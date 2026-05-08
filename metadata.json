@@ -1,0 +1,9 @@
+{
+  "name": "Hệ thống 5 tầng - 4 ( Xây dựng tính năng push github )",
+  "description": "Hệ thống quản lý tài chính và kiếm tiền tích hợp AI cao cấp với hai vai trò Admin và User.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": []
+}

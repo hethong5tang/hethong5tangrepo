@@ -1,0 +1,202 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hệ Thống Kiếm Tiền Thông Minh & Bền Vững</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Dancing+Script:wght@600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
+    <style>
+      html, body, #root {
+        min-height: 100%;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8fafc; /* bg-slate-50 for light mode */
+        color: #1e293b; /* text-slate-800 for light mode */
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      html.dark body {
+        background-color: #0f172a; /* bg-slate-900 */
+        color: #cbd5e1; /* text-slate-300 */
+      }
+      
+      /* Custom Scrollbar Utilities */
+      .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+      }
+      .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+      }
+      
+      .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.5);
+        border-radius: 20px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(156, 163, 175, 0.8);
+      }
+
+      /* New Pulse Glow animation */
+      @keyframes pulse-glow {
+        0%, 100% {
+          box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.4), 0 0 0 0 rgba(59, 130, 246, 0.4);
+        }
+        50% {
+          box-shadow: 0 0 35px 15px rgba(59, 130, 246, 0.1), 0 0 0 10px rgba(59, 130, 246, 0);
+        }
+      }
+      .pulse-glow {
+          animation: pulse-glow 4s infinite ease-in-out;
+      }
+      
+      /* Refined Aurora - now fixed */
+      @keyframes aurora {
+        from {
+          background-position: 50% 50%, 50% 50%;
+        }
+        to {
+          background-position: 350% 50%, 350% 50%;
+        }
+      }
+      .aurora-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        mix-blend-mode: color-dodge;
+        background-image: radial-gradient(
+            25% 75% at 27% 29%,
+            rgba(59, 130, 246, 0.08) 0%, /* blue, was 0.15 */
+            rgba(59, 130, 246, 0) 100%
+          ),
+          radial-gradient(
+            25% 50% at 73% 71%,
+            rgba(34, 197, 94, 0.06) 0%, /* green, was 0.1 */
+            rgba(34, 197, 94, 0) 100%
+          );
+        will-change: background-position;
+        animation: aurora 20s linear infinite;
+        pointer-events: none;
+        z-index: -1;
+      }
+      
+      @keyframes float {
+        0%, 100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+      
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animate-on-scroll {
+        opacity: 0;
+      }
+
+      .animate-on-scroll.is-visible {
+        animation: fadeInUp 0.8s ease-out forwards;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+
+      @keyframes modal-fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes modal-fade-out {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+
+      @keyframes modal-content-show {
+        from { opacity: 0; transform: translate(0, 1rem) scale(0.95); }
+        to { opacity: 1; transform: translate(0, 0) scale(1); }
+      }
+      @keyframes modal-content-hide {
+        from { opacity: 1; transform: translate(0, 0) scale(1); }
+        to { opacity: 0; transform: translate(0, 1rem) scale(0.95); }
+      }
+
+      @keyframes page-fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .page-enter-active {
+        animation: page-fade-in 0.3s ease-out forwards;
+      }
+
+      @keyframes fall {
+        to {
+          transform: translateY(100vh) rotate(360deg);
+          opacity: 0;
+        }
+      }
+      
+      .grabbing, .grabbing * {
+        cursor: grabbing !important;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.3.0",
+    "lodash-es": "https://aistudiocdn.com/lodash-es@^4.17.21",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
+    "@testing-library/jest-dom": "https://aistudiocdn.com/@testing-library/jest-dom@^6.9.1",
+    "@testing-library/react": "https://aistudiocdn.com/@testing-library/react@^16.3.0",
+    "vitest/": "https://aistudiocdn.com/vitest@^4.0.8/",
+    "vitest": "https://aistudiocdn.com/vitest@^4.0.8",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
+    "react-markdown": "https://aistudiocdn.com/react-markdown@^10.1.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
