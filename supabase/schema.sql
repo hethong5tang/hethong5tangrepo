@@ -195,3 +195,77 @@ BEGIN
 
 END;
 $$;
+
+-- ==========================================
+-- 7. BẢO MẬT DỮ LIỆU (ROW LEVEL SECURITY - RLS)
+-- ==========================================
+
+-- Tạo hàm kiểm tra quyền Admin (Security Definer giúp tránh lỗi lặp vô hạn đệ quy khi query bảng users)
+CREATE OR REPLACE FUNCTION public.is_admin() RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin'
+  );
+$$;
+
+-- Bật RLS cho toàn bộ các bảng
+ALTER TABLE public.system_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.funds ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.fund_transactions ENABLE ROW LEVEL SECURITY;
+
+-- 7.1 SYSTEM_SETTINGS
+-- Bất kỳ ai đăng nhập cũng có thể xem cấu hình chung (tỉ lệ chia hoa hồng)
+CREATE POLICY "Bất kỳ ai cũng có thể xem cài đặt hệ thống" 
+ON public.system_settings FOR SELECT USING (auth.role() = 'authenticated');
+
+-- Chỉ Admin mới có quyền Sửa/Xóa cấu hình
+CREATE POLICY "Admin có toàn quyền quản lý bảng settings" 
+ON public.system_settings FOR ALL USING (public.is_admin());
+
+
+-- 7.2 USERS
+-- User chỉ có thể xem và cập nhật thông tin của chính mình
+CREATE POLICY "User xem được dữ liệu của chính mình" 
+ON public.users FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "User tự tạo record của chính mình (Lúc đăng ký)" 
+ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "User có thể cập nhật thông tin của chính mình" 
+ON public.users FOR UPDATE USING (auth.uid() = id);
+
+-- Admin xem và quản lý tất cả user
+CREATE POLICY "Admin quản lý toàn bộ hệ thống User" 
+ON public.users FOR ALL USING (public.is_admin());
+
+
+-- 7.3 FUNDS
+-- Cho phép mọi user xem được số dư các Quỹ để đảm bảo tính minh bạch hệ thống
+CREATE POLICY "Mọi người đều xem được thông tin các Quỹ" 
+ON public.funds FOR SELECT USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Admin có toàn quyền quản lý Quỹ" 
+ON public.funds FOR ALL USING (public.is_admin());
+
+
+-- 7.4 TRANSACTIONS (Lịch sử giao dịch User)
+-- User chỉ xem được lịch sử giao dịch nạp/rút/hoa hồng của chính mình
+CREATE POLICY "User xem lịch sử giao dịch cá nhân" 
+ON public.transactions FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Admin quản lý tất cả lịch sử giao dịch" 
+ON public.transactions FOR ALL USING (public.is_admin());
+
+
+-- 7.5 FUND_TRANSACTIONS (Lịch sử giao dịch của Quỹ)
+-- Chỉ Admin mới được quyền xem và quản lý dòng tiền chi tiết ra/vào các Quỹ
+CREATE POLICY "Người dùng không được phép truy cập lịch sử của Quỹ"
+ON public.fund_transactions FOR SELECT USING (public.is_admin());
+
+CREATE POLICY "Admin quản lý giao dịch Quỹ" 
+ON public.fund_transactions FOR ALL USING (public.is_admin());
