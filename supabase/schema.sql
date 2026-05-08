@@ -5,7 +5,7 @@
 -- 1. BẢNG CẬP NHẬT CẤU HÌNH (SETTINGS)
 -- ==========================================
 -- Lưu trữ các công thức linh hoạt để Admin có thể thay đổi sau này mà không cần code lại.
-CREATE TABLE public.system_settings (
+CREATE TABLE IF NOT EXISTS public.system_settings (
     key VARCHAR(50) PRIMARY KEY,
     value JSONB NOT NULL,
     description TEXT,
@@ -18,13 +18,13 @@ VALUES (
     'commission_rates',
     '{"fund_admin": 0.10, "fund_leader": 0.05, "fund_support": 0.05, "f1": 0.40, "f2": 0.16, "f3": 0.12, "f4": 0.08, "f5": 0.04}',
     'Tỉ lệ phân bổ hoa hồng (20% cho quỹ, 80% cho hệ thống 5 tầng)'
-);
+) ON CONFLICT (key) DO NOTHING;
 
 
 -- ==========================================
 -- 2. BẢNG NGƯỜI DÙNG (USERS)
 -- ==========================================
-CREATE TABLE public.users (
+CREATE TABLE IF NOT EXISTS public.users (
     id UUID PRIMARY KEY DEFAULT auth.uid(), -- Kết nối trực tiếp với bảng Auth của Supabase
     email VARCHAR(255) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE public.users (
 -- ==========================================
 -- 3. BẢNG QUỸ HỆ THỐNG (FUNDS)
 -- ==========================================
-CREATE TABLE public.funds (
+CREATE TABLE IF NOT EXISTS public.funds (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     balance NUMERIC(15, 2) DEFAULT 0,
@@ -54,14 +54,15 @@ CREATE TABLE public.funds (
 INSERT INTO public.funds (id, name, balance) VALUES
 ('admin', 'Ví Admin (Lợi nhuận)', 0),
 ('leader', 'Quỹ Thưởng Leader', 10000000), -- Yêu cầu khởi tạo 10 triệu cho leader
-('support', 'Quỹ Hỗ Trợ (Chưa có F1)', 0);
+('support', 'Quỹ Hỗ Trợ (Chưa có F1)', 0)
+ON CONFLICT (id) DO NOTHING;
 
 
 -- ==========================================
 -- 4. BẢNG GIAO DỊCH NGƯỜI DÙNG (TRANSACTIONS)
 -- ==========================================
 -- Lưu lịch sử nạp/rút/hoa hồng của members.
-CREATE TABLE public.transactions (
+CREATE TABLE IF NOT EXISTS public.transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES public.users(id),
     type VARCHAR(50) NOT NULL, -- 'deposit', 'withdraw', 'commission', 'fee'
@@ -76,7 +77,7 @@ CREATE TABLE public.transactions (
 -- 5. BẢNG GIAO DỊCH QUỸ (FUND TRANSACTIONS)
 -- ==========================================
 -- Lịch sử dòng tiền vào, ra của 3 Quỹ hệ thống
-CREATE TABLE public.fund_transactions (
+CREATE TABLE IF NOT EXISTS public.fund_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     fund_id VARCHAR(50) REFERENCES public.funds(id),
     type VARCHAR(50) NOT NULL, -- 'inflow', 'outflow'
@@ -219,53 +220,59 @@ ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.fund_transactions ENABLE ROW LEVEL SECURITY;
 
 -- 7.1 SYSTEM_SETTINGS
--- Bất kỳ ai đăng nhập cũng có thể xem cấu hình chung (tỉ lệ chia hoa hồng)
+DROP POLICY IF EXISTS "Bất kỳ ai cũng có thể xem cài đặt hệ thống" ON public.system_settings;
 CREATE POLICY "Bất kỳ ai cũng có thể xem cài đặt hệ thống" 
 ON public.system_settings FOR SELECT USING (auth.role() = 'authenticated');
 
--- Chỉ Admin mới có quyền Sửa/Xóa cấu hình
+DROP POLICY IF EXISTS "Admin có toàn quyền quản lý bảng settings" ON public.system_settings;
 CREATE POLICY "Admin có toàn quyền quản lý bảng settings" 
 ON public.system_settings FOR ALL USING (public.is_admin());
 
 
 -- 7.2 USERS
--- User chỉ có thể xem và cập nhật thông tin của chính mình
+DROP POLICY IF EXISTS "User xem được dữ liệu của chính mình" ON public.users;
 CREATE POLICY "User xem được dữ liệu của chính mình" 
 ON public.users FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "User tự tạo record của chính mình (Lúc đăng ký)" ON public.users;
 CREATE POLICY "User tự tạo record của chính mình (Lúc đăng ký)" 
 ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
 
+DROP POLICY IF EXISTS "User có thể cập nhật thông tin của chính mình" ON public.users;
 CREATE POLICY "User có thể cập nhật thông tin của chính mình" 
 ON public.users FOR UPDATE USING (auth.uid() = id);
 
 -- Admin xem và quản lý tất cả user
+DROP POLICY IF EXISTS "Admin quản lý toàn bộ hệ thống User" ON public.users;
 CREATE POLICY "Admin quản lý toàn bộ hệ thống User" 
 ON public.users FOR ALL USING (public.is_admin());
 
 
 -- 7.3 FUNDS
--- Cho phép mọi user xem được số dư các Quỹ để đảm bảo tính minh bạch hệ thống
+DROP POLICY IF EXISTS "Mọi người đều xem được thông tin các Quỹ" ON public.funds;
 CREATE POLICY "Mọi người đều xem được thông tin các Quỹ" 
 ON public.funds FOR SELECT USING (auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Admin có toàn quyền quản lý Quỹ" ON public.funds;
 CREATE POLICY "Admin có toàn quyền quản lý Quỹ" 
 ON public.funds FOR ALL USING (public.is_admin());
 
 
 -- 7.4 TRANSACTIONS (Lịch sử giao dịch User)
--- User chỉ xem được lịch sử giao dịch nạp/rút/hoa hồng của chính mình
+DROP POLICY IF EXISTS "User xem lịch sử giao dịch cá nhân" ON public.transactions;
 CREATE POLICY "User xem lịch sử giao dịch cá nhân" 
 ON public.transactions FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admin quản lý tất cả lịch sử giao dịch" ON public.transactions;
 CREATE POLICY "Admin quản lý tất cả lịch sử giao dịch" 
 ON public.transactions FOR ALL USING (public.is_admin());
 
 
 -- 7.5 FUND_TRANSACTIONS (Lịch sử giao dịch của Quỹ)
--- Chỉ Admin mới được quyền xem và quản lý dòng tiền chi tiết ra/vào các Quỹ
+DROP POLICY IF EXISTS "Người dùng không được phép truy cập lịch sử của Quỹ" ON public.fund_transactions;
 CREATE POLICY "Người dùng không được phép truy cập lịch sử của Quỹ"
 ON public.fund_transactions FOR SELECT USING (public.is_admin());
 
+DROP POLICY IF EXISTS "Admin quản lý giao dịch Quỹ" ON public.fund_transactions;
 CREATE POLICY "Admin quản lý giao dịch Quỹ" 
 ON public.fund_transactions FOR ALL USING (public.is_admin());
