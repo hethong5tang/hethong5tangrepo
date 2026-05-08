@@ -68,6 +68,7 @@ export const githubSyncService = {
       logCallback(`[1/5] Fetching latest commit for branch '${branch}'...`);
       let latestCommitSha: string | null = null;
       let baseTreeSha: string | null = null;
+      let baseTreeItems: any[] = [];
 
       try {
         const refData = await this.request(`/repos/${owner}/${repo}/git/ref/heads/${branch}`, 'GET', token, undefined, logCallback);
@@ -94,19 +95,47 @@ export const githubSyncService = {
         const commitData = await this.request(`/repos/${owner}/${repo}/git/commits/${latestCommitSha}`, 'GET', token, undefined, logCallback);
         baseTreeSha = commitData.tree.sha;
         logCallback(`✓ Base tree SHA: ${baseTreeSha.substring(0,7)}`);
+
+        logCallback(`Fetching full tree to detect orphan files...`);
+        try {
+            const treeData = await this.request(`/repos/${owner}/${repo}/git/trees/${baseTreeSha}?recursive=1`, 'GET', token, undefined, logCallback);
+            baseTreeItems = treeData.tree || [];
+        } catch (e) {
+            logCallback(`Warning: Could not fetch recursive tree.`);
+        }
       } else {
         logCallback(`[2/5] Skipping base tree fetch (initial commit).`);
       }
 
       logCallback(`[3/5] Creating new tree with ${files.length} files...`);
-      const treeParams: any = {
-        // Ensure path doesn't start with /
-        tree: files.map(file => ({
+      const newTreeEntries = files.map(file => ({
           path: file.path.replace(/^\/+/, ''), 
-          mode: '100644', // Make sure it's 100644
+          mode: '100644',
           type: 'blob',
           content: file.content
-        }))
+      }));
+
+      // Clean up orphaned files that were previously uploaded to the root due to a bug
+      const validRootFiles = new Set(['AGENTS.md', 'App.tsx', 'config.ts', 'constants.ts', 'index.css', 'index.html', 'index.tsx', 'metadata.json', 'package-lock.json', 'package.json', 'tsconfig.json', 'types.ts', 'vite.config.ts', 'vitest.config.ts', 'vitest.setup.ts', 'README.md']);
+      for (const item of baseTreeItems) {
+        if (item.type === 'blob' && !item.path.includes('/')) {
+            if (!validRootFiles.has(item.path) && !item.path.startsWith('.')) {
+                // Not in the valid list and not a dotfile
+                if (!newTreeEntries.find(e => e.path === item.path)) {
+                    logCallback(`✓ Removing misplaced root file: ${item.path}`);
+                    newTreeEntries.push({
+                        path: item.path,
+                        mode: '100644',
+                        type: 'blob',
+                        sha: null // Delete marker
+                    } as any);
+                }
+            }
+        }
+      }
+
+      const treeParams: any = {
+        tree: newTreeEntries
       };
       if (baseTreeSha) {
         treeParams.base_tree = baseTreeSha;
