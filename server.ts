@@ -24,7 +24,7 @@ async function startServer() {
     }
 
     try {
-      const response = await fetch(`https://api.supabase.com/v1/projects/${supabaseRef}/sql`, {
+      const response = await fetch(`https://api.supabase.com/v1/projects/${supabaseRef}/database/query`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${supabaseToken}`,
