@@ -5,6 +5,7 @@ import { DashboardLayout } from '../../components/DashboardLayout';
 import PageLoader from '../../components/PageLoader';
 import { useSettings } from '../../features/settings/useSettings';
 import OnboardingTour, { TourStep } from '../../components/OnboardingTour';
+import { storageService } from '../../services/storageService';
 
 // Lazy load all page components
 const DashboardPage = lazy(() => import('./DashboardPage'));
@@ -78,18 +79,22 @@ const UserDashboard: React.FC = () => {
   
   useEffect(() => {
       // Kiểm tra xem người dùng đã xem hướng dẫn chưa
-      const hasSeenTour = localStorage.getItem(`hasSeenTour_${user?.id}`);
-      if (!hasSeenTour && user) {
-          // Trì hoãn một chút để đảm bảo DOM đã render xong
-          const timer = setTimeout(() => setIsTourOpen(true), 1500);
-          return () => clearTimeout(timer);
-      }
+      const checkTour = async () => {
+          if (user) {
+              const hasSeenTour = await storageService.getAsync(`hasSeenTour_${user.id}`, null);
+              if (!hasSeenTour) {
+                  // Trì hoãn một chút để đảm bảo DOM đã render xong
+                  setTimeout(() => setIsTourOpen(true), 1500);
+              }
+          }
+      };
+      checkTour();
   }, [user]);
 
   const handleTourComplete = () => {
       setIsTourOpen(false);
       if (user) {
-          localStorage.setItem(`hasSeenTour_${user.id}`, 'true');
+          storageService.setAsync(`hasSeenTour_${user.id}`, 'true');
       }
   };
 

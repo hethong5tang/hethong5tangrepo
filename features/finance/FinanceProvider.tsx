@@ -4,6 +4,7 @@ import { MOCK_INITIAL_TRANSACTIONS, MOCK_INITIAL_WITHDRAWALS, MOCK_FUND_TRANSACT
 import { FinanceAction, FinanceState } from './financeTypes';
 import { financeReducer } from './financeReducer';
 import { FundTransaction, FundType, FundStatus as TFundStatus } from './types';
+import { storageService, STORAGE_KEYS } from '../../services/storageService';
 
 const calculateInitialFundStatus = (transactions: FundTransaction[]): Record<FundType, TFundStatus> => {
     const status: Record<FundType, TFundStatus> = {
@@ -39,19 +40,8 @@ const defaultState: FinanceState = {
   milestoneBonusRequests: MOCK_INITIAL_MILESTONE_BONUS_REQUESTS,
 };
 
-const STORAGE_KEY = 'app_finance_v2';
-
 const init = (initial: FinanceState): FinanceState => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-        return JSON.parse(stored);
-    }
-    return initial;
-  } catch (error) {
-    console.error("Failed to load finance data from local storage", error);
-    return initial;
-  }
+  return storageService.get(STORAGE_KEYS.FINANCE, initial);
 };
 
 export const FinanceContext = createContext<{
@@ -63,11 +53,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [financeState, financeDispatch] = useReducer(financeReducer, defaultState, init);
   
   useEffect(() => {
-      try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(financeState));
-      } catch (error) {
-          console.error("Failed to save finance data to local storage", error);
-      }
+      storageService.set(STORAGE_KEYS.FINANCE, financeState);
   }, [financeState]);
 
   const value = { 

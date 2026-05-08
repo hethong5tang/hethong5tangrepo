@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { storageService } from '../services/storageService';
 
 type Theme = 'light' | 'dark';
 
@@ -12,11 +13,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    const savedTheme = localStorage.getItem('app_theme');
-    if (savedTheme === 'light' || savedTheme === 'dark') {
-      return savedTheme as Theme;
-    }
-    return 'light';
+    return storageService.get('app_theme', 'light') as Theme;
   });
 
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -28,7 +25,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.classList.add(theme);
     
     setIsDarkMode(theme === 'dark');
-    localStorage.setItem('app_theme', theme);
+    storageService.set('app_theme', theme);
   }, [theme]);
 
   return (

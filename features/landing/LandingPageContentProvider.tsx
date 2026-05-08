@@ -9,24 +9,15 @@ import { useUser } from '../users/useUser';
 import { useFinance } from '../finance/useFinance';
 import { TransactionType } from '../finance/types';
 import { LeaderboardMetric } from '../settings/types';
-
-const STORAGE_KEY = 'app_landing_page_v2';
+import { storageService, STORAGE_KEYS } from '../../services/storageService';
 
 const init = (defaultState: any) => {
-    try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            const parsed = JSON.parse(stored);
-            return {
-                ...defaultState,
-                ...parsed,
-                content: { ...defaultState.content, ...parsed.content }
-            };
-        }
-    } catch (e) {
-        console.error("Failed to load landing page content", e);
-    }
-    return defaultState;
+    const raw = storageService.get(STORAGE_KEYS.LANDING_PAGE, defaultState);
+    return {
+        ...defaultState,
+        ...raw,
+        content: { ...defaultState.content, ...raw.content }
+    };
 };
 
 export const LandingPageContentProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -35,9 +26,9 @@ export const LandingPageContentProvider: React.FC<{ children: ReactNode }> = ({ 
     const { userState } = useUser();
     const { financeState } = useFinance();
     
-    // Lưu vào LocalStorage mỗi khi state thay đổi
+    // Lưu vào storage mỗi khi state thay đổi
     useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        storageService.set(STORAGE_KEYS.LANDING_PAGE, state);
     }, [state]);
 
     // Ref để theo dõi giá trị settings cũ

@@ -3,21 +3,14 @@ import React, { createContext, useReducer, ReactNode, useEffect } from 'react';
 import { MOCK_INITIAL_USERS } from '../../data/mockData';
 import { UserAction, UserState } from './userTypes';
 import { userReducer } from './userReducer';
+import { storageService, STORAGE_KEYS } from '../../services/storageService';
 
 const initialState: UserState = {
   allUsers: MOCK_INITIAL_USERS,
 };
 
-const STORAGE_KEY = 'app_users_v4';
-
 const init = (defaultState: UserState): UserState => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : defaultState;
-  } catch (error) {
-    console.error("Failed to load users from local storage", error);
-    return defaultState;
-  }
+  return storageService.get(STORAGE_KEYS.USERS, defaultState);
 };
 
 export const UserContext = createContext<{
@@ -29,11 +22,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [userState, userDispatch] = useReducer(userReducer, initialState, init);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(userState));
-    } catch (error) {
-      console.error("Failed to save users to local storage", error);
-    }
+    storageService.set(STORAGE_KEYS.USERS, userState);
   }, [userState]);
 
   const value = { userState, userDispatch };
