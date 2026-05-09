@@ -198,8 +198,47 @@ END;
 $$;
 
 -- ==========================================
--- 7. BẢO MẬT DỮ LIỆU (ROW LEVEL SECURITY - RLS)
+-- 8. CẤU HÌNH KHO LƯU TRỮ (SUPABASE STORAGE)
 -- ==========================================
+-- Khởi tạo các Buckets để chứa file
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('avatars', 'avatars', true), ('proofs', 'transaction_proofs', false)
+ON CONFLICT (id) DO NOTHING;
+
+-- Thiết lập RLS cho Storage (Sử dụng bảng storage.objects)
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+-- Policy cho bucket 'avatars' (Công khai xem nhưng hạn chế ghi)
+CREATE POLICY "Ai cũng có thể xem ảnh đại diện"
+ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
+
+CREATE POLICY "User có thể upload ảnh đại diện của mình"
+ON storage.objects FOR INSERT WITH CHECK (
+    bucket_id = 'avatars' AND 
+    (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "User có thể cập nhật/xóa ảnh đại diện của mình"
+ON storage.objects FOR ALL USING (
+    bucket_id = 'avatars' AND 
+    (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Policy cho bucket 'proofs' (Ảnh bằng chứng giao dịch - Bảo mật cao hơn)
+CREATE POLICY "Admin có thể xem mọi bằng chứng giao dịch"
+ON storage.objects FOR SELECT USING (
+    bucket_id = 'proofs' AND public.is_admin()
+);
+
+CREATE POLICY "User có thể xem bằng chứng của chính mình"
+ON storage.objects FOR SELECT USING (
+    bucket_id = 'proofs' AND (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "User upload bằng chứng giao dịch"
+ON storage.objects FOR INSERT WITH CHECK (
+    bucket_id = 'proofs' AND (storage.foldername(name))[1] = auth.uid()::text
+);
 
 -- Tạo hàm kiểm tra quyền Admin (Security Definer giúp tránh lỗi lặp vô hạn đệ quy khi query bảng users)
 CREATE OR REPLACE FUNCTION public.is_admin() RETURNS boolean
@@ -276,3 +315,4 @@ ON public.fund_transactions FOR SELECT USING (public.is_admin());
 DROP POLICY IF EXISTS "Admin quản lý giao dịch Quỹ" ON public.fund_transactions;
 CREATE POLICY "Admin quản lý giao dịch Quỹ" 
 ON public.fund_transactions FOR ALL USING (public.is_admin());
+

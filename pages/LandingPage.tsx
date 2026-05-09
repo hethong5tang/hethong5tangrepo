@@ -397,7 +397,7 @@ const FaqSection: React.FC<{ data: any; }> = ({ data }) => {
 // --- Main Component ---
 
 const LandingPage: React.FC = () => {
-  const { handleLogin, handleFinalize2faLogin } = useAuth();
+  const { handleLogin, handleFinalize2faLogin, handleGoogleLogin } = useAuth();
   const { handleRegister, handleForgotPassword } = useActions();
   const { userState: { allUsers } } = useUser();
   const { state: { content, layout } } = useLandingPageContent();
@@ -576,6 +576,7 @@ const LandingPage: React.FC = () => {
       <Modal isOpen={isLoginModalOpen} onClose={() => setLoginModalOpen(false)} title="" hideFooter>
         <LoginScreen 
             onLogin={async (email, password) => handleLogin(email, password)}
+            onGoogleLogin={handleGoogleLogin}
             onFinalize2faLogin={async (userId, code) => handleFinalize2faLogin(userId, code)}
             onRegister={async (name, email, password, parentId, phone) => handleRegister(name, email, password, parentId, phone)} 
             onForgotPassword={async (email) => handleForgotPassword(email)} 

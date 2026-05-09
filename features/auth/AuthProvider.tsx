@@ -11,6 +11,7 @@ import { findUserInTree } from '../../services/userService';
 import { LoggableAction } from '../logging/types';
 import { useActions } from '../actions/useActions';
 import { useLogging } from '../logging/useLogging';
+import { supabase } from '../../services/supabaseClient';
 
 
 interface AuthContextType {
@@ -19,6 +20,7 @@ interface AuthContextType {
     permissions: Permission[];
     hasPermission: (permission: Permission) => boolean;
     handleLogin: (email: string, password: string) => { success: boolean; message: string; requires2fa?: boolean; userId?: string; };
+    handleGoogleLogin: () => Promise<void>;
     handleLogout: () => void;
     handleFinalize2faLogin: (userId: string, code: string) => { success: boolean; message: string };
     // This is needed by ActionsProvider to complete the login flow after registration
@@ -54,6 +56,62 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     return findUserInTree(allUsers, loggedInUserId);
   }, [loggedInUserId, allUsers]);
+
+  // Listener for Supabase Auth Popup Callback
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+            // Handle popup window logic
+            if (window.opener) {
+                // Notice the opener that login was successful
+                window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS', session }, '*');
+                window.close();
+            } else {
+                // Try to find the user in our mock database via email
+                const email = session.user.email;
+                if (email) {
+                    const existingUser = findUserRecursive(allUsers, email);
+                    if (existingUser) {
+                        performLogin(existingUser);
+                    } else {
+                        // In a fully backed app, Supabase user creation would be handled by DB trigger
+                        // For now we simulate creating their profile in our tree if not exist
+                        // Here we just notify to create account
+                         addToast(`Đã xác thực Google: ${email}. Vui lòng đăng ký bằng Google để hoàn tất.`, 'info');
+                    }
+                }
+            }
+        }
+    });
+
+    return () => {
+        authListener.subscription.unsubscribe();
+    };
+  }, [allUsers]);
+
+  // Listener for cross-window messages when user triggers OAuth popup
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Validate origin if needed, but since it's same origin/iframe we check type
+      if (event.data?.type === 'OAUTH_AUTH_SUCCESS' && event.data.session) {
+        // Success from popup!
+        const session = event.data.session;
+        const email = session.user.email;
+        if (email) {
+             const existingUser = findUserRecursive(allUsers, email);
+             if (existingUser) {
+                 performLogin(existingUser);
+                 addToast('Đăng nhập bằng Google thành công!', 'success');
+             } else {
+                 addToast('Tài khoản Google này chưa đăng ký. Hãy dùng nút Đăng ký phía dưới.', 'error');
+                 supabase.auth.signOut(); // reset
+             }
+        }
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [allUsers]);
 
   useEffect(() => {
     if (pendingLoginId && allUsers.length > 0) {
@@ -109,6 +167,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
     }
     window.location.hash = 'Bảng điều khiển';
+  };
+
+  const handleGoogleLogin = async () => {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+              skipBrowserRedirect: true,
+              redirectTo: window.location.origin
+          }
+      });
+      if (error) {
+          addToast(error.message, 'error');
+          return;
+      }
+      if (data?.url) {
+          window.open(data.url, 'oauth_popup', 'width=600,height=700');
+      }
   };
 
   const handleLogin = (email: string, password: string): { success: boolean; message: string; requires2fa?: boolean; userId?: string; } => {
@@ -187,7 +262,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { success: false, message: 'Lỗi: Không tìm thấy người dùng để đăng nhập.' };
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     // CLEAR SESSION DATA FOR TOOLS
     if (loggedInUserId) {
         localStorage.removeItem(`tool_bg_remover_session_${loggedInUserId}`);
@@ -195,6 +270,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.removeItem(`tool_photo_restore_session_${loggedInUserId}`);
     }
 
+    await supabase.auth.signOut();
     setUserRole(null);
     setLoggedInUserId(null);
     setPermissions([]);
@@ -207,6 +283,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     permissions,
     hasPermission,
     handleLogin,
+    handleGoogleLogin,
     handleLogout,
     handleFinalize2faLogin,
     setPendingLoginId
@@ -218,3 +295,4 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     </AuthContext.Provider>
   );
 };
+
