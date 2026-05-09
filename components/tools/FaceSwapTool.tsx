@@ -37,8 +37,8 @@ interface DetectedFace {
 type DragMode = 'none' | 'move' | 'rotate' | 'resize-tl' | 'resize-tr' | 'resize-bl' | 'resize-br';
 
 const AVAILABLE_MODELS = [
-    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash (Tiêu chuẩn)' },
-    { id: 'gemini-3-pro-image-preview', name: 'Gemini 3 Pro (Chất lượng cao)' },
+    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Cực nhanh / Miễn phí)' },
+    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image (Tạo ảnh / Miễn phí)' },
 ];
 
 const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
@@ -159,21 +159,21 @@ const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
 
     // --- FACE DETECTION LOGIC ---
     const detectFacesInImage = async (imageBase64: string) => {
-        if (!process.env.API_KEY) return;
+        if (!process.env.GEMINI_API_KEY && !process.env.API_KEY) return;
         
         setIsDetecting(true);
         setDetectedFaces([]);
         setSelectedFaceIndex(null);
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
             const mimeType = imageBase64.split(';')[0].split(':')[1] || 'image/png';
             const imagePart = { inlineData: { data: imageBase64.split(',')[1], mimeType } };
 
             const prompt = "Detect all human faces. Return bounding boxes.";
             
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-3-flash-preview',
                 contents: { parts: [imagePart, { text: prompt }] },
                 config: {
                     responseMimeType: "application/json",
@@ -227,7 +227,7 @@ const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
         setSourceFaces(prev => ({ ...prev, [index]: rawImage }));
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
             const mimeType = rawImage.split(';')[0].split(':')[1] || 'image/png';
             const imagePart = { inlineData: { data: rawImage.split(',')[1], mimeType } };
 
@@ -630,7 +630,7 @@ const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
         }
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
             
             const img = baseImageObjRef.current || new Image();
             if (!baseImageObjRef.current) {

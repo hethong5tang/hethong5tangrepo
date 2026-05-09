@@ -3,18 +3,19 @@ import { Transaction, WithdrawalRequest, FundStatus, FundType } from '../feature
 import { storageService, STORAGE_KEYS } from '../services/storageService';
 import { MOCK_INITIAL_TRANSACTIONS, MOCK_INITIAL_WITHDRAWALS, MOCK_FUND_TRANSACTIONS } from '../data/mockData';
 import { FinanceState } from '../features/finance/financeTypes';
+import { IS_DEMO_MODE } from '../config';
 
 // Dữ liệu mặc định
 const defaultFinanceState: FinanceState = {
-    allTransactions: MOCK_INITIAL_TRANSACTIONS,
-    withdrawalRequests: MOCK_INITIAL_WITHDRAWALS,
+    allTransactions: IS_DEMO_MODE ? MOCK_INITIAL_TRANSACTIONS : [],
+    withdrawalRequests: IS_DEMO_MODE ? MOCK_INITIAL_WITHDRAWALS : [],
     depositRequests: [],
     fundStatus: {
-        [FundType.Admin]: { name: 'Ví Admin', balance: 10000000, totalIn: 0, totalOut: 0 },
-        [FundType.LeaderBonus]: { name: 'Quỹ Thưởng Leader', balance: 10000000, totalIn: 10000000, totalOut: 0 },
+        [FundType.Admin]: { name: 'Ví Admin', balance: IS_DEMO_MODE ? 10000000 : 0, totalIn: 0, totalOut: 0 },
+        [FundType.LeaderBonus]: { name: 'Quỹ Thưởng Leader', balance: IS_DEMO_MODE ? 10000000 : 0, totalIn: IS_DEMO_MODE ? 10000000 : 0, totalOut: 0 },
         [FundType.Support]: { name: 'Quỹ Hỗ Trợ', balance: 0, totalIn: 0, totalOut: 0 },
     },
-    fundTransactions: MOCK_FUND_TRANSACTIONS,
+    fundTransactions: IS_DEMO_MODE ? MOCK_FUND_TRANSACTIONS : [],
     milestoneBonusRequests: [],
 };
 

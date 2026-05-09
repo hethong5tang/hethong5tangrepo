@@ -3,6 +3,7 @@ import { AdminManagedUser } from '../features/users/types';
 import { storageService, STORAGE_KEYS } from '../services/storageService';
 import { MOCK_INITIAL_USERS } from '../data/mockData';
 import { UserState } from '../features/users/userTypes';
+import { IS_DEMO_MODE } from '../config';
 
 // Helper để làm phẳng cây user (giống database quan hệ)
 const flattenUsers = (users: AdminManagedUser[]): AdminManagedUser[] => {
@@ -15,7 +16,7 @@ export const userApi = {
      */
     getAllUsers: async (): Promise<AdminManagedUser[]> => {
         await storageService.simulateNetwork(300); // Giả lập mạng nhanh
-        const userState = storageService.get<UserState>(STORAGE_KEYS.USERS, { allUsers: MOCK_INITIAL_USERS });
+        const userState = storageService.get<UserState>(STORAGE_KEYS.USERS, { allUsers: IS_DEMO_MODE ? MOCK_INITIAL_USERS : [] });
         return userState.allUsers; // Trả về dạng cây (như state hiện tại)
     },
 
@@ -24,7 +25,7 @@ export const userApi = {
      */
     getUserById: async (userId: string): Promise<AdminManagedUser | null> => {
         await storageService.simulateNetwork(200);
-        const userState = storageService.get<UserState>(STORAGE_KEYS.USERS, { allUsers: MOCK_INITIAL_USERS });
+        const userState = storageService.get<UserState>(STORAGE_KEYS.USERS, { allUsers: IS_DEMO_MODE ? MOCK_INITIAL_USERS : [] });
         const allFlat = flattenUsers(userState.allUsers);
         return allFlat.find(u => u.id === userId) || null;
     },
@@ -34,7 +35,7 @@ export const userApi = {
      */
     checkUserExists: async (email: string, phone: string): Promise<{ exists: boolean; field?: 'email' | 'phone' }> => {
         await storageService.simulateNetwork(500); // Giả lập mạng trung bình
-        const userState = storageService.get<UserState>(STORAGE_KEYS.USERS, { allUsers: MOCK_INITIAL_USERS });
+        const userState = storageService.get<UserState>(STORAGE_KEYS.USERS, { allUsers: IS_DEMO_MODE ? MOCK_INITIAL_USERS : [] });
         const allFlat = flattenUsers(userState.allUsers);
         
         const emailExists = allFlat.some(u => u.email.toLowerCase() === email.toLowerCase());

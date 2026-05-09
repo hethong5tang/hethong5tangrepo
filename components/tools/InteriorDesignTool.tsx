@@ -30,8 +30,8 @@ interface InteriorDesignToolProps {
 }
 
 const AVAILABLE_MODELS = [
-    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash (Tiêu chuẩn)' },
-    { id: 'gemini-3-pro-image-preview', name: 'Gemini 3 Pro (Chất lượng cao)' },
+    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Siêu nhanh / Miễn phí)' },
+    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image (Tạo ảnh / Miễn phí)' },
 ];
 
 const ROOM_TYPES = [
@@ -165,7 +165,7 @@ const InteriorDesignTool: React.FC<InteriorDesignToolProps> = ({ tool, onNavigat
         if (!uploadedImage || isAnalyzing) return;
         setIsAnalyzing(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
             const mimeType = uploadedImage.split(';')[0].split(':')[1];
             const data = uploadedImage.split(',')[1];
             const imagePart = { inlineData: { data, mimeType } };
@@ -197,7 +197,7 @@ const InteriorDesignTool: React.FC<InteriorDesignToolProps> = ({ tool, onNavigat
             }
             
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-3-flash-preview',
                 contents: { parts: [imagePart, { text: prompt }] }
             });
             

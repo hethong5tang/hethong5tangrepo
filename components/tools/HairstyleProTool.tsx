@@ -72,8 +72,8 @@ interface HairstyleProToolProps {
 }
 
 const AVAILABLE_MODELS = [
-    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash (Tiêu chuẩn)' },
-    { id: 'gemini-3-pro-image-preview', name: 'Gemini 3 Pro (Chất lượng cao)' },
+    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Cực nhanh / Miễn phí)' },
+    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image (Tạo ảnh / Miễn phí)' },
 ];
 
 const HAIR_COLORS = [
@@ -281,12 +281,12 @@ const HairstyleProTool: React.FC<HairstyleProToolProps> = ({ tool, onNavigate })
     const validateRefImage = async (base64Data: string): Promise<boolean> => {
         setIsValidatingRef(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
             const mimeType = base64Data.split(';')[0].split(':')[1] || 'image/png';
             const imagePart = { inlineData: { data: base64Data.split(',')[1], mimeType } };
             
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-3-flash-preview',
                 contents: { parts: [imagePart, { text: "Analyze this image. Does it contain a visible hairstyle, a haircut, or a person's head with hair that can be used as a hairstyle reference? Answer only JSON: { \"isValid\": boolean }" }] },
                 config: { 
                     responseMimeType: 'application/json',
@@ -336,7 +336,7 @@ const HairstyleProTool: React.FC<HairstyleProToolProps> = ({ tool, onNavigate })
     const handleAutoAlign = async (rawImage: string) => {
         setIsAligning(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
             const mimeType = rawImage.split(';')[0].split(':')[1] || 'image/png';
             const imagePart = { inlineData: { data: rawImage.split(',')[1], mimeType } };
 
@@ -397,7 +397,7 @@ const HairstyleProTool: React.FC<HairstyleProToolProps> = ({ tool, onNavigate })
         const styleDef = availableStyles.find(s => s.id === styleId);
         if (!styleDef) return null;
 
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
         const mimeType = alignedImage.split(';')[0].split(':')[1] || 'image/png';
         const imagePart = { inlineData: { data: alignedImage.split(',')[1], mimeType } };
         
@@ -438,7 +438,7 @@ const HairstyleProTool: React.FC<HairstyleProToolProps> = ({ tool, onNavigate })
     const generateCustomStyle = async (): Promise<string | null> => {
         if (!alignedImage || !refHairImage) return null;
 
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
         
         const faceMime = alignedImage.split(';')[0].split(':')[1] || 'image/png';
         const facePart = { inlineData: { data: alignedImage.split(',')[1], mimeType: faceMime } };
@@ -614,7 +614,7 @@ const HairstyleProTool: React.FC<HairstyleProToolProps> = ({ tool, onNavigate })
 
         // Generate Side Views AND Back View
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
             const mimeType = item.imageUrl.split(';')[0].split(':')[1] || 'image/png';
             const imagePart = { inlineData: { data: item.imageUrl.split(',')[1], mimeType } };
             

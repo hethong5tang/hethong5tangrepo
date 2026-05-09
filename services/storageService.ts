@@ -3,14 +3,14 @@ import { LocalAdapter } from './data/adapters/LocalAdapter';
 import { SupabaseAdapter } from './data/adapters/SupabaseAdapter';
 
 export const STORAGE_KEYS = {
-    USERS: 'app_users_v4',
-    FINANCE: 'app_finance_v1',
-    SETTINGS: 'app_settings_v1',
-    NOTIFICATIONS: 'app_notifications_v1',
-    SUPPORT: 'app_support_v1',
-    LOGS: 'app_logs_v1',
-    AUTH: 'app_auth_token',
-    LANDING_PAGE: 'app_landing_page_v2',
+    USERS: 'app_users_v5',
+    FINANCE: 'app_finance_v2',
+    SETTINGS: 'app_settings_v2',
+    NOTIFICATIONS: 'app_notifications_v2',
+    SUPPORT: 'app_support_v2',
+    LOGS: 'app_logs_v2',
+    AUTH: 'app_auth_token_v2',
+    LANDING_PAGE: 'app_landing_page_v3',
 };
 
 // Khởi tạo Adapter dựa trên môi trường

@@ -58,8 +58,8 @@ const STYLE_CATEGORIES: Record<StyleCategory, string[]> = {
 };
 
 const AVAILABLE_MODELS = [
-    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash (Tiêu chuẩn)' },
-    { id: 'gemini-3-pro-image-preview', name: 'Gemini 3 Pro (Chất lượng cao)' },
+    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image (Tạo ảnh / Miễn phí)' },
+    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Tiêu chuẩn / Miễn phí)' },
 ];
 
 // Flatten type for state management
@@ -471,7 +471,7 @@ const ImageGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
         if (!creditResult.success) { setIsGenerating(false); return; }
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
             const mimeType = imageSrc.split(';')[0].split(':')[1] || 'image/png';
             const imagePart = { inlineData: { data: imageSrc.split(',')[1], mimeType } };
             
@@ -537,7 +537,7 @@ const ImageGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
         if (!creditResult.success) { setIsGenerating(false); return; }
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
             const mimeType = hdFixImage.split(';')[0].split(':')[1] || 'image/png';
             const imagePart = { inlineData: { data: hdFixImage.split(',')[1], mimeType } };
             

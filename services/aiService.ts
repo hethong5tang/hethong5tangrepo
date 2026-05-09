@@ -2,13 +2,16 @@
 import { GoogleGenAI, GenerateContentResponse, Chat } from "@google/genai";
 
 // Hàm khởi tạo Client. 
-// Hiện tại vẫn dùng process.env.API_KEY (Client-side).
-// SAU NÀY: Bạn chỉ cần sửa hàm này để gọi fetch() tới Backend của bạn.
+// Sử dụng GEMINI_API_KEY được hệ thống AI Studio cung cấp tự động.
 const getClient = () => {
-    const apiKey = process.env.API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-        console.error("API Key chưa được cấu hình. Vui lòng kiểm tra file .env");
-        throw new Error("API Key missing");
+        console.warn("GEMINI_API_KEY chưa được cấu hình. Đang thử dùng API_KEY cũ làm dự phòng...");
+        const fallbackKey = process.env.API_KEY;
+        if (!fallbackKey) {
+            throw new Error("API Key missing. Vui lòng thiết lập GEMINI_API_KEY trong Environment Variables.");
+        }
+        return new GoogleGenAI({ apiKey: fallbackKey });
     }
     return new GoogleGenAI({ apiKey });
 };
