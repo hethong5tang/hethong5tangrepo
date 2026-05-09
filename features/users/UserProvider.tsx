@@ -4,9 +4,10 @@ import { MOCK_INITIAL_USERS } from '../../data/mockData';
 import { UserAction, UserState } from './userTypes';
 import { userReducer } from './userReducer';
 import { storageService, STORAGE_KEYS } from '../../services/storageService';
+import { IS_DEMO_MODE } from '../../config';
 
 const initialState: UserState = {
-  allUsers: MOCK_INITIAL_USERS,
+  allUsers: IS_DEMO_MODE ? MOCK_INITIAL_USERS : [],
 };
 
 const init = (defaultState: UserState): UserState => {

@@ -3,6 +3,7 @@ import React, { createContext, useReducer, ReactNode } from 'react';
 import { MOCK_INITIAL_SUPPORT_TICKETS } from '../../data/mockData';
 import { SupportAction, SupportState } from './supportTypes';
 import { supportReducer } from './supportReducer';
+import { IS_DEMO_MODE } from '../../config';
 
 export const SupportContext = createContext<{
   supportState: SupportState;
@@ -25,5 +26,5 @@ export const SupportProvider: React.FC<{ children: ReactNode }> = ({ children })
 };
 
 const initialState: SupportState = {
-  supportTickets: MOCK_INITIAL_SUPPORT_TICKETS,
+  supportTickets: IS_DEMO_MODE ? MOCK_INITIAL_SUPPORT_TICKETS : [],
 };

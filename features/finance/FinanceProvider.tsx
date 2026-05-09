@@ -5,11 +5,12 @@ import { FinanceAction, FinanceState } from './financeTypes';
 import { financeReducer } from './financeReducer';
 import { FundTransaction, FundType, FundStatus as TFundStatus } from './types';
 import { storageService, STORAGE_KEYS } from '../../services/storageService';
+import { IS_DEMO_MODE } from '../../config';
 
 const calculateInitialFundStatus = (transactions: FundTransaction[]): Record<FundType, TFundStatus> => {
     const status: Record<FundType, TFundStatus> = {
-        [FundType.Admin]: { name: 'Ví Admin (Lợi nhuận)', balance: 10000000, totalIn: 0, totalOut: 0 },
-        [FundType.LeaderBonus]: { name: 'Quỹ Thưởng Leader', balance: 10000000, totalIn: 10000000, totalOut: 0 }, // Khởi tạo 10 triệu
+        [FundType.Admin]: { name: 'Ví Admin (Lợi nhuận)', balance: IS_DEMO_MODE ? 10000000 : 0, totalIn: 0, totalOut: 0 },
+        [FundType.LeaderBonus]: { name: 'Quỹ Thưởng Leader', balance: IS_DEMO_MODE ? 10000000 : 0, totalIn: IS_DEMO_MODE ? 10000000 : 0, totalOut: 0 }, 
         [FundType.Support]: { name: 'Quỹ Hỗ Trợ (Chưa có F1)', balance: 0, totalIn: 0, totalOut: 0 },
     };
 
@@ -32,12 +33,12 @@ const calculateInitialFundStatus = (transactions: FundTransaction[]): Record<Fun
 };
 
 const defaultState: FinanceState = {
-  allTransactions: MOCK_INITIAL_TRANSACTIONS,
-  withdrawalRequests: MOCK_INITIAL_WITHDRAWALS,
-  depositRequests: MOCK_DEPOSIT_REQUESTS,
-  fundStatus: calculateInitialFundStatus(MOCK_FUND_TRANSACTIONS),
-  fundTransactions: MOCK_FUND_TRANSACTIONS,
-  milestoneBonusRequests: MOCK_INITIAL_MILESTONE_BONUS_REQUESTS,
+  allTransactions: IS_DEMO_MODE ? MOCK_INITIAL_TRANSACTIONS : [],
+  withdrawalRequests: IS_DEMO_MODE ? MOCK_INITIAL_WITHDRAWALS : [],
+  depositRequests: IS_DEMO_MODE ? MOCK_DEPOSIT_REQUESTS : [],
+  fundStatus: calculateInitialFundStatus(IS_DEMO_MODE ? MOCK_FUND_TRANSACTIONS : []),
+  fundTransactions: IS_DEMO_MODE ? MOCK_FUND_TRANSACTIONS : [],
+  milestoneBonusRequests: IS_DEMO_MODE ? MOCK_INITIAL_MILESTONE_BONUS_REQUESTS : [],
 };
 
 const init = (initial: FinanceState): FinanceState => {

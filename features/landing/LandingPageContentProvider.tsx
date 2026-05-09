@@ -10,6 +10,7 @@ import { useFinance } from '../finance/useFinance';
 import { TransactionType } from '../finance/types';
 import { LeaderboardMetric } from '../settings/types';
 import { storageService, STORAGE_KEYS } from '../../services/storageService';
+import { IS_DEMO_MODE } from '../../config';
 
 const init = (defaultState: any) => {
     const raw = storageService.get(STORAGE_KEYS.LANDING_PAGE, defaultState);
@@ -92,6 +93,10 @@ export const LandingPageContentProvider: React.FC<{ children: ReactNode }> = ({ 
         // 4. Bảng xếp hạng
         const { leaderboardSettings, useLeaderboardMockData, leaderboardMockData } = systemSettings;
         let newLeaderboardContent;
+        
+        const flattenUsers = (users: AdminManagedUser[]): AdminManagedUser[] => users.flatMap(u => [u, ...(u.children ? flattenUsers(u.children) : [])]);
+        const allFlatUsers = flattenUsers(userState.allUsers);
+
         if (useLeaderboardMockData) {
             newLeaderboardContent = {
                 title: leaderboardMockData.title,
@@ -112,9 +117,6 @@ export const LandingPageContentProvider: React.FC<{ children: ReactNode }> = ({ 
             }
             startDate.setHours(0, 0, 0, 0);
             
-            const flattenUsers = (users: AdminManagedUser[]): AdminManagedUser[] => users.flatMap(u => [u, ...(u.children ? flattenUsers(u.children) : [])]);
-            const allFlatUsers = flattenUsers(userState.allUsers);
-
             const leadersWithScores = allFlatUsers
                 .filter(user => user.status === UserStatus.Active)
                 .map(user => {
@@ -135,6 +137,32 @@ export const LandingPageContentProvider: React.FC<{ children: ReactNode }> = ({ 
 
         if (JSON.stringify(newLeaderboardContent) !== JSON.stringify(state.content.leaderboard)) {
             dispatch({ type: 'SET_SECTION_CONTENT', payload: { sectionId: 'leaderboard', content: newLeaderboardContent } });
+        }
+
+        // 5. Cập nhật Thống kê (Stats)
+        if (!IS_DEMO_MODE) {
+            const today = new Date().toISOString().split('T')[0];
+            const newMembersToday = allFlatUsers.filter(u => u.joinDate === today).length;
+            const transactionsToday = financeState.allTransactions.filter(t => t.date === today).length;
+            const totalPayout = financeState.allTransactions
+                .filter(t => t.type === TransactionType.Payout && t.amount < 0)
+                .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+            const updatedStats = [
+                { id: 'stat1', label: 'Tổng Thành viên', value: allFlatUsers.length.toLocaleString('vi-VN') },
+                { id: 'stat2', label: 'Thành viên mới hôm nay', value: `+${newMembersToday}` },
+                { id: 'stat3', label: 'Giao dịch Hôm nay', value: `+${transactionsToday}` },
+                { id: 'stat4', label: 'Tổng Tiền đã chi trả', value: `${totalPayout.toLocaleString('vi-VN')}đ` },
+            ];
+
+            if (JSON.stringify(updatedStats) !== JSON.stringify(state.content.hero.stats)) {
+                dispatch({ type: 'SET_SECTION_CONTENT', payload: { sectionId: 'hero', content: { ...state.content.hero, stats: updatedStats } } });
+            }
+            
+            // Hide social proof in real mode if it's empty
+            if (state.content.socialProof?.enabled) {
+                dispatch({ type: 'SET_SECTION_CONTENT', payload: { sectionId: 'socialProof', content: { ...state.content.socialProof, enabled: false } } });
+            }
         }
 
         prevSettingsRef.current = currentSettingsStr;

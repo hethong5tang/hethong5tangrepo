@@ -5,6 +5,9 @@ import { Permission, Role } from './features/roles/types';
 
 // CẢNH BÁO BẢO MẬT: Trong môi trường Production, không bao giờ lưu credentials trong mã nguồn Frontend.
 // Đây là file config cho bản Demo.
+
+export const IS_DEMO_MODE = typeof window !== 'undefined' && window.location.hostname.includes('-dev-');
+
 export const ADMIN_CREDENTIALS = {
     email: 'admin@example.com',
     // Mật khẩu đã được loại bỏ khỏi file config công khai.
@@ -34,7 +37,7 @@ export const ALL_PERMISSIONS = [
   { id: Permission.SUPPORT_MANAGE_TICKETS, name: 'Quản lý Hỗ trợ', description: 'Trả lời/Đóng yêu cầu hỗ trợ' },
 ];
 
-export const MOCK_ROLES: Role[] = [
+export const MOCK_ROLES: Role[] = IS_DEMO_MODE ? [
     {
         id: 'role_manager',
         name: 'Manager',
@@ -54,7 +57,7 @@ export const MOCK_ROLES: Role[] = [
             Permission.FUNDS_VIEW, Permission.FUNDS_MANAGE_PAYOUTS
         ]
     }
-];
+] : [];
 
 export const MOCK_FUND_SETTINGS: FundSettings = {
     leaderBonusAllocationPercentage: 5,
@@ -150,7 +153,7 @@ export const MOCK_SYSTEM_SETTINGS: SystemSettings = {
         metric: LeaderboardMetric.TotalEarnings,
         timeframe: 'monthly',
     },
-    useLeaderboardMockData: true,
+    useLeaderboardMockData: IS_DEMO_MODE,
     leaderboardMockData: {
         title: 'Vinh danh <span class="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Leader Tháng 8</span>',
         description: 'Chúc mừng các Leader xuất sắc nhất!',

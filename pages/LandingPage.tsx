@@ -17,6 +17,7 @@ import { LeaderboardMetric } from '../features/settings/types';
 import { useSettings } from '../features/settings/useSettings';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Trophy, Medal, Crown } from 'lucide-react';
+import { IS_DEMO_MODE } from '../config';
 
 const useIntersectionObserver = (options: IntersectionObserverInit) => {
     const elementsRef = useRef<(HTMLElement | null)[]>([]);
@@ -81,17 +82,34 @@ const GrowthPreview: React.FC<{ stats: StatItem[] }> = ({ stats }) => {
     
     const chartData = useMemo(() => {
         const months = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
-        const baseUsers = 5000;
-        const growthFactor = 1.15;
+        const baseUsers = IS_DEMO_MODE ? 5000 : 0;
+        const growthFactor = IS_DEMO_MODE ? 1.15 : 1.05;
         let cumulativeUsers = baseUsers;
         return months.map(month => {
-            cumulativeUsers *= (1 + (Math.random() * (growthFactor - 1) + 0.05));
+            const growth = IS_DEMO_MODE ? (Math.random() * (growthFactor - 1) + 0.05) : 0;
+            cumulativeUsers *= (1 + growth);
             return {
                 name: month,
                 'Thành viên': Math.round(cumulativeUsers),
             };
         });
     }, []);
+
+    if (!IS_DEMO_MODE && chartData[chartData.length - 1]['Thành viên'] === 0) {
+        return (
+            <section ref={ref} className="pt-24 pb-12 transition-colors duration-300">
+                <div ref={addToRefs} className="container mx-auto px-6 animate-on-scroll">
+                    <div className="bg-white/50 dark:bg-slate-800/30 backdrop-blur-lg rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-xl dark:shadow-2xl shadow-indigo-500/5 dark:shadow-indigo-500/10">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+                            {stats.map((stat) => (
+                                <StatDisplayItem key={stat.id} label={stat.label} value={stat.value} />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section ref={ref} className="pt-24 pb-12 transition-colors duration-300">

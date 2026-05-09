@@ -4,9 +4,10 @@ import React, { createContext, useReducer, ReactNode, useCallback } from 'react'
 import { MOCK_INITIAL_NOTIFICATIONS } from '../../data/mockData';
 import { NotificationAction, NotificationState } from './notificationTypes';
 import { notificationReducer } from './notificationReducer';
+import { IS_DEMO_MODE } from '../../config';
 
 const initialState: NotificationState = {
-  notifications: MOCK_INITIAL_NOTIFICATIONS,
+  notifications: IS_DEMO_MODE ? MOCK_INITIAL_NOTIFICATIONS : [],
   levelUpInfo: null,
 };
 
