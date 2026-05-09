@@ -34,7 +34,7 @@ export const createAuthActions = (deps: {
         const cleanName = name.trim();
         const cleanEmail = email.trim().toLowerCase();
         const cleanPhone = phone.trim().replace(/\s/g, ''); 
-        const trimmedParentId = parentId ? parentId.trim() : null;
+        const trimmedParentId = (parentId && parentId.trim() !== '') ? parentId.trim() : null;
         
         // 2. Validate phía "Server" (thông qua Mock API)
         // Thay vì check trực tiếp userState.allUsers, ta gọi API checkExists

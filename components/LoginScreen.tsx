@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { EnvelopeIcon, KeyIcon, EyeIcon, EyeSlashIcon, UserCircleIcon, UserPlusIcon, ClipboardDocumentIcon, CheckIcon, InformationCircleIcon, DevicePhoneMobileIcon, XCircleIcon } from './Icons';
+import { useAuth } from '../features/auth/useAuth';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
 import { validatePassword, PasswordValidationResult } from '../utils/validation';
 import { ADMIN_CREDENTIALS } from '../config';
@@ -52,6 +53,7 @@ const loginHints: LoginHintGroup[] = [
 ];
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFinalize2faLogin, onRegister, onForgotPassword, referrerId, referrerName, isMaintenanceMode, maintenanceEndTime }) => {
+    const { pendingGoogleAuth, clearPendingGoogleAuth } = useAuth();
     const [view, setView] = useState<'login' | 'register' | 'forgot' | 'verify2fa'>('login');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -83,6 +85,21 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
     const [copyStatus, setCopyStatus] = useState<Record<string, boolean>>({});
     const [countdown, setCountdown] = useState('');
     const [isHintsOpen, setIsHintsOpen] = useState(false);
+
+    // Watch for pending Google Auth to auto-fill
+    useEffect(() => {
+        if (pendingGoogleAuth) {
+            setRegisterEmail(pendingGoogleAuth.email);
+            if (pendingGoogleAuth.name) {
+                setRegisterName(pendingGoogleAuth.name);
+            }
+            // Set a dummy password for Google users since the system requires one in handleRegister
+            // In a real app this would be random/empty and handled differently
+            setRegisterPassword('GoogleOAuth_' + Math.random().toString(36).slice(-8));
+            setConfirmPassword(''); // confirmed via OAuth
+            setView('register');
+        }
+    }, [pendingGoogleAuth]);
 
     useEffect(() => {
         if (!maintenanceEndTime) return;
@@ -176,13 +193,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
             return;
         }
 
-        if (registerPassword !== confirmPassword) {
+        if (registerPassword !== confirmPassword && !pendingGoogleAuth) {
             setError('Mật khẩu xác nhận không khớp.');
             return;
         }
 
         const validation = validatePassword(registerPassword);
-        if (!validation.isValid) {
+        if (!validation.isValid && !pendingGoogleAuth) {
             setError(validation.errors.join(' '));
             return;
         }
@@ -193,6 +210,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
         if (result.success) {
             // Hiển thị phần "Xác nhận gửi email"
             setRegisterSuccess(true);
+            if (pendingGoogleAuth) clearPendingGoogleAuth();
         } else {
             setError(result.message);
         }
@@ -387,6 +405,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
         {/* --- FORM REGISTER --- */}
         {view === 'register' && (
              <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+                {pendingGoogleAuth && (
+                    <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-md text-sm text-indigo-800 flex items-center gap-2">
+                        <InformationCircleIcon className="h-5 w-5 text-indigo-500 flex-shrink-0" />
+                        <div>
+                            <p>Đã xác thực Google: <strong>{pendingGoogleAuth.email}</strong></p>
+                            <p className="text-xs mt-1">Vui lòng hoàn thành thông tin bên dưới để tạo tài khoản trong hệ thống.</p>
+                        </div>
+                        <button onClick={clearPendingGoogleAuth} className="ml-auto text-indigo-400 hover:text-indigo-600">
+                            <XCircleIcon className="h-4 w-4" />
+                        </button>
+                    </div>
+                )}
+                
                 {referrerName && (
                     <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800 flex items-center gap-2">
                         <InformationCircleIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />
@@ -418,14 +449,18 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
                 ) : (
                     <>
                         <div>
-                            <label htmlFor="register-ref" className="block text-xs font-medium text-slate-500 mb-1 ml-1">
-                                Mã giới thiệu <span className="text-indigo-500">(Áp dụng cho cả đăng ký bằng Email và Google)</span>
+                            <label htmlFor="register-ref" className="block text-xs font-medium text-slate-500 mb-1 ml-1 flex justify-between">
+                                <span>Mã giới thiệu <span className="text-gray-400 font-normal">(Không bắt buộc)</span></span>
+                                <span className="text-indigo-500">Dùng cho cả Email & Google</span>
                             </label>
                             <div className="relative group">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><UserPlusIcon className="h-5 w-5 text-gray-400" /></div>
-                                <input id="register-ref" type="text" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} className="block w-full rounded-md border border-gray-200 bg-white pl-10 pr-10 py-2.5 text-gray-900 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Mã giới thiệu (tùy chọn)" />
+                                <input id="register-ref" type="text" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} className="block w-full rounded-md border border-gray-200 bg-white pl-10 pr-10 py-2.5 text-gray-900 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Nhập mã giới thiệu nếu có" />
+                                <div className="mt-1 text-[10px] text-gray-400 ml-1 italic">
+                                    Nếu để trống, bạn sẽ đăng ký trực tiếp hệ thống.
+                                </div>
                                 {referralCode && (
-                                    <button type="button" onClick={() => setReferralCode('')} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 opacity-0 group-focus-within:opacity-100 transition-opacity">
+                                    <button type="button" onClick={() => setReferralCode('')} className="absolute inset-y-0 right-0 top-0 h-[42px] flex items-center pr-3 text-slate-400 hover:text-slate-600 opacity-0 group-focus-within:opacity-100 transition-opacity">
                                         <XCircleIcon className="h-5 w-5" />
                                     </button>
                                 )}
@@ -445,34 +480,38 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
                             </div>
                         </div>
 
-                        <div>
-                            <label htmlFor="register-password" className="sr-only">Mật khẩu</label>
-                            <div className="relative group">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><KeyIcon className="h-5 w-5 text-gray-400" /></div>
-                                <input id="register-password" type={showPassword ? 'text' : 'password'} required={view === 'register' && !isLoading} value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} className="block w-full rounded-md border border-gray-200 bg-white pl-10 pr-20 py-2.5 text-gray-900 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Mật khẩu" />
-                                 {registerPassword && (
-                                     <button type="button" onClick={() => setRegisterPassword('')} className="absolute inset-y-0 right-10 flex items-center pr-3 text-slate-400 hover:text-slate-600 opacity-0 group-focus-within:opacity-100 transition-opacity">
-                                        <XCircleIcon className="h-5 w-5" />
-                                    </button>
-                                )}
-                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3">{showPassword ? <EyeSlashIcon className="h-5 w-5 text-gray-400" /> : <EyeIcon className="h-5 w-5 text-gray-400" />}</button>
-                            </div>
-                        </div>
+                        {!pendingGoogleAuth && (
+                            <>
+                                <div>
+                                    <label htmlFor="register-password" className="sr-only">Mật khẩu</label>
+                                    <div className="relative group">
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><KeyIcon className="h-5 w-5 text-gray-400" /></div>
+                                        <input id="register-password" type={showPassword ? 'text' : 'password'} required={view === 'register' && !isLoading} value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} className="block w-full rounded-md border border-gray-200 bg-white pl-10 pr-20 py-2.5 text-gray-900 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Mật khẩu" />
+                                         {registerPassword && (
+                                             <button type="button" onClick={() => setRegisterPassword('')} className="absolute inset-y-0 right-10 flex items-center pr-3 text-slate-400 hover:text-slate-600 opacity-0 group-focus-within:opacity-100 transition-opacity">
+                                                <XCircleIcon className="h-5 w-5" />
+                                            </button>
+                                        )}
+                                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3">{showPassword ? <EyeSlashIcon className="h-5 w-5 text-gray-400" /> : <EyeIcon className="h-5 w-5 text-gray-400" />}</button>
+                                    </div>
+                                </div>
 
-                        {passwordValidation && <PasswordStrengthMeter validationResult={passwordValidation} />}
+                                {passwordValidation && <PasswordStrengthMeter validationResult={passwordValidation} />}
 
-                        <div>
-                            <label htmlFor="register-confirm-password" className="sr-only">Xác nhận Mật khẩu</label>
-                            <div className="relative group">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><KeyIcon className="h-5 w-5 text-gray-400" /></div>
-                                <input id="register-confirm-password" type={showPassword ? 'text' : 'password'} required={view === 'register' && !isLoading} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="block w-full rounded-md border border-gray-200 bg-white pl-10 pr-10 py-2.5 text-gray-900 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Xác nhận Mật khẩu" />
-                                {confirmPassword && (
-                                    <button type="button" onClick={() => setConfirmPassword('')} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 opacity-0 group-focus-within:opacity-100 transition-opacity">
-                                        <XCircleIcon className="h-5 w-5" />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
+                                <div>
+                                    <label htmlFor="register-confirm-password" className="sr-only">Xác nhận Mật khẩu</label>
+                                    <div className="relative group">
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><KeyIcon className="h-5 w-5 text-gray-400" /></div>
+                                        <input id="register-confirm-password" type={showPassword ? 'text' : 'password'} required={view === 'register' && !isLoading} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="block w-full rounded-md border border-gray-200 bg-white pl-10 pr-10 py-2.5 text-gray-900 placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Xác nhận Mật khẩu" />
+                                        {confirmPassword && (
+                                            <button type="button" onClick={() => setConfirmPassword('')} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 opacity-0 group-focus-within:opacity-100 transition-opacity">
+                                                <XCircleIcon className="h-5 w-5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
 
                         {error && <p className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-100">{error}</p>}
                         
@@ -483,7 +522,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
                                 onClick={handleManualRegister}
                                 className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-semibold rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-green-500/50 transition-all font-medium"
                             >
-                                {isLoading ? 'Đang xử lý...' : 'Tạo tài khoản'}
+                                {isLoading ? 'Đang xử lý...' : (pendingGoogleAuth ? 'Hoàn tất đăng ký bằng Google' : 'Tạo tài khoản')}
                             </button>
                         </div>
 

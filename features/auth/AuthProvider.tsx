@@ -25,6 +25,8 @@ interface AuthContextType {
     handleFinalize2faLogin: (userId: string, code: string) => { success: boolean; message: string };
     // This is needed by ActionsProvider to complete the login flow after registration
     setPendingLoginId: (id: string | null) => void;
+    pendingGoogleAuth: { email: string; name?: string } | null;
+    clearPendingGoogleAuth: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,6 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [pendingLoginId, setPendingLoginId] = useState<string | null>(null);
+  const [pendingGoogleAuth, setPendingGoogleAuth] = useState<{email: string, name?: string} | null>(null);
 
   const loggedInUser = useMemo(() => {
     if (!loggedInUserId) return null;
@@ -57,29 +60,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return findUserInTree(allUsers, loggedInUserId);
   }, [loggedInUserId, allUsers]);
 
-  // Listener for Supabase Auth Popup Callback
+  const handleOAuthSession = async (session: any) => {
+    const email = session.user.email;
+    const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
+    
+    if (email) {
+        const existingUser = findUserRecursive(allUsers, email);
+        if (existingUser) {
+            performLogin(existingUser);
+            addToast('Đăng nhập bằng Google thành công!', 'success');
+            setPendingGoogleAuth(null);
+        } else {
+            // User not in our system, save info for registration
+            setPendingGoogleAuth({ email, name });
+            addToast(`Xác thực Google thành công cho ${email}. Vui lòng hoàn tất đăng ký để tạo tài khoản.`, 'info');
+        }
+    }
+  };
+
+  // Listener for Supabase Auth Popup Callback (Inside the popup)
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-            // Handle popup window logic
+            // If we are in the popup window
             if (window.opener) {
-                // Notice the opener that login was successful
                 window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS', session }, '*');
                 window.close();
             } else {
-                // Try to find the user in our mock database via email
-                const email = session.user.email;
-                if (email) {
-                    const existingUser = findUserRecursive(allUsers, email);
-                    if (existingUser) {
-                        performLogin(existingUser);
-                    } else {
-                        // In a fully backed app, Supabase user creation would be handled by DB trigger
-                        // For now we simulate creating their profile in our tree if not exist
-                        // Here we just notify to create account
-                         addToast(`Đã xác thực Google: ${email}. Vui lòng đăng ký bằng Google để hoàn tất.`, 'info');
-                    }
-                }
+                // If we are in main window and session synced automatically
+                handleOAuthSession(session);
             }
         }
     });
@@ -92,21 +101,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Listener for cross-window messages when user triggers OAuth popup
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Validate origin if needed, but since it's same origin/iframe we check type
       if (event.data?.type === 'OAUTH_AUTH_SUCCESS' && event.data.session) {
-        // Success from popup!
-        const session = event.data.session;
-        const email = session.user.email;
-        if (email) {
-             const existingUser = findUserRecursive(allUsers, email);
-             if (existingUser) {
-                 performLogin(existingUser);
-                 addToast('Đăng nhập bằng Google thành công!', 'success');
-             } else {
-                 addToast('Tài khoản Google này chưa đăng ký. Hãy dùng nút Đăng ký phía dưới.', 'error');
-                 supabase.auth.signOut(); // reset
-             }
-        }
+        handleOAuthSession(event.data.session);
       }
     };
     window.addEventListener('message', handleMessage);
@@ -277,6 +273,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     window.location.hash = '';
   };
   
+  const clearPendingGoogleAuth = () => setPendingGoogleAuth(null);
+  
   const value = {
     userRole,
     loggedInUser,
@@ -286,7 +284,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     handleGoogleLogin,
     handleLogout,
     handleFinalize2faLogin,
-    setPendingLoginId
+    setPendingLoginId,
+    pendingGoogleAuth,
+    clearPendingGoogleAuth
   };
 
   return (
