@@ -209,15 +209,18 @@ ON CONFLICT (id) DO NOTHING;
 -- Kho lưu trữ Supabase Storage mặc định đã bật RLS. Mọi chính sách (policy) thiết lập ở dưới sẽ được áp dụng.
 
 -- Policy cho bucket 'avatars' (Công khai xem nhưng hạn chế ghi)
+DROP POLICY IF EXISTS "Ai cũng có thể xem ảnh đại diện" ON storage.objects;
 CREATE POLICY "Ai cũng có thể xem ảnh đại diện"
 ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
 
+DROP POLICY IF EXISTS "User có thể upload ảnh đại diện của mình" ON storage.objects;
 CREATE POLICY "User có thể upload ảnh đại diện của mình"
 ON storage.objects FOR INSERT WITH CHECK (
     bucket_id = 'avatars' AND 
     (storage.foldername(name))[1] = auth.uid()::text
 );
 
+DROP POLICY IF EXISTS "User có thể cập nhật/xóa ảnh đại diện của mình" ON storage.objects;
 CREATE POLICY "User có thể cập nhật/xóa ảnh đại diện của mình"
 ON storage.objects FOR ALL USING (
     bucket_id = 'avatars' AND 
@@ -225,16 +228,19 @@ ON storage.objects FOR ALL USING (
 );
 
 -- Policy cho bucket 'proofs' (Ảnh bằng chứng giao dịch - Bảo mật cao hơn)
+DROP POLICY IF EXISTS "Admin có thể xem mọi bằng chứng giao dịch" ON storage.objects;
 CREATE POLICY "Admin có thể xem mọi bằng chứng giao dịch"
 ON storage.objects FOR SELECT USING (
     bucket_id = 'proofs' AND public.is_admin()
 );
 
+DROP POLICY IF EXISTS "User có thể xem bằng chứng của chính mình" ON storage.objects;
 CREATE POLICY "User có thể xem bằng chứng của chính mình"
 ON storage.objects FOR SELECT USING (
     bucket_id = 'proofs' AND (storage.foldername(name))[1] = auth.uid()::text
 );
 
+DROP POLICY IF EXISTS "User upload bằng chứng giao dịch" ON storage.objects;
 CREATE POLICY "User upload bằng chứng giao dịch"
 ON storage.objects FOR INSERT WITH CHECK (
     bucket_id = 'proofs' AND (storage.foldername(name))[1] = auth.uid()::text

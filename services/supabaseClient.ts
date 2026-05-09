@@ -4,7 +4,15 @@ let supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
 // Tự động sửa lỗi nếu user paste nhầm URL có chứa /rest/v1 hoặc dấu gạch chéo cuối
-supabaseUrl = supabaseUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
+try {
+  // Loại bỏ /rest/v1 (và có thể có trailing slash) nếu tồn tại ở cuối chuỗi
+  supabaseUrl = supabaseUrl.replace(/\/rest\/v1\/?$/i, '');
+  // Loại bỏ slash ở cuối nếu có
+  supabaseUrl = supabaseUrl.replace(/\/+$/, '');
+  console.log("Supabase URL initialized as:", supabaseUrl);
+} catch(e) {
+  console.error("Error parsing supabase url", e);
+}
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Thiếu cấu hình VITE_SUPABASE_URL hoặc VITE_SUPABASE_ANON_KEY trong Settings.');
