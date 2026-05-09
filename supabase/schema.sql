@@ -206,7 +206,7 @@ VALUES ('avatars', 'avatars', true), ('proofs', 'transaction_proofs', false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Thiết lập RLS cho Storage (Sử dụng bảng storage.objects)
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- Kho lưu trữ Supabase Storage mặc định đã bật RLS. Mọi chính sách (policy) thiết lập ở dưới sẽ được áp dụng.
 
 -- Policy cho bucket 'avatars' (Công khai xem nhưng hạn chế ghi)
 CREATE POLICY "Ai cũng có thể xem ảnh đại diện"
