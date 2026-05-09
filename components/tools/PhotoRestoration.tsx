@@ -20,8 +20,8 @@ interface RestorationViewProps {
 }
 
 const AVAILABLE_MODELS = [
-    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash (Tiêu chuẩn)' },
-    { id: 'gemini-3-pro-image-preview', name: 'Gemini 3 Pro (Chất lượng cao)' },
+    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Tốc độ & Miễn phí)' },
+    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Chất lượng cao)' },
 ];
 
 const PhotoRestoration: React.FC<RestorationViewProps> = ({ tool, initialImage, onBack, onNavigate }) => {
@@ -29,6 +29,9 @@ const PhotoRestoration: React.FC<RestorationViewProps> = ({ tool, initialImage, 
     const { userState } = useUser();
     const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
     const { addToast } = useToast();
+
+    // Use correct key from environment
+    const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
 
     const [uploadedImage, setUploadedImage] = useState<string | null>(initialImage || null);
     const [isRestoring, setIsRestoring] = useState(false);

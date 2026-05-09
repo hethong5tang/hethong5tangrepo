@@ -60,19 +60,51 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return findUserInTree(allUsers, loggedInUserId);
   }, [loggedInUserId, allUsers]);
 
+  // Helper function to find user by email in the hierarchical tree
+  // Defined with more robust checks
+  const findUserByEmail = (users: AdminManagedUser[], emailToFind: string): AdminManagedUser | undefined => {
+    if (!emailToFind || !users || !Array.isArray(users)) return undefined;
+    const cleanEmailToFind = emailToFind.trim().toLowerCase();
+    
+    for (const user of users) {
+        // Log individual checks if needed for deep debugging
+        if (user.email && user.email.trim().toLowerCase() === cleanEmailToFind) {
+            return user;
+        }
+        
+        // Search children recursively
+        if (user.children && Array.isArray(user.children) && user.children.length > 0) {
+            const found = findUserByEmail(user.children, emailToFind);
+            if (found) return found;
+        }
+    }
+    return undefined;
+  };
+
   const handleOAuthSession = async (session: any) => {
-    const email = session.user.email;
-    const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
+    if (!session || !session.user) return;
+
+    // Normalize incoming data from Supabase
+    const email = session.user.email?.trim();
+    const name = (session.user.user_metadata?.full_name || session.user.user_metadata?.name || '').trim();
+    
+    console.log('[Auth] Handling OAuth Session for:', email);
     
     if (email) {
-        const existingUser = findUserRecursive(allUsers, email);
+        // We use the latest allUsers from the higher scope
+        const existingUser = findUserByEmail(allUsers, email);
+        
         if (existingUser) {
+            console.log('[Auth] Existing user found in tree:', existingUser.id);
             performLogin(existingUser);
             addToast('Đăng nhập bằng Google thành công!', 'success');
             setPendingGoogleAuth(null);
         } else {
+            console.log('[Auth] User not found in local tree. Email searched:', email);
+            console.log('[Auth] Current pool size (root):', allUsers.length);
+            
             // User not in our system, save info for registration
-            setPendingGoogleAuth({ email, name });
+            setPendingGoogleAuth({ email, name: name || undefined });
             addToast(`Xác thực Google thành công cho ${email}. Vui lòng hoàn tất đăng ký để tạo tài khoản.`, 'info');
         }
     }
@@ -122,17 +154,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [pendingLoginId, allUsers]);
 
 
-  const findUserRecursive = (users: AdminManagedUser[], emailToFind: string): AdminManagedUser | undefined => {
-    const lowerCaseEmailToFind = emailToFind.toLowerCase();
-    for (const user of users) {
-        if (user.email.toLowerCase() === lowerCaseEmailToFind) return user;
-        if (user.children) {
-            const found = findUserRecursive(user.children, emailToFind);
-            if (found) return found;
-        }
-    }
-    return undefined;
-  };
   
   const logAction = (payload: any) => {
     loggingDispatch({ type: 'ADD_LOG', payload });
@@ -192,7 +213,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return { success: true, message: 'Đăng nhập thành công!' };
     }
 
-    const user = findUserRecursive(allUsers, email);
+    const user = findUserByEmail(allUsers, email);
 
     if (user && user.password === password) {
       // Check if account is suspended or dead
