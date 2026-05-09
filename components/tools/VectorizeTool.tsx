@@ -25,8 +25,8 @@ interface VectorizeToolProps {
 type ProcessingMode = 'ai_art' | 'pixel_exact';
 
 const AVAILABLE_MODELS = [
-    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Tốc độ cao)' },
-    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Mới nhất)' },
+    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Tốc độ cao & Miễn phí)' },
+    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Nhiều chi tiết)' },
 ];
 
 const VectorizeTool: React.FC<VectorizeToolProps> = ({ tool, onNavigate }) => {
@@ -34,6 +34,9 @@ const VectorizeTool: React.FC<VectorizeToolProps> = ({ tool, onNavigate }) => {
     const { userState } = useUser();
     const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
     const { addToast } = useToast();
+
+    // Use correct key from environment
+    const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
 
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
     const [imageDimensions, setImageDimensions] = useState<{w: number, h: number}>({w: 512, h: 512});
@@ -328,7 +331,7 @@ const VectorizeTool: React.FC<VectorizeToolProps> = ({ tool, onNavigate }) => {
         }
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             
             // Prepare low-res version for AI to see structure better without getting lost in noise
             const img = new Image();

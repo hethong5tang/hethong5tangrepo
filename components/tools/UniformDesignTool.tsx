@@ -102,6 +102,9 @@ const UniformDesignTool: React.FC<UniformDesignToolProps> = ({ tool, onNavigate 
     const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
     const { addToast } = useToast();
 
+    // Use correct key from environment
+    const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
+
     // State
     const [categoryId, setCategoryId] = useState<string>(UNIFORM_CATEGORIES[0].id);
     const [itemId, setItemId] = useState<string>(UNIFORM_CATEGORIES[0].items[0].id);
@@ -169,7 +172,7 @@ const UniformDesignTool: React.FC<UniformDesignToolProps> = ({ tool, onNavigate 
         }
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             const inputParts: any[] = [];
             
             if (logoImage) {
@@ -216,7 +219,7 @@ const UniformDesignTool: React.FC<UniformDesignToolProps> = ({ tool, onNavigate 
             inputParts.push({ text: systemPrompt });
 
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash-image',
+                model: 'gemini-1.5-flash',
                 contents: { parts: inputParts },
                 config: { responseModalities: [Modality.IMAGE] },
             });

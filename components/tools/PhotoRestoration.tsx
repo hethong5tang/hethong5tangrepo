@@ -252,7 +252,7 @@ const PhotoRestoration: React.FC<RestorationViewProps> = ({ tool, initialImage, 
         }
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             const mimeType = uploadedImage.split(';')[0].split(':')[1] || 'image/png';
             const imagePart = { inlineData: { data: uploadedImage.split(',')[1], mimeType } };
             

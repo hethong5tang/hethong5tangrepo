@@ -25,8 +25,8 @@ interface AiVideoGeneratorProps {
 }
 
 const AVAILABLE_MODELS = [
-    { id: 'veo-3.1-fast-generate-preview', name: 'Veo 3.1 Fast (Tốc độ cao)' },
-    { id: 'veo-3.1-generate-preview', name: 'Veo 3.1 Pro (Chất lượng cao)' },
+    { id: 'veo-1.5-fast-generate-preview', name: 'Veo 1.5 Fast (Tốc độ cao)' },
+    { id: 'veo-1.5-generate-preview', name: 'Veo 1.5 Pro (Chất lượng cao)' },
 ];
 
 const VIDEO_STYLES = [
@@ -78,6 +78,9 @@ const AiVideoGenerator: React.FC<AiVideoGeneratorProps> = ({ tool, onNavigate })
     const { userState } = useUser();
     const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
     const { addToast } = useToast();
+
+    // Use correct key from environment
+    const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
 
     // --- STATE ---
     
@@ -179,7 +182,7 @@ const AiVideoGenerator: React.FC<AiVideoGeneratorProps> = ({ tool, onNavigate })
         setPrompt('Đang phân tích hình ảnh và sáng tạo kịch bản...'); 
         
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             const mimeType = targetImage.split(';')[0].split(':')[1];
             const base64Data = targetImage.split(',')[1];
             const imagePart = { inlineData: { data: base64Data, mimeType } };
@@ -199,7 +202,7 @@ const AiVideoGenerator: React.FC<AiVideoGeneratorProps> = ({ tool, onNavigate })
             `;
 
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash', 
+                model: 'gemini-1.5-flash', 
                 contents: { parts: [imagePart, { text: "Phân tích ảnh và viết prompt video." }] },
                 config: { systemInstruction }
             });
@@ -242,9 +245,9 @@ const AiVideoGenerator: React.FC<AiVideoGeneratorProps> = ({ tool, onNavigate })
         if (!prompt.trim()) return;
         setIsEnhancingPrompt(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-1.5-flash',
                 contents: { parts: [{ text: `Enhance this video prompt to be more descriptive, cinematic, and detailed for an AI video generator. Keep it under 50 words. Original: "${prompt}"` }] }
             });
             if (response.text) {
@@ -284,7 +287,7 @@ const AiVideoGenerator: React.FC<AiVideoGeneratorProps> = ({ tool, onNavigate })
         setGeneratedVideoUrl(null); // Clear preview to show loading
         setProgressStatus('Đang khởi tạo mô hình Veo...');
 
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+        const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
 
         try {
             let operation: any;
@@ -351,7 +354,7 @@ const AiVideoGenerator: React.FC<AiVideoGeneratorProps> = ({ tool, onNavigate })
                 setLastVideoObject(generatedVideoData);
                 
                 setProgressStatus('Đang tải xuống video...');
-                const videoResponse = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
+                const videoResponse = await fetch(`${downloadLink}&key=${GEMINI_KEY}`);
                 if (!videoResponse.ok) throw new Error("Không thể tải video.");
                 
                 const videoBlob = await videoResponse.blob();

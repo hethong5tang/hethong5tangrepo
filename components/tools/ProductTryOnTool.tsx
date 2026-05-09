@@ -41,6 +41,9 @@ const ProductTryOnTool: React.FC<ProductTryOnToolProps> = ({ tool, onNavigate })
     const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
     const { addToast } = useToast();
 
+    // Use correct key from environment
+    const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
+
     // Images
     const [baseImage, setBaseImage] = useState<string | null>(null); // Input 1 (Background/Context)
     const [mixImages, setMixImages] = useState<string[]>([]);   // Input 2+ (Objects/Subjects)
@@ -220,7 +223,7 @@ const ProductTryOnTool: React.FC<ProductTryOnToolProps> = ({ tool, onNavigate })
 
         setIsSuggesting(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             
             const baseMime = baseImage.split(';')[0].split(':')[1] || 'image/png';
             const basePart = { inlineData: { data: baseImage.split(',')[1], mimeType: baseMime } };
@@ -246,7 +249,7 @@ const ProductTryOnTool: React.FC<ProductTryOnToolProps> = ({ tool, onNavigate })
             `;
 
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash', 
+                model: 'gemini-1.5-flash', 
                 contents: { parts: [basePart, ...mixParts, { text: prompt }] }
             });
 
@@ -290,7 +293,7 @@ const ProductTryOnTool: React.FC<ProductTryOnToolProps> = ({ tool, onNavigate })
         }
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
 
             setProcessingStatus('Đang phân tích cấu trúc không gian và ánh sáng...');
             
@@ -348,7 +351,7 @@ const ProductTryOnTool: React.FC<ProductTryOnToolProps> = ({ tool, onNavigate })
             `;
 
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash-image', 
+                model: 'gemini-1.5-flash', 
                 contents: { parts: [basePart, ...mixParts, { text: systemPrompt }] },
                 config: { responseModalities: [Modality.IMAGE] },
             });

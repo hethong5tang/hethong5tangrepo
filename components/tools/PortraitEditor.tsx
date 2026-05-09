@@ -341,8 +341,8 @@ const TRANSLATION_LANGUAGES = [
 ];
 
 const AVAILABLE_MODELS = [
-    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash (Tiêu chuẩn)' },
-    { id: 'gemini-3-pro-image-preview', name: 'Gemini 3 Pro (Chất lượng cao)' },
+    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Tốc độ & Miễn phí)' },
+    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Chất lượng cao)' },
 ];
 
 // --- TYPES ---
@@ -375,6 +375,10 @@ const PortraitEditor: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
     const { userState } = useUser();
     const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
     const { addToast } = useToast();
+
+    // Use correct key from environment
+    const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const refImageInputRef = useRef<HTMLInputElement>(null); // For Mimic Mode
 
@@ -447,7 +451,7 @@ const PortraitEditor: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
     const autoAnalyzeRefImage = async (base64Image: string) => {
         setIsExtractingPrompt(true);
         try {
-             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+             const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
              const mimeType = base64Image.split(';')[0].split(':')[1] || 'image/png';
              const imagePart = { inlineData: { data: base64Image.split(',')[1], mimeType } };
 
@@ -464,7 +468,7 @@ const PortraitEditor: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
              `;
              
              const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash-image',
+                model: 'gemini-1.5-flash',
                 contents: { parts: [imagePart, { text: prompt }] },
                 config: { responseModalities: [Modality.TEXT] },
             });
@@ -519,13 +523,13 @@ const PortraitEditor: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
         if (!customPrompt.trim()) return;
         setIsTranslating(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             const targetLangName = TRANSLATION_LANGUAGES.find(l => l.code === translateLang)?.name || 'Vietnamese';
             
             const prompt = `Translate the following text to ${targetLangName}. Keep technical photography terms (bokeh, ISO, lighting names) in English if they are standard. Only return the translated text. Text: "${customPrompt}"`;
             
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-1.5-flash',
                 contents: { parts: [{ text: prompt }] }
             });
 
@@ -550,7 +554,7 @@ const PortraitEditor: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
         const ratioInfo = ASPECT_RATIOS.find(r => r.id === retouch.ratio);
         
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             let parts: any[] = [];
 
             // Add Image if available
@@ -587,7 +591,7 @@ const PortraitEditor: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
             parts.push({ text: promptText });
 
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-1.5-flash',
                 contents: { parts: parts }
             });
             
@@ -644,7 +648,7 @@ const PortraitEditor: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
         }
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             const mimeType = uploadedImage.split(';')[0].split(':')[1] || 'image/png';
             const imagePart = { inlineData: { data: uploadedImage.split(',')[1], mimeType } };
 

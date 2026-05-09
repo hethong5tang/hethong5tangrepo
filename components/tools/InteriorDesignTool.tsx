@@ -30,8 +30,8 @@ interface InteriorDesignToolProps {
 }
 
 const AVAILABLE_MODELS = [
-    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Siêu nhanh / Miễn phí)' },
-    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image (Tạo ảnh / Miễn phí)' },
+    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Tốc độ & Miễn phí)' },
+    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Chất lượng cao)' },
 ];
 
 const ROOM_TYPES = [
@@ -83,6 +83,9 @@ const InteriorDesignTool: React.FC<InteriorDesignToolProps> = ({ tool, onNavigat
     const { userState } = useUser();
     const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
     const { addToast } = useToast();
+
+    // Use correct key from environment
+    const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
 
     // State
     const [activeTab, setActiveTab] = useState<'design' | 'renovate'>('design');
@@ -165,7 +168,7 @@ const InteriorDesignTool: React.FC<InteriorDesignToolProps> = ({ tool, onNavigat
         if (!uploadedImage || isAnalyzing) return;
         setIsAnalyzing(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             const mimeType = uploadedImage.split(';')[0].split(':')[1];
             const data = uploadedImage.split(',')[1];
             const imagePart = { inlineData: { data, mimeType } };
@@ -197,7 +200,7 @@ const InteriorDesignTool: React.FC<InteriorDesignToolProps> = ({ tool, onNavigat
             }
             
             const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
+                model: 'gemini-1.5-flash',
                 contents: { parts: [imagePart, { text: prompt }] }
             });
             
@@ -244,7 +247,7 @@ const InteriorDesignTool: React.FC<InteriorDesignToolProps> = ({ tool, onNavigat
         }
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             const mimeType = uploadedImage.split(';')[0].split(':')[1];
             const data = uploadedImage.split(',')[1];
             const imagePart = { inlineData: { data, mimeType } };

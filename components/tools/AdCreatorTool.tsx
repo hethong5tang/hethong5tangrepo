@@ -31,8 +31,8 @@ type ImageQuantity = 1 | 2 | 3 | 4;
 type ModelMode = 'none' | 'ai' | 'upload';
 
 const AVAILABLE_MODELS = [
-    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash (Tiêu chuẩn)' },
-    { id: 'gemini-3-pro-image-preview', name: 'Gemini 3 Pro (Chất lượng cao)' },
+    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Tốc độ & Miễn phí)' },
+    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Chất lượng cao)' },
 ];
 
 const FORMAT_OPTIONS: { id: string, label: string, ratio: AspectRatio, desc: string }[] = [
@@ -97,6 +97,9 @@ const AdCreatorTool: React.FC<AdCreatorToolProps> = ({ tool, onNavigate }) => {
     const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
     const { addToast } = useToast();
 
+    // Use correct key from environment
+    const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
+
     // Inputs
     const [mode, setMode] = useState<CreateMode>('new');
     const [productImage, setProductImage] = useState<string | null>(null);
@@ -157,7 +160,7 @@ const AdCreatorTool: React.FC<AdCreatorToolProps> = ({ tool, onNavigate }) => {
     const extractPromptFromImage = async (base64Image: string) => {
         setIsExtractingRef(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             const mimeType = base64Image.split(';')[0].split(':')[1] || 'image/png';
             const imagePart = { inlineData: { data: base64Image.split(',')[1], mimeType } };
 
@@ -177,7 +180,7 @@ const AdCreatorTool: React.FC<AdCreatorToolProps> = ({ tool, onNavigate }) => {
             `;
 
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash', // Using Flash for fast description
+                model: 'gemini-1.5-flash', // Using Flash for fast description
                 contents: { parts: [imagePart, { text: systemPrompt }] }
             });
 
@@ -279,7 +282,7 @@ const AdCreatorTool: React.FC<AdCreatorToolProps> = ({ tool, onNavigate }) => {
 
         setIsSuggestingPrompt(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             const mimeType = productImage.split(';')[0].split(':')[1] || 'image/png';
             const imagePart = { inlineData: { data: productImage.split(',')[1], mimeType } };
 
@@ -300,7 +303,7 @@ const AdCreatorTool: React.FC<AdCreatorToolProps> = ({ tool, onNavigate }) => {
             `;
 
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-1.5-flash',
                 contents: { parts: [imagePart, { text: systemPrompt }] }
             });
 
@@ -351,7 +354,7 @@ const AdCreatorTool: React.FC<AdCreatorToolProps> = ({ tool, onNavigate }) => {
         }
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             
             // 1. Product Image Part
             const productMime = productImage.split(';')[0].split(':')[1] || 'image/png';

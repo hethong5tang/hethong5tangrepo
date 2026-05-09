@@ -39,6 +39,9 @@ const ExpandView: React.FC<ExpandViewProps> = ({ image, onBack, onGenerate, tool
     const { handleUseToolCredit } = useActions();
     const { addToast } = useToast();
 
+    // Use correct key from environment
+    const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
+
     const [selectedAspectRatio, setSelectedAspectRatio] = useState(aspectRatios[0]);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -239,7 +242,7 @@ const ExpandView: React.FC<ExpandViewProps> = ({ image, onBack, onGenerate, tool
         const imageDataUrl = finalCanvas.toDataURL('image/png');
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
             const imagePart = { inlineData: { data: imageDataUrl.split(',')[1], mimeType: 'image/png' } };
 
             const finalExpandPrompt = expandPrompt.trim();
@@ -260,7 +263,7 @@ INSTRUCTIONS:
 OUTPUT: A complete, fully filled image.` };
 
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash-image',
+                model: 'gemini-1.5-flash',
                 contents: { parts: [imagePart, textPart] },
                 config: { responseModalities: [Modality.IMAGE] },
             });

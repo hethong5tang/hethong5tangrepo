@@ -29,6 +29,9 @@ const ImageEditorView: React.FC<ImageEditorViewProps> = ({ image, initialMode, o
     const { userState } = useUser();
     const { handleUseToolCredit } = useActions();
     const { addToast } = useToast();
+
+    // Use correct key from environment
+    const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
     
     const [mode, setMode] = useState<'erase' | 'repaint'>(initialMode);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -165,7 +168,7 @@ const ImageEditorView: React.FC<ImageEditorViewProps> = ({ image, initialMode, o
         }
     
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
     
             const compositeImagePart = { inlineData: { data: aiInputCanvas.toDataURL('image/png').split(',')[1], mimeType: 'image/png' } };
             
@@ -194,7 +197,7 @@ Output the full edited image.`;
             const textPart = { text: systemInstruction };
     
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash-image',
+                model: 'gemini-1.5-flash',
                 contents: { parts: [compositeImagePart, textPart] },
                 config: { responseModalities: [Modality.IMAGE] },
             });
