@@ -85,6 +85,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
     const [copyStatus, setCopyStatus] = useState<Record<string, boolean>>({});
     const [countdown, setCountdown] = useState('');
     const [isHintsOpen, setIsHintsOpen] = useState(false);
+    const isDemoMode = typeof window !== 'undefined' && window.location.hostname.includes('-dev-');
+
+    // Auto-fill admin credentials in "real" environment
+    useEffect(() => {
+        if (!isDemoMode && view === 'login') {
+            setLoginEmail(ADMIN_CREDENTIALS.email);
+            setLoginPassword(ADMIN_CREDENTIALS.password);
+        }
+    }, [isDemoMode, view]);
 
     // Watch for pending Google Auth to auto-fill
     useEffect(() => {
@@ -594,45 +603,47 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
         )}
 
       {/* --- MOCK LOGIN HINTS --- */}
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <button 
-              onClick={() => setIsHintsOpen(!isHintsOpen)} 
-              className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors"
-          >
-              Gợi ý Đăng nhập (Demo)
-              <svg className={`w-4 h-4 transform transition-transform ${isHintsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-          </button>
-          
-          {isHintsOpen && (
-            <div className="text-xs text-gray-500 space-y-3 mt-4">
-                {loginHints.map((group, groupIdx) => (
-                    <div key={groupIdx} className="mb-4 last:mb-0 border border-gray-100 rounded-md p-2 bg-white shadow-sm">
-                        <p className="font-semibold text-xs text-blue-800 mb-2">{group.group}</p>
-                        <div className="space-y-3 pl-1">
-                            {group.hints.map(hint => (
-                                <div key={hint.role} className="flex flex-col border-l-2 border-blue-200 pl-2">
-                                    <div className="flex flex-col sm:flex-row justify-between sm:items-start mb-1">
-                                        <span className="font-bold text-gray-900">{hint.role}</span>
-                                        <div className="flex items-center gap-2 mt-1 sm:mt-0 flex-wrap">
-                                            <code className="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded border border-gray-200">{hint.email}</code>
-                                            <button onClick={() => { setLoginEmail(hint.email); handleCopy(hint.email, hint.email); }} className="text-gray-400 hover:text-blue-600 transition-colors" title="Copy & Fill Email">
-                                                {copyStatus[hint.email] ? <CheckIcon className="h-4 w-4 text-green-500" /> : <ClipboardDocumentIcon className="h-4 w-4" />}
-                                            </button>
-                                            <code className="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded border border-gray-200">{hint.pass}</code>
-                                            <button onClick={() => { setLoginPassword(hint.pass); handleCopy(hint.pass, hint.pass); }} className="text-gray-400 hover:text-blue-600 transition-colors" title="Copy & Fill Password">
-                                                {copyStatus[hint.pass] ? <CheckIcon className="h-4 w-4 text-green-500" /> : <ClipboardDocumentIcon className="h-4 w-4" />}
-                                            </button>
+      {isDemoMode && (
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <button 
+                onClick={() => setIsHintsOpen(!isHintsOpen)} 
+                className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors"
+            >
+                Gợi ý Đăng nhập (Demo)
+                <svg className={`w-4 h-4 transform transition-transform ${isHintsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            
+            {isHintsOpen && (
+                <div className="text-xs text-gray-500 space-y-3 mt-4">
+                    {loginHints.map((group, groupIdx) => (
+                        <div key={groupIdx} className="mb-4 last:mb-0 border border-gray-100 rounded-md p-2 bg-white shadow-sm">
+                            <p className="font-semibold text-xs text-blue-800 mb-2">{group.group}</p>
+                            <div className="space-y-3 pl-1">
+                                {group.hints.map(hint => (
+                                    <div key={hint.role} className="flex flex-col border-l-2 border-blue-200 pl-2">
+                                        <div className="flex flex-col sm:flex-row justify-between sm:items-start mb-1">
+                                            <span className="font-bold text-gray-900">{hint.role}</span>
+                                            <div className="flex items-center gap-2 mt-1 sm:mt-0 flex-wrap">
+                                                <code className="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded border border-gray-200">{hint.email}</code>
+                                                <button onClick={() => { setLoginEmail(hint.email); handleCopy(hint.email, hint.email); }} className="text-gray-400 hover:text-blue-600 transition-colors" title="Copy & Fill Email">
+                                                    {copyStatus[hint.email] ? <CheckIcon className="h-4 w-4 text-green-500" /> : <ClipboardDocumentIcon className="h-4 w-4" />}
+                                                </button>
+                                                <code className="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded border border-gray-200">{hint.pass}</code>
+                                                <button onClick={() => { setLoginPassword(hint.pass); handleCopy(hint.pass, hint.pass); }} className="text-gray-400 hover:text-blue-600 transition-colors" title="Copy & Fill Password">
+                                                    {copyStatus[hint.pass] ? <CheckIcon className="h-4 w-4 text-green-500" /> : <ClipboardDocumentIcon className="h-4 w-4" />}
+                                                </button>
+                                            </div>
                                         </div>
+                                        <p className="text-[11px] text-gray-500 italic mt-0.5">{hint.description}</p>
                                     </div>
-                                    <p className="text-[11px] text-gray-500 italic mt-0.5">{hint.description}</p>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                ))}
-            </div>
-          )}
-      </div>
+                    ))}
+                </div>
+            )}
+        </div>
+      )}
     </div>
   );
 };
