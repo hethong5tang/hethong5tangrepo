@@ -1,5 +1,5 @@
 {
-  "name": "Hệ thống 5 tầng - 6 ( Hoàn thiện backend )",
+  "name": "Hệ thống 5 tầng - 5 ( Cấu trúc code chạy song song 2 môi trường )",
   "description": "Hệ thống quản lý tài chính và kiếm tiền tích hợp AI cao cấp với hai vai trò Admin và User.",
   "requestFramePermissions": [
     "camera",
