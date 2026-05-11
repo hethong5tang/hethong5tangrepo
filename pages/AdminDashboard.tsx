@@ -191,6 +191,11 @@ const AdminDashboard: React.FC = () => {
     const renderContent = () => {
         const config = pageConfig[currentPage as keyof typeof pageConfig] || pageConfig['Bảng điều khiển'];
         
+        const isProductionDeployed = !window.location.hostname.includes('run.app') && !window.location.hostname.includes('localhost');
+        if (currentPage === 'Đồng bộ GitHub' && isProductionDeployed) {
+            return <AccessDenied />;
+        }
+        
         if (config.permissions.length > 0 && !config.permissions.some(p => hasPermission(p))) {
             return <AccessDenied />;
         }

@@ -181,7 +181,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role
   const { addToast } = useToast();
   
   const adminNav = useMemo(() => {
-    return baseAdminNavItems.filter(item => !item.permission || hasPermission(item.permission));
+    let items = baseAdminNavItems.filter(item => !item.permission || hasPermission(item.permission));
+    
+    // Hide GitHub Sync outside AI Studio (Vercel, custom domains, etc)
+    const isProductionDeployed = !window.location.hostname.includes('run.app') && !window.location.hostname.includes('localhost');
+    if (isProductionDeployed) {
+        items = items.filter(item => item.id !== 'admin-github-sync');
+    }
+    
+    return items;
   }, [hasPermission]);
 
   const navigation = role === 'admin' ? adminNav : userNavItems;
