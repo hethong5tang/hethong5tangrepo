@@ -21,19 +21,50 @@ export const dataAdapter: IDataAdapter =
     ? new SupabaseAdapter() 
     : new LocalAdapter();
 
-// storageService cũ - Giữ lại một số hàm đồng bộ (Synchronous) cho LocalStorage để tương thích ngược. 
-// LƯU Ý: Các hàm này sẽ LỖI nếu chạy trên Supabase (vì Supabase là Asynchronous).
+// In-memory cache to support synchronous get operations
+const inMemoryCache: Record<string, any> = {};
+let isStorageInitialized = false;
+
+// storageService
 export const storageService = {
-  // === ASYNC API (CHUẨN MỚI CHO CẢ LOCAL LẪN SUPABASE) ===
+  // Hàm khởi tạo để tải dữ liệu bất đồng bộ trước khi render
+  initializeStorage: async (): Promise<void> => {
+    if (isStorageInitialized) return;
+    
+    console.log(`[Storage] Initializing storage from data source: ${dataSource}`);
+    const promises = Object.values(STORAGE_KEYS).map(async (key) => {
+      try {
+        const val = await dataAdapter.get(key, null);
+        if (val !== null) {
+          inMemoryCache[key] = val;
+        }
+      } catch (err) {
+        console.error(`[Storage] Failed to preload key ${key}:`, err);
+      }
+    });
+    
+    await Promise.all(promises);
+    isStorageInitialized = true;
+    console.log('[Storage] Initialization complete.', Object.keys(inMemoryCache));
+  },
+
+  // === ASYNC API ===
   getAsync: async <T>(key: string, defaultValue: T): Promise<T> => {
-    return await dataAdapter.get<T>(key, defaultValue);
+    if (isStorageInitialized && inMemoryCache[key] !== undefined) {
+      return inMemoryCache[key];
+    }
+    const val = await dataAdapter.get<T>(key, defaultValue);
+    inMemoryCache[key] = val;
+    return val;
   },
 
   setAsync: async <T>(key: string, value: T): Promise<void> => {
+    inMemoryCache[key] = value;
     await dataAdapter.set<T>(key, value);
   },
 
   removeAsync: async (key: string): Promise<void> => {
+    delete inMemoryCache[key];
     await dataAdapter.remove(key);
   },
 
@@ -41,41 +72,58 @@ export const storageService = {
     return new Promise(resolve => setTimeout(resolve, ms));
   },
 
-  // === SYNC API (CHỈ CHẠY ĐƯỢC CHO LOCALSTORAGE) ===
-  // VẪN GIỮ ĐỂ CODE HIỆN TẠI KHÔNG BỊ BREAK.
+  // === SYNC API (Bây giờ đã hỗ trợ cả Supabase thông qua In-Memory Cache) ===
   get: <T>(key: string, defaultValue: T): T => {
-    if (dataSource === 'supabase') {
-      console.warn(`[CẢNH BÁO] Hàm đồng bộ get() không hỗ trợ trên Supabase. Đang trả về dữ liệu mặc định! Sử dụng getAsync().`);
-      return defaultValue;
+    // Ưu tiên đọc từ cache nếu đã init hoặc cache có dữ liệu
+    if (inMemoryCache[key] !== undefined) {
+      return inMemoryCache[key] as T;
     }
-    if (typeof window === 'undefined') return defaultValue;
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
-    } catch (error) {
-      console.error(`Error reading key ${key} from storage`, error);
-      return defaultValue;
+    
+    // Fallback cho LocalStorage nếu chưa init
+    if (dataSource === 'local') {
+      if (typeof window === 'undefined') return defaultValue;
+      try {
+        const item = localStorage.getItem(key);
+        if (item) {
+          const parsed = JSON.parse(item);
+          inMemoryCache[key] = parsed;
+          return parsed;
+        }
+      } catch (error) {
+        console.error(`Error reading key ${key} from storage`, error);
+      }
     }
+    
+    return defaultValue;
   },
 
   set: <T>(key: string, value: T): void => {
-    if (dataSource === 'supabase') {
-      console.warn(`[CẢNH BÁO] Hàm đồng bộ set() không hỗ trợ trên Supabase. Vui lòng sử dụng setAsync().`);
-      return;
-    }
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.error(`Error saving key ${key} to storage`, error);
+    inMemoryCache[key] = value;
+    
+    // Ghi bất đồng bộ xuống data adapter (fire and forget)
+    dataAdapter.set(key, value).catch(err => {
+       console.error(`[Storage] Async write failed for key ${key}`, err);
+    });
+    
+    // Double save to LocalStorage cho LocalAdapter nếu an toàn
+    if (dataSource === 'local' && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (error) {
+        console.error(`Error saving key ${key} to storage`, error);
+      }
     }
   },
 
   remove: (key: string): void => {
-    if (dataSource === 'supabase') {
-      return;
+    delete inMemoryCache[key];
+    
+    dataAdapter.remove(key).catch(err => {
+        console.error(`[Storage] Async remove failed for key ${key}`, err);
+    });
+    
+    if (dataSource === 'local' && typeof window !== 'undefined') {
+      localStorage.removeItem(key);
     }
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(key);
   }
 };
