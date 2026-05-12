@@ -142,7 +142,7 @@ const UpgradePlanPage: React.FC<{ onNavigate: (page: string) => void }> = ({ onN
                                 {isCurrent && <div className="text-xs font-bold uppercase text-slate-500 mb-2">Gói hiện tại</div>}
                                 <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">{plan.name}</h3>
                                 <p className="text-3xl font-bold my-2 text-slate-900 dark:text-white">{plan.priceText} <span className="text-base font-medium text-slate-500">/ lần duy nhất</span></p>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Phí duy trì: {plan.maintenance}</p>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Phí thuê bao: {plan.maintenance}</p>
                                 <ul className="space-y-3 text-slate-600 dark:text-slate-400 flex-grow">
                                     {plan.features.map(f => <li key={f} className="flex items-start"><CheckCircleFillIcon className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" /><span dangerouslySetInnerHTML={{ __html: f }}></span></li>)}
                                 </ul>

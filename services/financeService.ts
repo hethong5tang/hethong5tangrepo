@@ -44,10 +44,8 @@ export const calculateFeePaymentChanges = (
     let feeAmount = 0;
 
     if (specificAmount !== undefined) {
-        // Nếu có số tiền cụ thể (VD: Nâng cấp), dùng số tiền đó
         feeAmount = specificAmount;
     } else {
-        // Nếu không, tra cứu giá gốc từ cài đặt
         let singleMonthFee = 0;
         if (feeType === 'participation') {
             const fees = {
@@ -71,42 +69,39 @@ export const calculateFeePaymentChanges = (
     
     if (feeAmount <= 0) return null;
 
-    // 4. Phân bổ vào các quỹ (Tính theo % trên tổng phí)
+    // 4. Phân bổ vào các quỹ (Theo quy tắc 40/60 của dự án)
+    // Tổng Quỹ hệ thống (40%): VAT 10%, Thuế DN 3%, Ops 17%, Leader 5%, Support 5%
+    const vatPart = Math.floor(feeAmount * 0.10);
+    const corpTaxPart = Math.floor(feeAmount * 0.03);
+    const opsPart = Math.floor(feeAmount * 0.17);
+    const leaderFundPart = Math.floor(feeAmount * 0.05);
+    const supportFundPart = Math.floor(feeAmount * 0.05);
+    
     const newTransactions: Transaction[] = [];
     const newFundTransactions: FundTransaction[] = [];
     const fundUpdates: { [fundType in FundType]?: { balanceChange: number; totalInChange: number } } = {};
-    
-    const profitCfg = feeType === 'participation' 
-        ? currentSystemSettings.profitSettings.participation 
-        : currentSystemSettings.profitSettings.maintenance;
 
-    const adminProfitPart = Math.floor(feeAmount * (profitCfg.adminWallet / 100));
-    const leaderFundPart = Math.floor(feeAmount * (profitCfg.leaderBonusFund / 100));
-    const supportFundPart = Math.floor(feeAmount * (profitCfg.supportFund / 100));
-    
-    const totalAllocatedToSystem = adminProfitPart + leaderFundPart + supportFundPart;
+    fundUpdates[FundType.VAT] = { balanceChange: vatPart, totalInChange: vatPart };
+    newFundTransactions.push({ id: `ft_vat_${Date.now()}`, date, fund: FundType.VAT, type: 'inflow', amount: vatPart, description: `Thuế VAT (10%) từ ${payingUser.name}` });
 
-    if (leaderFundPart > 0) {
-        fundUpdates[FundType.LeaderBonus] = { balanceChange: leaderFundPart, totalInChange: leaderFundPart };
-        newFundTransactions.push({
-            id: `ft_lb_${Date.now()}`, date, fund: FundType.LeaderBonus, type: 'inflow',
-            amount: leaderFundPart, description: `Trích từ phí của ${payingUser.name}`
-        });
-    }
-    if (supportFundPart > 0) {
-        fundUpdates[FundType.Support] = { balanceChange: supportFundPart, totalInChange: supportFundPart };
-        newFundTransactions.push({
-            id: `ft_sp_${Date.now()}`, date, fund: FundType.Support, type: 'inflow',
-            amount: supportFundPart, description: `Trích từ phí của ${payingUser.name}`
-        });
-    }
+    fundUpdates[FundType.CorporateTax] = { balanceChange: corpTaxPart, totalInChange: corpTaxPart };
+    newFundTransactions.push({ id: `ft_ctax_${Date.now()}`, date, fund: FundType.CorporateTax, type: 'inflow', amount: corpTaxPart, description: `Thuế TNDN (3%) từ ${payingUser.name}` });
 
-    // 5. Tìm upline
+    fundUpdates[FundType.Admin] = { balanceChange: opsPart, totalInChange: opsPart };
+    newFundTransactions.push({ id: `ft_ops_${Date.now()}`, date, fund: FundType.Admin, type: 'inflow', amount: opsPart, description: `Chi phí vận hành & API (17%) từ ${payingUser.name}` });
+
+    fundUpdates[FundType.LeaderBonus] = { balanceChange: leaderFundPart, totalInChange: leaderFundPart };
+    newFundTransactions.push({ id: `ft_lb_${Date.now()}`, date, fund: FundType.LeaderBonus, type: 'inflow', amount: leaderFundPart, description: `Quỹ Leader (5%) từ ${payingUser.name}` });
+
+    fundUpdates[FundType.Support] = { balanceChange: supportFundPart, totalInChange: supportFundPart };
+    newFundTransactions.push({ id: `ft_sp_${Date.now()}`, date, fund: FundType.Support, type: 'inflow', amount: supportFundPart, description: `Quỹ Hỗ trợ (5%) từ ${payingUser.name}` });
+
+    // 5. Tìm upline (Dành cho Affiliate 60%)
     const userUpdates: { [userId: string]: { balanceChange: number; earningsChange: number; supportDebtChange?: number } } = {};
     const upline: AdminManagedUser[] = [];
     let curr = payingUser;
     
-    while (curr.parentId && upline.length < maxCommissionLevels) {
+    while (curr.parentId && upline.length < 2) {
         const parent = userMap.get(curr.parentId);
         if (!parent) break;
         upline.push(parent);
@@ -114,128 +109,36 @@ export const calculateFeePaymentChanges = (
     }
 
     let distributedCommission = 0;
-    let unclaimedTiers: string[] = []; // Theo dõi các tầng không trả được
+    const affiliateRates = [40, 20]; // F1 40%, F2 20%
 
-    commissionSettings.forEach((setting, index) => {
+    affiliateRates.forEach((rate, index) => {
         const level = index + 1;
-        const potentialCommission = Math.floor(feeAmount * (setting.percentage / 100));
-        
-        // Kiểm tra điều kiện nhận: Không có upline HOẶC upline bị khóa HOẶC upline chưa kích hoạt gói
-        if (index >= upline.length) {
-            unclaimedTiers.push(`F${level} (Thiếu cấp)`);
-            return;
-        }
-        
+        const potentialCommission = Math.floor(feeAmount * (rate / 100));
+        if (index >= upline.length) return;
         const recipient = upline[index];
-        
-        // RULE: CHỈ chặn Suspended và None. PendingFee VẪN nhận được tiền.
-        if (recipient.status === UserStatus.Suspended || recipient.membershipTier === MembershipTier.None) {
-            unclaimedTiers.push(`F${level} (Bị khóa/Chưa kích hoạt)`);
-            return;
-        }
+        if (recipient.status === UserStatus.Suspended || recipient.membershipTier === MembershipTier.None) return;
 
-        // Cơ chế giới hạn hoa hồng theo gói của người nhận
-        // LƯU Ý: Phần này vẫn dùng giá gói chuẩn để tính "Entitlement Cap" (Hạn mức hưởng)
-        // Dù người dưới đóng bao nhiêu, người trên chỉ hưởng tối đa theo % của gói họ đang sở hữu.
-        let uplineSingleMonthFee = 0;
-        if (feeType === 'participation') {
-            if (recipient.membershipTier === MembershipTier.Pro) uplineSingleMonthFee = currentSystemSettings.proParticipationFee;
-            else if (recipient.membershipTier === MembershipTier.Master) uplineSingleMonthFee = currentSystemSettings.masterParticipationFee;
-            else uplineSingleMonthFee = currentSystemSettings.participationFee;
-        } else {
-            if (recipient.membershipTier === MembershipTier.Pro) uplineSingleMonthFee = currentSystemSettings.proMaintenanceFee;
-            else if (recipient.membershipTier === MembershipTier.Master) uplineSingleMonthFee = currentSystemSettings.masterMaintenanceFee;
-            else uplineSingleMonthFee = currentSystemSettings.maintenanceFee;
-        }
-
-        const uplineFeeAmount = Math.round(uplineSingleMonthFee * multiplier);
-        const entitlementLimit = Math.floor(uplineFeeAmount * (setting.percentage / 100));
-
-        const actualCommission = Math.min(potentialCommission, entitlementLimit);
-        
-        if (potentialCommission > actualCommission) {
-            unclaimedTiers.push(`F${level} (Chênh lệch gói)`);
-        }
-
+        const actualCommission = potentialCommission;
         if (actualCommission > 0) {
             distributedCommission += actualCommission;
-            
             let amountToRecover = 0;
             if (recipient.supportDebt && recipient.supportDebt > 0) {
                 amountToRecover = Math.min(recipient.supportDebt, actualCommission);
-                
-                userUpdates[recipient.id] = {
-                    ...userUpdates[recipient.id],
-                    supportDebtChange: (userUpdates[recipient.id]?.supportDebtChange || 0) - amountToRecover
-                };
-                
-                fundUpdates[FundType.Support] = {
-                    balanceChange: (fundUpdates[FundType.Support]?.balanceChange || 0) + amountToRecover,
-                    totalInChange: (fundUpdates[FundType.Support]?.totalInChange || 0) + amountToRecover,
-                };
-                
-                newFundTransactions.push({
-                    id: `ft_sp_clawback_${Date.now()}_${recipient.id}`, date, fund: FundType.Support, type: 'inflow',
-                    amount: amountToRecover, description: `Hệ thống nhận lại ${amountToRecover.toLocaleString('vi-VN')}đ hỗ trợ hoàn lại từ ${recipient.name} do thành viên này đã hoạt động trở lại.`
-                });
-                
-                newTransactions.push({
-                    id: `txn_support_clawback_${Date.now()}_${recipient.id}`,
-                    userId: recipient.id,
-                    user: { name: recipient.name, avatar: recipient.avatar },
-                    date,
-                    type: TransactionType.SupportFund,
-                    description: `Hệ thống đã trích ra số tiền ${amountToRecover.toLocaleString('vi-VN')}đ (đúng với số tiền bạn đã nhận hỗ trợ trước đây) từ hoa hồng bạn vừa kiếm được để hoàn trả lại quỹ hỗ trợ.`,
-                    amount: -amountToRecover,
-                    status: TransactionStatus.Completed,
-                    sourceEventId,
-                });
+                userUpdates[recipient.id] = { ...userUpdates[recipient.id], supportDebtChange: (userUpdates[recipient.id]?.supportDebtChange || 0) - amountToRecover };
+                fundUpdates[FundType.Support] = { ...fundUpdates[FundType.Support], balanceChange: (fundUpdates[FundType.Support]?.balanceChange || 0) + amountToRecover, totalInChange: (fundUpdates[FundType.Support]?.totalInChange || 0) + amountToRecover };
+                newFundTransactions.push({ id: `ft_sp_clawback_${Date.now()}_${recipient.id}`, date, fund: FundType.Support, type: 'inflow', amount: amountToRecover, description: `Thu hồi hỗ trợ từ hoa hồng của ${recipient.name}` });
+                newTransactions.push({ id: `txn_support_clawback_${Date.now()}_${recipient.id}`, userId: recipient.id, user: { name: recipient.name, avatar: recipient.avatar }, date, type: TransactionType.SupportFund, description: `Khấu trừ ${amountToRecover.toLocaleString('vi-VN')}đ hoàn trả quỹ hỗ trợ`, amount: -amountToRecover, status: TransactionStatus.Completed, sourceEventId });
             }
-
-            userUpdates[recipient.id] = {
-                ...userUpdates[recipient.id],
-                balanceChange: (userUpdates[recipient.id]?.balanceChange || 0) + actualCommission - amountToRecover,
-                earningsChange: (userUpdates[recipient.id]?.earningsChange || 0) + actualCommission
-            };
-            newTransactions.push({
-                id: `txn_comm_${Date.now()}_${recipient.id}`, userId: recipient.id,
-                user: { name: recipient.name, avatar: recipient.avatar },
-                date, type: feeType === 'participation' ? TransactionType.CommissionParticipation : TransactionType.CommissionMaintenance,
-                description: `Hoa hồng F${level} từ ${payingUser.name}`,
-                amount: actualCommission, status: TransactionStatus.Completed,
-                sourceEventId, sourceTier: membershipTier
-            });
+            userUpdates[recipient.id] = { ...userUpdates[recipient.id], balanceChange: (userUpdates[recipient.id]?.balanceChange || 0) + actualCommission - amountToRecover, earningsChange: (userUpdates[recipient.id]?.earningsChange || 0) + actualCommission };
+            newTransactions.push({ id: `txn_comm_${Date.now()}_${recipient.id}`, userId: recipient.id, user: { name: recipient.name, avatar: recipient.avatar }, date, type: level === 1 ? TransactionType.CommissionParticipation : TransactionType.CommissionMaintenance, description: `Hoa hồng F${level} (${rate}%) từ ${payingUser.name}`, amount: actualCommission, status: TransactionStatus.Completed, sourceEventId, sourceTier: membershipTier });
         }
     });
 
-    // 6. Lợi nhuận Admin = (Phần % cố định)
-    const finalAdminProfit = adminProfitPart;
-    
-    let adminDescription = `Lợi nhuận Admin từ phí của ${payingUser.name}`;
-
-    newTransactions.push({
-        id: `txn_sys_profit_${Date.now()}`, userId: 'system', user: { name: 'Hệ thống', avatar: '' },
-        date, type: TransactionType.SystemProfit,
-        description: adminDescription,
-        amount: finalAdminProfit, status: TransactionStatus.Completed,
-        sourceEventId
-    });
-
-    // 7. Chênh lệch hoa hồng (CommissionDifference)
-    const totalCommissionDifference = feeAmount - (leaderFundPart + supportFundPart + distributedCommission + finalAdminProfit);
-
-    if (totalCommissionDifference > 0) {
-        let diffDescription = `Chênh lệch hoa hồng từ phí của ${payingUser.name}`;
-        if (unclaimedTiers.length > 0) {
-            diffDescription += ` (Gồm dư thừa từ: ${unclaimedTiers.join(', ')})`;
-        }
-        newTransactions.push({
-            id: `txn_comm_diff_${Date.now()}`, userId: 'system', user: { name: 'Hệ thống', avatar: '' },
-            date, type: TransactionType.CommissionDifference,
-            description: diffDescription,
-            amount: totalCommissionDifference, status: TransactionStatus.Completed,
-            sourceEventId
-        });
+    // 6. Chênh lệch (nếu thiếu upline F2)
+    const unclaimedCommission = (feeAmount * 0.60) - distributedCommission;
+    if (unclaimedCommission > 0) {
+        fundUpdates[FundType.Admin] = { ...fundUpdates[FundType.Admin], balanceChange: (fundUpdates[FundType.Admin]?.balanceChange || 0) + unclaimedCommission, totalInChange: (fundUpdates[FundType.Admin]?.totalInChange || 0) + unclaimedCommission };
+        newFundTransactions.push({ id: `ft_adm_uncl_${Date.now()}`, date, fund: FundType.Admin, type: 'inflow', amount: unclaimedCommission, description: `Hoa hồng vô chủ (Thiếu upline) từ ${payingUser.name}` });
     }
 
     return { 
@@ -249,7 +152,7 @@ export const calculateFeePaymentChanges = (
             id: `txn_fee_${Date.now()}`, userId: payingUser.id,
             user: { name: payingUser.name, avatar: payingUser.avatar },
             date, type: feeType === 'participation' ? TransactionType.ParticipationFee : TransactionType.MaintenanceFee,
-            description: `Thanh toán phí ${feeType === 'participation' ? 'tham gia' : 'duy trì'} (${multiplier} tháng)`,
+            description: `Thanh toán phí ${feeType === 'participation' ? 'tham gia' : 'dịch vụ'} (${multiplier} tháng)`,
             amount: -feeAmount, status: TransactionStatus.Completed, sourceEventId
         }
     };

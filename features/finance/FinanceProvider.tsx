@@ -12,6 +12,9 @@ const calculateInitialFundStatus = (transactions: FundTransaction[]): Record<Fun
         [FundType.Admin]: { name: 'Ví Admin (Lợi nhuận)', balance: IS_DEMO_MODE ? 10000000 : 0, totalIn: 0, totalOut: 0 },
         [FundType.LeaderBonus]: { name: 'Quỹ Thưởng Leader', balance: IS_DEMO_MODE ? 10000000 : 0, totalIn: IS_DEMO_MODE ? 10000000 : 0, totalOut: 0 }, 
         [FundType.Support]: { name: 'Quỹ Hỗ Trợ (Chưa có F1)', balance: 0, totalIn: 0, totalOut: 0 },
+        [FundType.VAT]: { name: 'Quỹ Thuế VAT', balance: 0, totalIn: 0, totalOut: 0 },
+        [FundType.CorporateTax]: { name: 'Quỹ Thuế TNDN', balance: 0, totalIn: 0, totalOut: 0 },
+        [FundType.TNCN_TAX]: { name: 'Thanh khoản Thuế TNCN', balance: 0, totalIn: 0, totalOut: 0 },
     };
 
     const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date).getTime() - new Date(a.date).getTime());
@@ -42,7 +45,16 @@ const defaultState: FinanceState = {
 };
 
 const init = (initial: FinanceState): FinanceState => {
-  return storageService.get(STORAGE_KEYS.FINANCE, initial);
+  const stored = storageService.get(STORAGE_KEYS.FINANCE, initial);
+  
+  // Ensure all fund types are initialized in fundStatus
+  const migratedFundStatus = { ...initial.fundStatus, ...(stored.fundStatus || {}) };
+  
+  return {
+    ...initial,
+    ...stored,
+    fundStatus: migratedFundStatus
+  };
 };
 
 export const FinanceContext = createContext<{

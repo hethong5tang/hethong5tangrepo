@@ -41,7 +41,7 @@ const tourSteps: TourStep[] = [
     {
         targetId: 'nav-wallet',
         title: 'Ví Của Tôi',
-        content: 'Nơi quản lý tất cả nguồn tiền. Bạn có thể nạp tiền để sử dụng AI hoặc rút hoa hồng về tài khoản ngân hàng tại đây.',
+        content: 'Nơi quản lý tất cả nguồn tiền. Bạn có thể nạp tiền để sử dụng AI hoặc rút chiết khấu về tài khoản ngân hàng tại đây.',
     },
     {
         targetId: 'nav-tools',
@@ -51,7 +51,7 @@ const tourSteps: TourStep[] = [
     {
         targetId: 'nav-referral',
         title: 'Xây dựng Mạng lưới',
-        content: 'Lấy link giới thiệu và các mẫu tin nhắn soạn sẵn để chia sẻ cho bạn bè và nhận hoa hồng thụ động lên tới 10 tầng.',
+        content: 'Lấy link giới thiệu và các mẫu tin nhắn soạn sẵn để chia sẻ cho bạn bè và nhận chiết khấu thụ động lên tới 10 tầng.',
     },
     {
         targetId: 'header-credit',

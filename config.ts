@@ -23,13 +23,13 @@ export const ALL_PERMISSIONS = [
   { id: Permission.USER_DELETE, name: 'Xóa Người dùng', description: 'Xóa người dùng' },
   { id: Permission.USER_MANAGE_ROLES, name: 'Quản lý Vai trò', description: 'Cấp quyền và quản lý vai trò' },
   { id: Permission.FINANCE_VIEW_ALL, name: 'Xem Tài chính', description: 'Xem tất cả giao dịch' },
-  { id: Permission.FINANCE_MANAGE_WITHDRAWALS, name: 'Quản lý Rút tiền', description: 'Duyệt/Từ chối rút tiền' },
+  { id: Permission.FINANCE_MANAGE_WITHDRAWALS, name: 'Quản lý Rút lợi nhuận', description: 'Duyệt/Từ chối yêu cầu rút lợi nhuận' },
   { id: Permission.FINANCE_EXPORT, name: 'Xuất Báo cáo', description: 'Xuất dữ liệu tài chính' },
   { id: Permission.FUNDS_VIEW, name: 'Xem Quỹ', description: 'Xem trạng thái các quỹ' },
   { id: Permission.FUNDS_MANAGE_PAYOUTS, name: 'Chi trả Quỹ', description: 'Thực hiện chi trả từ quỹ' },
   { id: Permission.FUNDS_MANAGE_SETTINGS, name: 'Cài đặt Quỹ', description: 'Cấu hình tham số quỹ' },
-  { id: Permission.SETTINGS_FEES_COMMISSIONS_VIEW, name: 'Xem Phí & HH', description: 'Xem cấu hình phí và hoa hồng' },
-  { id: Permission.SETTINGS_FEES_COMMISSIONS_EDIT, name: 'Sửa Phí & HH', description: 'Chỉnh sửa phí và hoa hồng' },
+  { id: Permission.SETTINGS_FEES_COMMISSIONS_VIEW, name: 'Xem Phí & Chiết khấu', description: 'Xem cấu hình phí và chiết khấu' },
+  { id: Permission.SETTINGS_FEES_COMMISSIONS_EDIT, name: 'Sửa Phí & Chiết khấu', description: 'Chỉnh sửa phí và chiết khấu' },
   { id: Permission.SETTINGS_SYSTEM_VIEW, name: 'Xem Cài đặt HT', description: 'Xem cài đặt chung' },
   { id: Permission.SETTINGS_SYSTEM_EDIT, name: 'Sửa Cài đặt HT', description: 'Chỉnh sửa cài đặt chung' },
   { id: Permission.SETTINGS_ACHIEVEMENTS_MANAGE, name: 'Quản lý Thành tích', description: 'Thêm/Sửa/Xóa thành tích' },
@@ -79,7 +79,7 @@ export const MOCK_USER_SETTINGS: UserSettings = {
 };
 
 export const MOCK_SYSTEM_SETTINGS: SystemSettings = {
-    systemName: 'Monetize System',
+    systemName: 'Affiliate SaaS AI',
     isMaintenanceMode: false,
     maintenanceEndTime: null,
     adminEmail: 'admin@example.com',
@@ -93,41 +93,78 @@ export const MOCK_SYSTEM_SETTINGS: SystemSettings = {
     commissionSettings: {
         participationCommissions: [
             { level: 'F1', percentage: 40 },
-            { level: 'F2', percentage: 16 },
-            { level: 'F3', percentage: 12 },
-            { level: 'F4', percentage: 8 },
-            { level: 'F5', percentage: 4 },
+            { level: 'F2', percentage: 20 },
         ],
         maintenanceCommissions: [
             { level: 'F1', percentage: 40 },
-            { level: 'F2', percentage: 16 },
-            { level: 'F3', percentage: 12 },
-            { level: 'F4', percentage: 8 },
-            { level: 'F5', percentage: 4 },
+            { level: 'F2', percentage: 20 },
         ],
     },
     minWithdrawal: 100000,
     profitSettings: {
+        leaderFundAutoPayout: false,
+        leaderFundPayoutDay: 1,
         participation: {
-            adminWallet: 10,
+            adminWallet: 17,
+            vat: 10,
+            corporateTax: 3,
             leaderBonusFund: 5,
             supportFund: 5,
         },
         maintenance: {
-            adminWallet: 10,
+            adminWallet: 17,
+            vat: 10,
+            corporateTax: 3,
             leaderBonusFund: 5,
             supportFund: 5,
         },
     },
     levelSettings: [
-        { level: 1, name: 'Bronze (Đồng)', requiredEarnings: 0, bonusAmount: 0, rewardPercentage: 0, branchRequirements: [] },
-        { level: 2, name: 'Silver (Bạc)', requiredEarnings: 10000000, bonusAmount: 100000, rewardPercentage: 1, branchRequirements: [{ targetLevel: 1, count: 3 }] },
-        { level: 3, name: 'Gold (Vàng)', requiredEarnings: 50000000, bonusAmount: 750000, rewardPercentage: 1.5, branchRequirements: [{ targetLevel: 2, count: 2 }] },
-        { level: 4, name: 'Platinum (Bạch kim)', requiredEarnings: 200000000, bonusAmount: 4000000, rewardPercentage: 2, branchRequirements: [{ targetLevel: 3, count: 2 }] },
-        { level: 5, name: 'Diamond (Kim cương)', requiredEarnings: 1000000000, bonusAmount: 25000000, rewardPercentage: 2.5, branchRequirements: [{ targetLevel: 4, count: 3 }] },
-        { level: 6, name: 'Master (Bậc thầy)', requiredEarnings: 3000000000, bonusAmount: 90000000, rewardPercentage: 3, branchRequirements: [{ targetLevel: 5, count: 3 }] },
-        { level: 7, name: 'Legend (Huyền thoại)', requiredEarnings: 10000000000, bonusAmount: 350000000, rewardPercentage: 3.5, branchRequirements: [{ targetLevel: 6, count: 3 }] },
-        { level: 8, name: 'Crown (Đại sứ)', requiredEarnings: 30000000000, bonusAmount: 1200000000, rewardPercentage: 4, branchRequirements: [{ targetLevel: 7, count: 4 }] },
+        { 
+            level: 1, 
+            name: 'Bronze Partner', 
+            subTitle: 'Đối tác Đồng', 
+            requiredGroupRevenue: 30000000, 
+            rewardPercentage: 0.3, 
+            honorAward: 'Bằng khen điện tử',
+            f1Requirement: 3 
+        },
+        { 
+            level: 2, 
+            name: 'Silver Leader', 
+            subTitle: 'Trưởng nhánh Bạc', 
+            requiredGroupRevenue: 100000000, 
+            rewardPercentage: 0.6, 
+            honorAward: 'Thưởng tăng trưởng 2.000.000đ',
+            branchRequirements: [{ targetLevel: 1, count: 2 }] 
+        },
+        { 
+            level: 3, 
+            name: 'Gold Manager', 
+            subTitle: 'Quản lý Vàng', 
+            requiredGroupRevenue: 500000000, 
+            rewardPercentage: 0.9, 
+            honorAward: 'Thưởng tăng trưởng 10.000.000đ',
+            branchRequirements: [{ targetLevel: 2, count: 2 }] 
+        },
+        { 
+            level: 4, 
+            name: 'Diamond Director', 
+            subTitle: 'Giám đốc Kim cương', 
+            requiredGroupRevenue: 2000000000, 
+            rewardPercentage: 1.2, 
+            honorAward: 'Chuyến du lịch công tác cao cấp',
+            branchRequirements: [{ targetLevel: 3, count: 2 }] 
+        },
+        { 
+            level: 5, 
+            name: 'Crown Ambassador', 
+            subTitle: 'Đại sứ Vương miện', 
+            requiredGroupRevenue: 10000000000, 
+            rewardPercentage: 1.5, 
+            honorAward: 'Vật phẩm vinh danh giá trị lớn',
+            branchRequirements: [{ targetLevel: 4, count: 2 }] 
+        },
     ],
     leaderMilestoneBonuses: [
         { id: 'mb1', networkSize: 100, bonusAmount: 500000 },
@@ -139,13 +176,40 @@ export const MOCK_SYSTEM_SETTINGS: SystemSettings = {
         { id: 'ach2', name: 'Mạng lưới Vững mạnh', description: 'Quy mô mạng lưới đạt 100 thành viên', icon: 'UsersIcon', rule: { metric: AchievementMetric.NetworkSize, target: 100 }, weight: 2 },
     ],
     referralTools: [
-        { id: 'tool1', title: 'Bài đăng Facebook', content: 'Tham gia ngay hệ thống kiếm tiền thụ động với {userName}. Link: {referralLink}', icon: 'FacebookIcon', color: '#1877F2' },
-        { id: 'tool2', title: 'Tin nhắn Zalo', content: 'Chào bạn, mình đang tham gia dự án này rất hay. Thu nhập ổn định. Xem thử nhé: {referralLink}', icon: 'ZaloIcon', color: '#0068FF' },
+        { id: 'tool1', title: 'Bài đăng Facebook', content: 'Tham gia giải pháp kinh doanh số dựa trên tài nguyên AI cùng {userName}. Xem thêm tại: {referralLink}', icon: 'FacebookIcon', color: '#1877F2' },
+        { id: 'tool2', title: 'Tin nhắn Zalo', content: 'Chào bạn, dự án Affiliate SaaS AI này đang cung cấp các công cụ AI rất mạnh mẽ. Tìm hiểu giải pháp tại đây: {referralLink}', icon: 'ZaloIcon', color: '#0068FF' },
     ],
     tierSettings: {
-        [MembershipTier.Starter]: { name: 'Cơ bản', visible: true },
-        [MembershipTier.Pro]: { name: 'Chuyên nghiệp', visible: true },
-        [MembershipTier.Master]: { name: 'Cao cấp', visible: true },
+        [MembershipTier.Starter]: { 
+            name: 'Cơ bản', 
+            visible: true,
+            credits: 1000,
+            benefits: [
+                'Trải nghiệm các bộ công cụ AI tiêu chuẩn',
+                'Mở khóa hệ thống chiết khấu 2 tầng',
+                'Báo cáo và quản lý mạng lưới đối tác'
+            ]
+        },
+        [MembershipTier.Pro]: { 
+            name: 'Chuyên nghiệp', 
+            visible: true,
+            credits: 10000,
+            benefits: [
+                'Truy cập không giới hạn Model AI cao cấp',
+                'Trọn bộ tài liệu & kịch bản Marketing',
+                'Huy hiệu đối tác Pro & Hỗ trợ ưu tiên'
+            ]
+        },
+        [MembershipTier.Master]: { 
+            name: 'Cao cấp', 
+            visible: true,
+            credits: 100000,
+            benefits: [
+                'Mở khóa toàn bộ đặc quyền nền tảng',
+                'Tham gia cộng đồng Leader chiến lược',
+                'Kênh hỗ trợ kỹ thuật trực tiếp 1-kèm-1'
+            ]
+        },
     },
     leaderboardSettings: {
         title: 'Bảng xếp hạng <span class="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Doanh thu</span>',
@@ -195,54 +259,55 @@ export const MOCK_SYSTEM_SETTINGS: SystemSettings = {
         ]
     },
     legalContent: {
-        tos: `Chào mừng bạn đến với Monetize!
-
-Bằng cách sử dụng nền tảng của chúng tôi, bạn đồng ý tuân thủ các điều khoản sau:
-- Đăng ký: Bạn phải cung cấp thông tin chính xác và chịu trách nhiệm bảo mật tài khoản.
-- Hoạt động: Nghiêm cấm các hành vi gian lận, tấn công hệ thống hoặc tạo tài khoản ảo để trục lợi.
-- Thanh toán: Các gói thành viên đã thanh toán thường không được hoàn lại, trừ trường hợp lỗi hệ thống nghiêm trọng.
-- Quyền lợi: Hoa hồng được tính dựa trên thực tế phát sinh và tuân theo sơ đồ 5 tầng của hệ thống.`,
-        privacy: `Chúng tôi cam kết bảo vệ thông tin cá nhân của bạn:
-
-- Thông tin thu thập: Tên, email, số điện thoại và dữ liệu giao dịch tài chính liên quan đến hệ thống.
-- Mục đích: Để quản lý tài khoản, tính toán hoa hồng, gửi thông báo và hỗ trợ khách hàng.
-- Bảo mật: Sử dụng mã hóa SSL và các biện pháp bảo mật hiện đại nhất để ngăn chặn truy cập trái phép.
-- Chia sẻ: Chúng tôi không bao giờ bán thông tin của bạn cho bên thứ ba.`,
-        systemPolicy: `<h3>Chính sách vận hành và duy trì hệ thống</h3>
-<p>- Phí duy trì: Được tính hàng tháng để đảm bảo hệ thống vận hành ổn định và cấp vốn cho các quỹ hỗ trợ.</p>
-<p>- Quỹ hỗ trợ: Được trích từ phí duy trì và chia sẻ cho cộng đồng người mới (chưa có F1) theo cơ chế minh bạch.</p>
-
-<h4>Số tiền hỗ trợ (Theo từng gói tham gia)</h4>
-<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-  <thead>
-    <tr style="background-color: #f1f5f9;">
-      <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: left;">Gói</th>
-      <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">Giá tham gia</th>
-      <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">Hạn mức hỗ trợ tối đa (50%)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="border: 1px solid #e2e8f0; padding: 10px;">Starter (Cơ bản)</td>
-      <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">100,000đ</td>
-      <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">50,000đ</td>
-    </tr>
-    <tr style="background-color: #f8fafc;">
-      <td style="border: 1px solid #e2e8f0; padding: 10px;">Pro (Chuyên nghiệp)</td>
-      <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">1,000,000đ</td>
-      <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">500,000đ</td>
-    </tr>
-    <tr>
-      <td style="border: 1px solid #e2e8f0; padding: 10px;">Master (Cao cấp)</td>
-      <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">10,000,000đ</td>
-      <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">5,000,000đ</td>
-    </tr>
-  </tbody>
-</table>
-
-<p style="margin-top: 15px;">- Điều kiện: Tài khoản đang trạng thái Active và chưa có thành viên F1 trực tiếp.</p>
-<p>- Bảo trì: Chúng tôi có quyền tạm dừng hệ thống để nâng cấp, thường sẽ thông báo trước 24 giờ.</p>
-<p>- Thay đổi: Các chính sách có thể được cập nhật để phù hợp với quy mô phát triển, mọi thay đổi sẽ được thông báo chính thức.</p>`
+        tos: `Chào mừng bạn đến với Affiliate SaaS AI!
+ 
+ Bằng cách sử dụng nền tảng của chúng tôi, bạn đồng ý tuân thủ các điều khoản sau:
+ - Bản chất dịch vụ: Đây là nền tảng cung cấp dịch vụ phần mềm AI (SaaS). Người dùng thanh toán để sử dụng các tài nguyên công nghệ AI chuyên nghiệp theo gói thuê bao.
+ - Tiếp thị liên kết: Hệ thống áp dụng mô hình Affiliate 2 tầng minh bạch. Đối tác có thể nhận chiết khấu dịch vụ bằng việc giới thiệu khách hàng thực tế sử dụng nền tảng.
+ - Đăng ký: Đối tác phải cung cấp thông tin chính xác và tự chịu trách nhiệm bảo mật tài khoản cá nhân.
+ - Hoạt động: Nghiêm cấm các hành vi gian lận, trục lợi chính sách hoặc gây ảnh hưởng đến danh tiếng hệ thống.
+ - Nghĩa vụ Thuế: Mọi khoản chiết khấu/lợi nhuận thực nhận sẽ được khấu trừ 10% Thuế Thu nhập Cá nhân (TNCN) để nộp vào ngân sách Nhà nước theo quy định hiện hành.
+ - Hoàn phí: Các gói dịch vụ đã kích hoạt tương ứng với tài nguyên công nghệ đã được cấp phát (AI Credits) và không hỗ trợ hoàn phí.`,
+        privacy: `Chúng tôi cam kết bảo vệ thông tin cá nhân của người dùng:
+ 
+ - Thông tin thu thập: Tên, email, số điện thoại và các dữ liệu cần thiết để xác thực giao dịch tài chính.
+ - Mục đích sử dụng: Quản lý tài khoản, tính toán chiết khấu kinh doanh, thực hiện báo cáo thuế và hỗ trợ kỹ thuật.
+ - Tính bảo mật: Dữ liệu được bảo vệ bằng các công nghệ mã hóa hiện đại, đảm bảo an toàn thông tin tối đa.
+ - Cam kết chia sẻ: Chúng tôi tuyệt đối không cung cấp thông tin người dùng cho bên thứ ba vì mục đích thương mại.`,
+        systemPolicy: `<h3>Chính sách vận hành và Gói thuê bao</h3>
+ <p>- Gói dịch vụ AI: Cung cấp dưới dạng thuê bao định kỳ. Khi kích hoạt hoặc gia hạn, đối tác sẽ nhận được lượt sử dụng AI (Credits) tương ứng với giá trị gói.</p>
+ <p>- Khấu trừ Thuế: Toàn bộ lệnh rút lợi nhuận sẽ được hệ thống tự động khấu trừ 10% Thuế TNCN để thực hiện nghĩa vụ với Nhà nước.</p>
+ 
+ <h4>Bảng giá Gói Thuê bao & Tài nguyên AI</h4>
+ <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+   <thead>
+     <tr style="background-color: #f1f5f9;">
+       <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: left;">Giải pháp dịch vụ</th>
+       <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">Phí thuê bao</th>
+       <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">Tài nguyên công nghệ (Credits)</th>
+     </tr>
+   </thead>
+   <tbody>
+     <tr>
+       <td style="border: 1px solid #e2e8f0; padding: 10px;">Starter (Cơ bản)</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">100,000đ</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">1,000 P</td>
+     </tr>
+     <tr style="background-color: #f8fafc;">
+       <td style="border: 1px solid #e2e8f0; padding: 10px;">Pro (Chuyên nghiệp)</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">1,000,000đ</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">10,000 P</td>
+     </tr>
+     <tr>
+       <td style="border: 1px solid #e2e8f0; padding: 10px;">Master (Cao cấp)</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">10,000,000đ</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">100,000 P</td>
+     </tr>
+   </tbody>
+ </table>
+ 
+ <p style="margin-top: 15px;">- Duy trì dịch vụ: Tài khoản cần ở trạng thái Active để đảm bảo các quyền lợi về tài nguyên AI và chiết khấu liên kết.</p>
+ <p>- Chính sách bảo lưu: Quyền lợi chiết khấu sẽ được bảo lưu trong thời gian ân hạn (7 ngày) kể từ khi gói dịch vụ hết hạn.</p>`
     },
     integrationTools: [
          {

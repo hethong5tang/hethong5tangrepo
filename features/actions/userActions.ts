@@ -85,6 +85,16 @@ export const createUserActions = (deps: {
             const changes = calculateFeePaymentChanges(newUser.id, 'participation', newUser.membershipTier, updatedTree, settingsState.systemSettings, settingsState.fundSettings);
             if (changes) {
                 const bulkUpdates: any[] = [];
+                
+                // Add credits for the paying user based on the fee amount
+                const packagePrice = changes.feeAmount;
+                const creditsToAdd = packagePrice / 1000;
+                
+                bulkUpdates.push({
+                    id: newUser.id,
+                    creditBalance: creditsToAdd,
+                });
+
                 Object.keys(changes.userUpdates).forEach(uid => {
                     const u = findUserInTree(updatedTree, uid);
                     if (u) {
@@ -166,7 +176,7 @@ export const createUserActions = (deps: {
                     type: TransactionType.PenaltyFee, description: `Phí phạt trễ hạn`, amount: -penaltyAmount, status: TransactionStatus.Completed
                 }});
             }
-            addToast('Thanh toán phí duy trì thành công!', 'success');
+            addToast('Thanh toán phí thuê bao thành công!', 'success');
         }
     };
 

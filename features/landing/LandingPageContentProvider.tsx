@@ -58,21 +58,21 @@ export const LandingPageContentProvider: React.FC<{ children: ReactNode }> = ({ 
                 }
                 // Cập nhật text đặc điểm tầng
                 const updatedFeatures = plan.features.map(f => 
-                    f.includes('hoa hồng') ? `Mở khóa hoa hồng ${commissionSettings.participationCommissions.length} tầng` : f
+                    f.includes('chiết khấu') || f.includes('hoa hồng') ? `Mở khóa chiết khấu ${commissionSettings.participationCommissions.length} tầng` : f
                 );
                 return { ...plan, name: tierSettings[tier].name, price, maintenanceFee: maintenanceFeeValue, features: updatedFeatures };
             });
 
         // 2. Cập nhật Subtitle (Số tầng động)
         const currentFLevel = commissionSettings.participationCommissions.length;
-        const updatedSubtitle = `Chỉ với ${formatPriceText(participationFee)} tham gia, nhận hoa hồng đến F${currentFLevel}, thưởng Leader và Quỹ Hỗ Trợ.`;
+        const updatedSubtitle = `Chỉ với ${formatPriceText(participationFee)} đăng ký, nhận chiết khấu dịch vụ đến F${currentFLevel}, thưởng Leader và Quỹ Hỗ Trợ Cộng đồng.`;
         
         // 3. Cập nhật Quỹ hỗ trợ
         const supportFundPayoutLimit = supportFundSettings[MembershipTier.Starter].totalPayoutLimit;
         const updatedSupportFundDescription = `Chia cho người chưa có F1, tối đa ${formatPriceText(supportFundPayoutLimit)}/người.`;
         
         const updatedFeaturesItems = state.content.features.items.map(item => {
-            if (item.id === 'f1') return { ...item, title: `💰 Hoa hồng F1–F${currentFLevel}`, description: `Nhận hoa hồng đến tầng ${currentFLevel} từ phí tham gia & duy trì.` };
+            if (item.id === 'f1') return { ...item, title: `💰 Chiết khấu F1–F${currentFLevel}`, description: `Nhận chiết khấu dịch vụ đến tầng ${currentFLevel} từ việc phát triển cộng đồng.` };
             if (item.id === 'f3') return { ...item, description: updatedSupportFundDescription };
             return item;
         });
@@ -150,9 +150,9 @@ export const LandingPageContentProvider: React.FC<{ children: ReactNode }> = ({ 
 
             const updatedStats = [
                 { id: 'stat1', label: 'Tổng Thành viên', value: allFlatUsers.length.toLocaleString('vi-VN') },
-                { id: 'stat2', label: 'Thành viên mới hôm nay', value: `+${newMembersToday}` },
-                { id: 'stat3', label: 'Giao dịch Hôm nay', value: `+${transactionsToday}` },
-                { id: 'stat4', label: 'Tổng Tiền đã chi trả', value: `${totalPayout.toLocaleString('vi-VN')}đ` },
+                { id: 'stat2', label: 'Thành viên mới', value: `+${newMembersToday}` },
+                { id: 'stat3', label: 'Giao dịch mới', value: `+${transactionsToday}` },
+                { id: 'stat4', label: 'Lợi nhuận đã chi trả', value: `${totalPayout.toLocaleString('vi-VN')}đ` },
             ];
 
             if (JSON.stringify(updatedStats) !== JSON.stringify(state.content.hero.stats)) {
@@ -163,6 +163,23 @@ export const LandingPageContentProvider: React.FC<{ children: ReactNode }> = ({ 
             if (state.content.socialProof?.enabled) {
                 dispatch({ type: 'SET_SECTION_CONTENT', payload: { sectionId: 'socialProof', content: { ...state.content.socialProof, enabled: false } } });
             }
+        }
+
+        // 6. Terminology Sync for static sections (FAQ, WhyUs, Features titles)
+        const checkTerm = (str: string) => {
+            const s = str.toLowerCase();
+            return s.includes('phí duy trì') || s.includes('hoa hồng') || s.includes('tiền đã chi trả');
+        };
+        
+        const faqItemsNeedUpdate = state.content.faq.items.some(item => checkTerm(item.question) || checkTerm(item.answer));
+        const featuresItemsNeedUpdate = state.content.features.items.some(item => checkTerm(item.title) || (item.description && checkTerm(item.description)));
+        
+        if (faqItemsNeedUpdate) {
+            dispatch({ type: 'SET_SECTION_CONTENT', payload: { sectionId: 'faq', content: initialLandingPageState.content.faq } });
+        }
+        
+        if (featuresItemsNeedUpdate) {
+             dispatch({ type: 'SET_SECTION_CONTENT', payload: { sectionId: 'features', content: initialLandingPageState.content.features } });
         }
 
         prevSettingsRef.current = currentSettingsStr;

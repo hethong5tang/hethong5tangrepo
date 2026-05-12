@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { SystemSettings, AdminWalletInfo } from '../../features/settings/types';
-import { Cog6ToothIcon, ShieldExclamationIcon, ArrowPathIcon, CheckIcon, XCircleIcon, EyeIcon, EyeSlashIcon, CpuChipIcon, ExclamationTriangleIcon, ClockIcon, CalendarDaysIcon, BoltIcon, InformationCircleIcon, BanknotesIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon, QrCodeIcon } from '../../components/Icons';
+import { Cog6ToothIcon, ShieldExclamationIcon, ArrowPathIcon, CheckIcon, XCircleIcon, EyeIcon, EyeSlashIcon, CpuChipIcon, ExclamationTriangleIcon, ClockIcon, CalendarDaysIcon, BoltIcon, InformationCircleIcon, BanknotesIcon, PlusIcon, TrashIcon, ArrowUpTrayIcon, QrCodeIcon, ChartPieIcon, AcademicCapIcon, StarIcon } from '../../components/Icons';
 import { isEqual } from 'lodash-es';
 import { useToast } from '../../components/ToastProvider';
 import { ADMIN_CREDENTIALS } from '../../config';
@@ -85,6 +85,8 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
 
     const [isScheduled, setIsScheduled] = useState(!!initialSettings.maintenanceEndTime);
     const [isTestingApi, setIsTestingApi] = useState(false);
+
+    const [editingLevelIndex, setEditingLevelIndex] = useState<number | null>(null);
 
     useEffect(() => {
         setSettings(initialSettings);
@@ -319,7 +321,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
         }));
     };
 
-    const TabButton: React.FC<{ tabId: 'general' | 'security' | 'payment' | 'legal'; label: string; }> = ({ tabId, label }) => (
+    const TabButton: React.FC<{ tabId: 'general' | 'security' | 'payment' | 'legal' | 'tiers'; label: string; }> = ({ tabId, label }) => (
         <button
             onClick={() => setActiveTab(tabId)}
             className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm ${
@@ -375,6 +377,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
                      </div>
                 </div>
             )}
+
 
             {activeTab === 'payment' && (
                 <div className="space-y-6 max-w-5xl">

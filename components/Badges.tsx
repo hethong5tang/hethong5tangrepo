@@ -87,10 +87,11 @@ export const RankLevelBadge: React.FC<{ level: number }> = React.memo(({ level }
     const levelName = levelInfo ? levelInfo.name : `Cấp ${level}`;
 
     const colors = [
-        'bg-yellow-200 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300', // Đồng
-        'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-300', // Bạc
-        'bg-amber-200 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300', // Vàng
-        'bg-sky-200 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300', // Kim cương
+        'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400', // Bronze (Cấp 1)
+        'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300',      // Silver (Cấp 2)
+        'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400', // Gold (Cấp 3)
+        'bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-900/30 dark:text-sky-400',          // Diamond (Cấp 4)
+        'bg-indigo-600 text-white border-indigo-700 shadow-sm shadow-indigo-500/30',            // Crown (Cấp 5)
     ];
     
     const colorClass = colors[(level - 1) % colors.length];

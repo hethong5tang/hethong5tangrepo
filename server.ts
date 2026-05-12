@@ -140,12 +140,15 @@ async function startServer() {
       }
 
       // 2. Create withdrawal request (status: pending)
+      const taxAmount = Number(amount) * 0.10;
+      const netAmount = Number(amount) - taxAmount;
+
       const { error: txErr } = await supabaseAdmin.from('transactions').insert({
           user_id: userId,
           type: 'withdraw',
           amount: amount,
           status: 'pending',
-          description: `Withdraw request to ${bankName} - ${bankAccountNumber}`
+          description: `Withdraw request to ${bankName} - ${bankAccountNumber}. (Gross: ${Number(amount).toLocaleString()}đ, Tax 10%: ${taxAmount.toLocaleString()}đ, Net: ${netAmount.toLocaleString()}đ)`
       });
 
       if (txErr) throw txErr;
@@ -153,7 +156,20 @@ async function startServer() {
       // 3. Deduct available balance immediately (reserve funds)
       await supabaseAdmin.from('users').update({ balance: Number(user.balance) - Number(amount) }).eq('id', userId);
       
-      res.json({ success: true, message: "Withdrawal request submitted via API" });
+      // 4. Record tax to the special tax fund in DB
+      await supabaseAdmin.from('funds').update({ 
+          balance: Number( (await supabaseAdmin.from('funds').select('balance').eq('id', 'tncn_tax').single()).data?.balance || 0 ) + taxAmount,
+          total_in: Number( (await supabaseAdmin.from('funds').select('total_in').eq('id', 'tncn_tax').single()).data?.total_in || 0 ) + taxAmount
+      }).eq('id', 'tncn_tax');
+
+      await supabaseAdmin.from('fund_transactions').insert({
+          fund_id: 'tncn_tax',
+          type: 'inflow',
+          amount: taxAmount,
+          description: `Khấu trừ 10% thuế TNCN từ lệnh rút của User: ${userId}`
+      });
+      
+      res.json({ success: true, message: `Lệnh rút đã gửi. Số tiền rút: ${Number(amount).toLocaleString()}đ, Thuế TNCN (10%): ${taxAmount.toLocaleString()}đ, Thực nhận dự kiến: ${netAmount.toLocaleString()}đ.` });
     } catch (error: any) {
       console.error("Withdraw Error:", error);
       res.status(500).json({ success: false, error: error.message });
@@ -162,10 +178,10 @@ async function startServer() {
 
 
   // ==========================================
-  // 2. F1-F5 HIERARCHY & COMMISSION PIPELINE
+  // 2. F1-F2 HIERARCHY & COMMISSION PIPELINE
   // ==========================================
 
-  // Process a Package Purchase -> Distributes Commisions F1-F5
+  // Process a Package Purchase -> Distributes Commisions F1-F2
   app.post("/api/packages/purchase", async (req, res) => {
     try {
       const { userId, packageId, packagePrice } = req.body;

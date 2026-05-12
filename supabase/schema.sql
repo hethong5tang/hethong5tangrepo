@@ -12,12 +12,12 @@ CREATE TABLE IF NOT EXISTS public.system_settings (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Khởi tạo tỉ lệ 20/80 (Phân bổ chuẩn)
+-- Khởi tạo tỉ lệ 40/60 (Phân bổ chuẩn 2 tầng)
 INSERT INTO public.system_settings (key, value, description)
 VALUES (
     'commission_rates',
-    '{"fund_admin": 0.10, "fund_leader": 0.05, "fund_support": 0.05, "f1": 0.40, "f2": 0.16, "f3": 0.12, "f4": 0.08, "f5": 0.04}',
-    'Tỉ lệ phân bổ hoa hồng (20% cho quỹ, 80% cho hệ thống 5 tầng)'
+    '{"fund_admin": 0.17, "fund_leader": 0.05, "fund_support": 0.05, "vat": 0.10, "corporate_tax": 0.03, "f1": 0.40, "f2": 0.20}',
+    'Tỉ lệ phân bổ hoa hồng (40% cho quỹ & thuế, 60% cho hệ thống 2 tầng)'
 ) ON CONFLICT (key) DO NOTHING;
 
 
@@ -34,7 +34,13 @@ CREATE TABLE IF NOT EXISTS public.users (
     referred_by UUID REFERENCES public.users(id), -- ID của tuyến trên (F1 của người này)
     balance NUMERIC(15, 2) DEFAULT 0, -- Số dư ví (Có thể rút tiền từ đây)
     total_commission NUMERIC(15, 2) DEFAULT 0, -- Tổng hoa hồng đã nhận từ trước đến nay
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    membership_tier VARCHAR(50) DEFAULT 'none', -- none, starter, pro, master
+    rank_level INTEGER DEFAULT 1, -- 1: Partner, 2: Silver, 3: Gold, 4: Diamond, 5: Crown
+    current_level_revenue NUMERIC(15, 2) DEFAULT 0, -- Doanh số tích lũy cho cấp độ hiện tại
+    f1_count INTEGER DEFAULT 0,
+    network_size INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    last_active_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 
@@ -50,11 +56,14 @@ CREATE TABLE IF NOT EXISTS public.funds (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Khởi tạo 3 Quỹ cố định
+-- Khởi tạo Quỹ và Thuế
 INSERT INTO public.funds (id, name, balance) VALUES
 ('admin', 'Ví Admin (Lợi nhuận)', 0),
-('leader', 'Quỹ Thưởng Leader', 10000000), -- Yêu cầu khởi tạo 10 triệu cho leader
-('support', 'Quỹ Hỗ Trợ (Chưa có F1)', 0)
+('leader', 'Quỹ Thưởng Leader', 0),
+('support', 'Quỹ Hỗ Trợ', 0),
+('vat', 'Quỹ Thuế VAT', 0),
+('corporate_tax', 'Quỹ Thuế TNDN', 0),
+('tncn_tax', 'Quỹ Thuế TNCN (Khấu trừ rút tiền)', 0)
 ON CONFLICT (id) DO NOTHING;
 
 
@@ -90,72 +99,127 @@ CREATE TABLE IF NOT EXISTS public.fund_transactions (
 -- ==========================================
 -- 6. HÀM XỬ LÝ 100% TIỀN CHUẨN XÁC VÀ TỰ ĐỘNG (RPC - RPC Function)
 -- ==========================================
--- Hàm này sẽ được code Frontend (SupabaseAdapter) gọi khi 1 user Mua Gói Đầu Tư/Phí Tham Gia
--- ƯU ĐIỂM: DB tự tính, không lo frontend bị lag dãn đến sai lệch tiền, hack tiền chặn ở mức SQL!
+
+-- Hàm kiểm tra thăng cấp
+CREATE OR REPLACE FUNCTION check_and_update_rank(p_user_id UUID) RETURNS void AS $$
+DECLARE
+    v_revenue NUMERIC;
+    v_f1_count INTEGER;
+    v_silver_branches INTEGER;
+    v_gold_branches INTEGER;
+    v_diamond_branches INTEGER;
+    v_current_rank INTEGER;
+BEGIN
+    SELECT rank_level, current_level_revenue, f1_count INTO v_current_rank, v_revenue, v_f1_count FROM public.users WHERE id = p_user_id;
+
+    -- Cấp 2: Silver Leader (Trưởng nhánh Bạc)
+    -- Yêu cầu: 100M doanh số + 3 F1
+    IF v_current_rank = 1 AND v_revenue >= 100000000 AND v_f1_count >= 3 THEN
+        UPDATE public.users SET rank_level = 2 WHERE id = p_user_id;
+        v_current_rank := 2;
+    END IF;
+
+    -- Cấp 3: Gold Manager (Quản lý Vàng)
+    -- Yêu cầu: 500M doanh số + 2 nhánh Silver
+    IF v_current_rank = 2 AND v_revenue >= 500000000 THEN
+        SELECT COUNT(*)::INTEGER INTO v_silver_branches FROM public.users WHERE referred_by = p_user_id AND rank_level >= 2;
+        IF v_silver_branches >= 2 THEN
+            UPDATE public.users SET rank_level = 3 WHERE id = p_user_id;
+            v_current_rank := 3;
+        END IF;
+    END IF;
+
+    -- Cấp 4: Diamond Director (Giám đốc Kim cương)
+    -- Yêu cầu: 2 tỷ doanh số + 3 nhánh Gold
+    IF v_current_rank = 3 AND v_revenue >= 2000000000 THEN
+        SELECT COUNT(*)::INTEGER INTO v_gold_branches FROM public.users WHERE referred_by = p_user_id AND rank_level >= 3;
+        IF v_gold_branches >= 3 THEN
+            UPDATE public.users SET rank_level = 4 WHERE id = p_user_id;
+            v_current_rank := 4;
+        END IF;
+    END IF;
+
+    -- Cấp 5: Crown Ambassador (Đại sứ Vương miện)
+    -- Yêu cầu: 10 tỷ doanh số + 3 nhánh Diamond
+    IF v_current_rank = 4 AND v_revenue >= 10000000000 THEN
+        SELECT COUNT(*)::INTEGER INTO v_diamond_branches FROM public.users WHERE referred_by = p_user_id AND rank_level >= 4;
+        IF v_diamond_branches >= 3 THEN
+            UPDATE public.users SET rank_level = 5 WHERE id = p_user_id;
+            v_current_rank := 5;
+        END IF;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION process_package_purchase(
     p_buyer_id UUID,
     p_amount NUMERIC
 ) RETURNS void
 LANGUAGE plpgsql
-SECURITY DEFINER -- Cho phép override quyền, bỏ qua RLS để update các bảng
+SECURITY DEFINER 
 AS $$
 DECLARE
     v_rates JSONB;
-    v_f1 UUID; v_f2 UUID; v_f3 UUID; v_f4 UUID; v_f5 UUID;
+    v_f1 UUID; v_f2 UUID;
+    v_parent UUID;
     v_amt_admin NUMERIC; v_amt_leader NUMERIC; v_amt_support NUMERIC;
-    v_amt_f1 NUMERIC; v_amt_f2 NUMERIC; v_amt_f3 NUMERIC; v_amt_f4 NUMERIC; v_amt_f5 NUMERIC;
+    v_amt_vat NUMERIC; v_amt_corporate NUMERIC;
+    v_amt_f1 NUMERIC; v_amt_f2 NUMERIC;
 BEGIN
     -- [A] Lấy cấu hình các tỉ lệ chia từ bảng Settings
     SELECT value INTO v_rates FROM public.system_settings WHERE key = 'commission_rates';
     
-    -- Chia tỉ lệ 20%
-    v_amt_admin := p_amount * (v_rates->>'fund_admin')::NUMERIC;
-    v_amt_leader := p_amount * (v_rates->>'fund_leader')::NUMERIC;
-    v_amt_support := p_amount * (v_rates->>'fund_support')::NUMERIC;
+    -- Chia tỉ lệ vào quỹ và thuế
+    v_amt_admin := p_amount * COALESCE((v_rates->>'fund_admin')::NUMERIC, 0.17);
+    v_amt_leader := p_amount * COALESCE((v_rates->>'fund_leader')::NUMERIC, 0.05);
+    v_amt_support := p_amount * COALESCE((v_rates->>'fund_support')::NUMERIC, 0.05);
+    v_amt_vat := p_amount * COALESCE((v_rates->>'vat')::NUMERIC, 0.10);
+    v_amt_corporate := p_amount * COALESCE((v_rates->>'corporate_tax')::NUMERIC, 0.03);
     
-    -- Chia tỉ lệ 80% (Theo Tầng)
-    v_amt_f1 := p_amount * (v_rates->>'f1')::NUMERIC;
-    v_amt_f2 := p_amount * (v_rates->>'f2')::NUMERIC;
-    v_amt_f3 := p_amount * (v_rates->>'f3')::NUMERIC;
-    v_amt_f4 := p_amount * (v_rates->>'f4')::NUMERIC;
-    v_amt_f5 := p_amount * (v_rates->>'f5')::NUMERIC;
+    -- Chia tỉ lệ Affiliate (2 Tầng)
+    v_amt_f1 := p_amount * COALESCE((v_rates->>'f1')::NUMERIC, 0.40);
+    v_amt_f2 := p_amount * COALESCE((v_rates->>'f2')::NUMERIC, 0.20);
 
-    -- [B] Bơm tiền (20%) vào các Quỹ Trung Tâm
+    -- [B] Bơm tiền (40%) vào các Quỹ Trung Tâm và Thuế
     UPDATE public.funds SET balance = balance + v_amt_admin, total_in = total_in + v_amt_admin WHERE id = 'admin';
-    INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('admin', 'inflow', v_amt_admin, 'Thu phí từ gói User: ' || p_buyer_id);
+    INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('admin', 'inflow', v_amt_admin, 'Lợi nhuận từ gói của User: ' || p_buyer_id);
     
     UPDATE public.funds SET balance = balance + v_amt_leader, total_in = total_in + v_amt_leader WHERE id = 'leader';
-    INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('leader', 'inflow', v_amt_leader, 'Thu phí từ gói User: ' || p_buyer_id);
+    INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('leader', 'inflow', v_amt_leader, 'Trích thưởng từ gói của User: ' || p_buyer_id);
     
-    -- Quỹ hỗ trợ nhận 5% cố định trước. NẾU các nhánh F bị khuyết, phần đó sẽ dồn thêm vào quỹ này sau.
     UPDATE public.funds SET balance = balance + v_amt_support, total_in = total_in + v_amt_support WHERE id = 'support';
-    INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('support', 'inflow', v_amt_support, 'Thu phí từ gói User: ' || p_buyer_id);
+    INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('support', 'inflow', v_amt_support, 'Trích hỗ trợ từ gói của User: ' || p_buyer_id);
 
-    -- [C] Trích xuất phả hệ 5 Tầng của Người mua
+    UPDATE public.funds SET balance = balance + v_amt_vat, total_in = total_in + v_amt_vat WHERE id = 'vat';
+    INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('vat', 'inflow', v_amt_vat, 'Khấu trừ VAT từ gói của User: ' || p_buyer_id);
+
+    UPDATE public.funds SET balance = balance + v_amt_corporate, total_in = total_in + v_amt_corporate WHERE id = 'corporate_tax';
+    INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('corporate_tax', 'inflow', v_amt_corporate, 'Khấu trừ Thuế TNDN từ gói của User: ' || p_buyer_id);
+
+    -- [C] Trích xuất phả hệ 2 Tầng của Người mua
     SELECT referred_by INTO v_f1 FROM public.users WHERE id = p_buyer_id;
     IF v_f1 IS NOT NULL THEN
         SELECT referred_by INTO v_f2 FROM public.users WHERE id = v_f1;
     END IF;
-    IF v_f2 IS NOT NULL THEN
-        SELECT referred_by INTO v_f3 FROM public.users WHERE id = v_f2;
-    END IF;
-    IF v_f3 IS NOT NULL THEN
-        SELECT referred_by INTO v_f4 FROM public.users WHERE id = v_f3;
-    END IF;
-    IF v_f4 IS NOT NULL THEN
-        SELECT referred_by INTO v_f5 FROM public.users WHERE id = v_f4;
-    END IF;
 
-    -- [D] Chia tiền các tầng (F1->F5). Nếu Ai bị "Mất Điểm" do KHÔNG TỒN TẠI HỆ THỐNG TRÊN, tiền sẽ Rơi về Quỹ Hỗ Trợ
-    
+    -- [D] Cập nhật doanh số cho các tuyến trên (Tới Gốc hệ thống)
+    v_parent := v_f1;
+    WHILE v_parent IS NOT NULL LOOP
+        UPDATE public.users SET current_level_revenue = current_level_revenue + p_amount WHERE id = v_parent;
+        -- Kiểm tra thăng cấp
+        PERFORM check_and_update_rank(v_parent);
+        
+        SELECT referred_by INTO v_parent FROM public.users WHERE id = v_parent;
+    END LOOP;
+
+    -- [E] Chia tiền các tầng (F1->F2)
     -- Tầng 1
     IF v_f1 IS NOT NULL THEN
         UPDATE public.users SET balance = balance + v_amt_f1, total_commission = total_commission + v_amt_f1 WHERE id = v_f1;
         INSERT INTO public.transactions (user_id, type, amount, description) VALUES (v_f1, 'commission', v_amt_f1, 'Hoa hồng F1 (Từ User: ' || p_buyer_id || ')');
     ELSE
-        UPDATE public.funds SET balance = balance + v_amt_f1, total_in = total_in + v_amt_f1 WHERE id = 'support';
-        INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('support', 'inflow', v_amt_f1, 'Hoa hồng F1 dư thừa (Trống tuyến)');
+        UPDATE public.funds SET balance = balance + v_amt_f1, total_in = total_in + v_amt_f1 WHERE id = 'admin';
+        INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('admin', 'inflow', v_amt_f1, 'Hoa hồng F1 dư thừa (Trống tuyến)');
     END IF;
 
     -- Tầng 2
@@ -163,35 +227,8 @@ BEGIN
         UPDATE public.users SET balance = balance + v_amt_f2, total_commission = total_commission + v_amt_f2 WHERE id = v_f2;
         INSERT INTO public.transactions (user_id, type, amount, description) VALUES (v_f2, 'commission', v_amt_f2, 'Hoa hồng F2 (Từ User: ' || p_buyer_id || ')');
     ELSE
-        UPDATE public.funds SET balance = balance + v_amt_f2, total_in = total_in + v_amt_f2 WHERE id = 'support';
-        INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('support', 'inflow', v_amt_f2, 'Hoa hồng F2 dư thừa (Trống tuyến)');
-    END IF;
-
-    -- Tầng 3
-    IF v_f3 IS NOT NULL THEN
-        UPDATE public.users SET balance = balance + v_amt_f3, total_commission = total_commission + v_amt_f3 WHERE id = v_f3;
-        INSERT INTO public.transactions (user_id, type, amount, description) VALUES (v_f3, 'commission', v_amt_f3, 'Hoa hồng F3 (Từ User: ' || p_buyer_id || ')');
-    ELSE
-        UPDATE public.funds SET balance = balance + v_amt_f3, total_in = total_in + v_amt_f3 WHERE id = 'support';
-        INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('support', 'inflow', v_amt_f3, 'Hoa hồng F3 dư thừa (Trống tuyến)');
-    END IF;
-
-    -- Tầng 4
-    IF v_f4 IS NOT NULL THEN
-        UPDATE public.users SET balance = balance + v_amt_f4, total_commission = total_commission + v_amt_f4 WHERE id = v_f4;
-        INSERT INTO public.transactions (user_id, type, amount, description) VALUES (v_f4, 'commission', v_amt_f4, 'Hoa hồng F4 (Từ User: ' || p_buyer_id || ')');
-    ELSE
-        UPDATE public.funds SET balance = balance + v_amt_f4, total_in = total_in + v_amt_f4 WHERE id = 'support';
-        INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('support', 'inflow', v_amt_f4, 'Hoa hồng F4 dư thừa (Trống tuyến)');
-    END IF;
-
-    -- Tầng 5
-    IF v_f5 IS NOT NULL THEN
-        UPDATE public.users SET balance = balance + v_amt_f5, total_commission = total_commission + v_amt_f5 WHERE id = v_f5;
-        INSERT INTO public.transactions (user_id, type, amount, description) VALUES (v_f5, 'commission', v_amt_f5, 'Hoa hồng F5 (Từ User: ' || p_buyer_id || ')');
-    ELSE
-        UPDATE public.funds SET balance = balance + v_amt_f5, total_in = total_in + v_amt_f5 WHERE id = 'support';
-        INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('support', 'inflow', v_amt_f5, 'Hoa hồng F5 dư thừa (Trống tuyến)');
+        UPDATE public.funds SET balance = balance + v_amt_f2, total_in = total_in + v_amt_f2 WHERE id = 'admin';
+        INSERT INTO public.fund_transactions (fund_id, type, amount, description) VALUES ('admin', 'inflow', v_amt_f2, 'Hoa hồng F2 dư thừa (Trống tuyến)');
     END IF;
 
 END;

@@ -156,6 +156,10 @@ const FinancePage: React.FC<FinancePageProps> = () => {
 
         return {
             adminWallet: fundStatus[FundType.Admin]?.balance || 0,
+            vat: fundStatus[FundType.VAT]?.balance || 0,
+            corporateTax: fundStatus[FundType.CorporateTax]?.balance || 0,
+            leaderBonus: fundStatus[FundType.LeaderBonus]?.balance || 0,
+            supportFund: fundStatus[FundType.Support]?.balance || 0,
             profit: totalProfit,
             profitChange: calculateChange(currentMonthProfit, prevMonthProfit),
             payout: totalPayout,
@@ -204,6 +208,8 @@ const FinancePage: React.FC<FinancePageProps> = () => {
 
 
     // Lịch sử thực tế (Chỉ giao dịch đã Hoàn thành)
+    const [historyTypeFilter, setHistoryTypeFilter] = useState<string>('all');
+    
     const adminWalletHistory = useMemo(() => {
         // CẬP NHẬT: Loại bỏ ParticipationFee và MaintenanceFee khỏi danh sách hiển thị
         // Vì đây là số tiền User chi ra, không phải doanh thu ròng của Admin.
@@ -213,7 +219,8 @@ const FinancePage: React.FC<FinancePageProps> = () => {
             TransactionType.PenaltyFee,            // Phí phạt
             TransactionType.Payout,                // Chi trả rút tiền
             TransactionType.SupportFundPayout,     // Chi quỹ hỗ trợ (nếu cấu hình admin quản lý)
-            TransactionType.AdminAdjustment        // Admin tự điều chỉnh
+            TransactionType.AdminAdjustment,       // Admin tự điều chỉnh
+            TransactionType.TaxDeduction           // Thuế
         ];
 
         return allTransactions
@@ -228,6 +235,8 @@ const FinancePage: React.FC<FinancePageProps> = () => {
                 // Nếu là Adjustment: Nạp cho user (t.amount > 0) -> Admin mất tiền (âm)
                 if (t.type === TransactionType.AdminAdjustment) {
                     displayAmount = -t.amount;
+                } else if (t.type === TransactionType.TaxDeduction) {
+                    displayAmount = Math.abs(t.amount); // Ghi nhận thu vào quỹ thuế
                 } else {
                     const inTypes = [TransactionType.SystemProfit, TransactionType.CommissionDifference, TransactionType.PenaltyFee];
                     // Nếu là loại Thu -> Số dương. Nếu loại Chi -> Số âm.
@@ -242,10 +251,14 @@ const FinancePage: React.FC<FinancePageProps> = () => {
                                   t.description.toLowerCase().includes(globalFilters.search.toLowerCase());
                 const dateMatch = (!globalFilters.startDate || t.date >= globalFilters.startDate) && 
                                  (!globalFilters.endDate || t.date <= globalFilters.endDate);
-                return searchMatch && dateMatch;
+                const typeMatch = historyTypeFilter === 'all' || 
+                                 (historyTypeFilter === 'inflow' && t.displayAmount > 0) || 
+                                 (historyTypeFilter === 'outflow' && t.displayAmount < 0) ||
+                                 (historyTypeFilter === 'tax' && t.type === TransactionType.TaxDeduction);
+                return searchMatch && dateMatch && typeMatch;
             })
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    }, [allTransactions, globalFilters, usersMap]);
+    }, [allTransactions, globalFilters, usersMap, historyTypeFilter]);
 
     const handleRequestAction = (decision: 'approve' | 'reject', request: any, kind: 'withdrawal' | 'deposit') => {
         setConfirmAction({ type: decision, request, kind });
@@ -343,10 +356,14 @@ const FinancePage: React.FC<FinancePageProps> = () => {
                 )}
             </Modal>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                  <FinanceStatCard title="Ví Admin" value={stats.adminWallet} icon={<CurrencyDollarIcon className="h-6 w-6"/>} color="green" />
                  <FinanceStatCard title="Lợi nhuận ròng" value={stats.profit} change={stats.profitChange} icon={<ArrowTrendingUpIcon className="h-6 w-6"/>} color="blue" />
                  <FinanceStatCard title="Chi trả" value={stats.payout} change={stats.payoutChange} icon={<ArrowTrendingDownIcon className="h-6 w-6"/>} color="orange" />
+                 <FinanceStatCard title="Quỹ Thuế VAT" value={stats.vat} icon={<BanknotesIcon className="h-6 w-6"/>} color="indigo" />
+                 <FinanceStatCard title="Quỹ Thuế TNDN" value={stats.corporateTax} icon={<BanknotesIcon className="h-6 w-6"/>} color="indigo" />
+                 <FinanceStatCard title="Quỹ Thưởng Leader" value={stats.leaderBonus} icon={<ArrowTrendingUpIcon className="h-6 w-6"/>} color="purple" />
+                 <FinanceStatCard title="Quỹ Hỗ Trợ" value={stats.supportFund} icon={<BanknotesIcon className="h-6 w-6"/>} color="teal" />
             </div>
 
             {/* TAB NAVIGATION */}
@@ -490,6 +507,16 @@ const FinancePage: React.FC<FinancePageProps> = () => {
                     <h3 className="text-lg font-bold text-slate-800 dark:text-white uppercase tracking-wide">Biến động Ví Admin thực tế (Lợi nhuận & Chi phí)</h3>
                     
                     <div className="flex flex-wrap items-center gap-3">
+                        <select
+                            value={historyTypeFilter}
+                            onChange={(e) => setHistoryTypeFilter(e.target.value)}
+                            className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-600 outline-none focus:ring-1 focus:ring-indigo-500"
+                        >
+                            <option value="all">Tất cả giao dịch</option>
+                            <option value="inflow">Thực Thu (+)</option>
+                            <option value="outflow">Thực Chi (-)</option>
+                            <option value="tax">Thuế (VAT, TNDN...)</option>
+                        </select>
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg">
                             <input type="date" value={globalFilters.startDate} onChange={e => setGlobalFilters(p => ({...p, startDate: e.target.value}))} className="bg-transparent text-xs font-medium text-slate-600 outline-none" />
                             <span className="text-slate-300">-</span>

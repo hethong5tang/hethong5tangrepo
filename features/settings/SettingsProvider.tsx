@@ -13,11 +13,36 @@ const initialState: SettingsState = {
 
 const init = (defaultState: SettingsState): SettingsState => {
     const raw = storageService.get(STORAGE_KEYS.SETTINGS, defaultState);
-    // Merge stored settings with default state to ensure new fields in structure updates don't break
+    
+    // Force reset levelSettings if the count is not 5 to ensure new structure is applied
+    const storedLevelSettings = raw.systemSettings?.levelSettings || [];
+    const shouldResetLevels = storedLevelSettings.length !== defaultState.systemSettings.levelSettings.length;
+
     return {
         ...defaultState,
         ...raw,
-        systemSettings: { ...defaultState.systemSettings, ...raw.systemSettings },
+        systemSettings: { 
+            ...defaultState.systemSettings, 
+            ...raw.systemSettings,
+            levelSettings: shouldResetLevels ? defaultState.systemSettings.levelSettings : (raw.systemSettings?.levelSettings || defaultState.systemSettings.levelSettings),
+            tierSettings: {
+                starter: {
+                    ...defaultState.systemSettings.tierSettings.starter,
+                    ...(raw.systemSettings?.tierSettings?.starter || {}),
+                    benefits: defaultState.systemSettings.tierSettings.starter.benefits
+                },
+                pro: {
+                    ...defaultState.systemSettings.tierSettings.pro,
+                    ...(raw.systemSettings?.tierSettings?.pro || {}),
+                    benefits: defaultState.systemSettings.tierSettings.pro.benefits
+                },
+                master: {
+                    ...defaultState.systemSettings.tierSettings.master,
+                    ...(raw.systemSettings?.tierSettings?.master || {}),
+                    benefits: defaultState.systemSettings.tierSettings.master.benefits
+                }
+            }
+        },
         fundSettings: { ...defaultState.fundSettings, ...raw.fundSettings },
         userSettings: { ...defaultState.userSettings, ...raw.userSettings }
     };

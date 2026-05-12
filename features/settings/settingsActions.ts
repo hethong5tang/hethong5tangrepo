@@ -18,7 +18,7 @@ export const createSettingsActions = (deps: {
         settingsDispatch({ type: 'UPDATE_FUND_SETTINGS_PERCENTAGES', payload: {
             leaderPct: newSettings.profitSettings.participation.leaderBonusFund,
             supportPartPct: newSettings.profitSettings.participation.supportFund, // Mới: Phí tham gia
-            supportMaintPct: newSettings.profitSettings.maintenance.supportFund // Phí duy trì
+            supportMaintPct: newSettings.profitSettings.maintenance.supportFund // Phí dịch vụ
         }});
 
         addToast('Cài đặt hệ thống đã được cập nhật và đồng bộ với Quỹ!', 'success');

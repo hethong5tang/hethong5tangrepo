@@ -46,10 +46,10 @@ const ReferralQuickCopy: React.FC<{ userId: string }> = ({ userId }) => {
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-2">
                     <h3 className="text-xl font-bold flex items-center gap-2">
-                        <SparklesIcon className="h-6 w-6 text-yellow-300 animate-bounce" /> Lan tỏa giá trị, Nhận hoa hồng khủng
+                        <SparklesIcon className="h-6 w-6 text-yellow-300 animate-bounce" /> Lan tỏa giá trị, Nhận chiết khấu hấp dẫn
                     </h3>
                     <p className="text-indigo-100 text-sm leading-relaxed max-w-lg">
-                        Chia sẻ dự án tuyệt vời này cho bạn bè qua Mã giới thiệu hoặc Link trực tiếp để nhận hoa hồng thụ động lên tới 10 tầng.
+                        Chia sẻ dự án tuyệt vời này cho bạn bè qua Mã giới thiệu hoặc Link trực tiếp để nhận chiết khấu thụ động lên tới 10 tầng.
                     </p>
                 </div>
                 
@@ -115,7 +115,7 @@ const DuesBanner: React.FC<{ user: AdminManagedUser, systemSettings: SystemSetti
             <div className="flex items-center gap-3">
                 <ExclamationTriangleIcon className="h-6 w-6 text-yellow-500 flex-shrink-0" />
                 <div>
-                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">Tài khoản bị hạn chế nhưng vẫn nhận hoa hồng!</h4>
+                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">Tài khoản bị hạn chế nhưng vẫn nhận chiết khấu!</h4>
                     <p className="text-sm text-yellow-700 dark:text-yellow-300">
                         Bạn có khoản phí quá hạn là <span className="font-bold">{totalDue.toLocaleString('vi-VN')}đ</span>. 
                         Thanh toán ngay để kích hoạt lại và truy cập toàn bộ số dư <span className="font-bold">{user.balance.toLocaleString('vi-VN')}đ</span> của bạn.
@@ -133,8 +133,8 @@ const DuesBanner: React.FC<{ user: AdminManagedUser, systemSettings: SystemSetti
 };
 
 const INCOME_COLORS: Record<string, string> = {
-    'Hoa hồng (Tham gia)': '#10b981', 
-    'Hoa hồng (Duy trì)': '#84cc16', 
+    'Chiết khấu (Đăng ký)': '#10b981', 
+    'Chiết khấu (Thuê bao)': '#84cc16', 
     'Hỗ trợ từ Quỹ': '#f97316', 
 };
 
@@ -202,8 +202,8 @@ const DashboardPage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNav
 
     const { data: incomeSourceData, total: totalIncome } = useMemo(() => {
         const sources: Record<string, {name: string, value: number, color: string}> = {
-            [TransactionType.CommissionParticipation]: { name: 'Hoa hồng (Tham gia)', value: 0, color: INCOME_COLORS['Hoa hồng (Tham gia)'] },
-            [TransactionType.CommissionMaintenance]: { name: 'Hoa hồng (Duy trì)', value: 0, color: INCOME_COLORS['Hoa hồng (Duy trì)'] },
+            [TransactionType.CommissionParticipation]: { name: 'Chiết khấu (Đăng ký)', value: 0, color: INCOME_COLORS['Chiết khấu (Đăng ký)'] },
+            [TransactionType.CommissionMaintenance]: { name: 'Chiết khấu (Thuê bao)', value: 0, color: INCOME_COLORS['Chiết khấu (Thuê bao)'] },
             [TransactionType.SupportFundPayout]: { name: 'Hỗ trợ từ Quỹ', value: 0, color: INCOME_COLORS['Hỗ trợ từ Quỹ'] },
         };
         let total = 0;
@@ -304,7 +304,7 @@ const DashboardPage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNav
                         <div>
                             <h4 className="font-semibold text-blue-800 dark:text-blue-200">Kích hoạt tài khoản của bạn!</h4>
                             <p className="text-sm text-blue-700 dark:text-blue-300">
-                               Để bắt đầu xây dựng hệ thống và nhận hoa hồng, bạn cần kích hoạt gói thành viên đầu tiên.
+                               Để bắt đầu xây dựng hệ thống và nhận chiết khấu, bạn cần kích hoạt gói thành viên đầu tiên.
                             </p>
                         </div>
                     </div>
@@ -334,7 +334,7 @@ const DashboardPage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNav
                     <div className="flex items-center gap-3">
                         <ExclamationTriangleIcon className="h-6 w-6 text-red-500 flex-shrink-0" />
                         <div>
-                            <h4 className="font-semibold text-red-800 dark:text-red-200">Phí duy trì quá hạn!</h4>
+                            <h4 className="font-semibold text-red-800 dark:text-red-200">Phí thuê bao quá hạn!</h4>
                             <p className="text-sm text-red-700 dark:text-red-300">Hạn thanh toán của bạn là ngày <span className="font-bold">{formattedDueDate}</span>. Chức năng Rút tiền đã bị tạm khóa. Vui lòng thanh toán để mở lại và tránh bị khóa tài khoản.</p>
                         </div>
                     </div>
@@ -357,9 +357,9 @@ const DashboardPage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNav
         let message = '';
 
         if (daysRemaining === 0) {
-            message = `Hôm nay là hạn duy trì (${formattedDueDate}). Vui lòng đảm bảo đủ số dư.`;
+            message = `Hôm nay là hạn dịch vụ (${formattedDueDate}). Vui lòng đảm bảo đủ số dư.`;
         } else if (isWarning) {
-            message = `Sắp hết hạn duy trì (còn ${daysRemaining} ngày). Hạn chót: ${formattedDueDate}.`;
+            message = `Sắp hết hạn dịch vụ (còn ${daysRemaining} ngày). Hạn chót: ${formattedDueDate}.`;
         } else {
              return null; 
         }
@@ -396,7 +396,7 @@ const DashboardPage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNav
                 <StatCard title="Số dư Ví" value={user.balance.toLocaleString('vi-VN') + 'đ'} icon={<BanknotesIcon />} trendData={trendData.wallet} isCurrency />
             </div>
             <div className="sm:col-span-2 lg:col-span-3 xl:col-span-2">
-                <StatCard title="Tổng Hoa Hồng" value={user.totalEarnings.toLocaleString('vi-VN') + 'đ'} icon={<CurrencyDollarIcon />} trendData={trendData.commission} isCurrency />
+                <StatCard title="Tổng Chiết Khấu" value={user.totalEarnings.toLocaleString('vi-VN') + 'đ'} icon={<CurrencyDollarIcon />} trendData={trendData.commission} isCurrency />
             </div>
             <div className="sm:col-span-2 lg:col-span-3 xl:col-span-2">
                 <StatCard title="Số người F1" value={user.f1Count.toLocaleString('vi-VN')} icon={<UserGroupIcon />} trendData={trendData.f1} />

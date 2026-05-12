@@ -178,22 +178,22 @@ const FundManagementPage: React.FC = () => {
         const { participation } = systemSettings.profitSettings;
         const { participationCommissions } = systemSettings.commissionSettings;
         const totalCommission = participationCommissions.reduce((sum: number, c: any) => sum + c.percentage, 0);
-        const adminFunds = participation.adminWallet + participation.leaderBonusFund + participation.supportFund;
+        const adminFunds = participation.adminWallet + (participation.vat || 10) + (participation.corporateTax || 3) + participation.leaderBonusFund + participation.supportFund;
 
         return (
             <div className="space-y-6 text-sm">
                 <section className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                     <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
                         <ArrowPathIcon className="h-4 w-4 text-indigo-500" />
-                        1. Cơ chế Phân bổ (20/80)
+                        1. Cơ chế Phân bổ (40/60)
                     </h4>
                     <p className="text-slate-600 dark:text-slate-400 mb-4 text-xs">
-                        Toàn bộ các loại phí (Tham gia & Duy trì) được tự động phân bổ theo tỷ lệ 20% cho Quỹ & Admin, 80% cho Hoa hồng Hệ thống:
+                        Toàn bộ các loại phí (Tham gia & Duy trì) được tự động phân bổ theo tỷ lệ 40% cho Quỹ & Admin, 60% cho Hoa hồng Hệ thống:
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 shadow-sm">
                             <p className="text-[10px] font-bold text-emerald-500 uppercase flex justify-between">
-                                <span>Hoa hồng Hệ thống (80%)</span>
+                                <span>Hoa hồng Hệ thống (60%)</span>
                                 <span>Tỷ lệ</span>
                             </p>
                             <ul className="mt-2 space-y-1">
@@ -211,10 +211,14 @@ const FundManagementPage: React.FC = () => {
                         </div>
                         <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 shadow-sm">
                             <p className="text-[10px] font-bold text-indigo-500 uppercase flex justify-between">
-                                <span>Phân bổ Quỹ & Admin (20%)</span>
+                                <span>Phân bổ Quỹ & Admin (40%)</span>
                                 <span>Tỷ lệ</span>
                             </p>
                             <ul className="mt-2 space-y-1">
+                                <li className="flex justify-between text-xs">
+                                    <span className="text-slate-500">Thuế (VAT + TNDN):</span>
+                                    <span className="font-bold">{(participation.vat || 10) + (participation.corporateTax || 3)}%</span>
+                                </li>
                                 <li className="flex justify-between text-xs">
                                     <span className="text-slate-500">Ví Admin:</span>
                                     <span className="font-bold">{participation.adminWallet}%</span>
@@ -243,17 +247,17 @@ const FundManagementPage: React.FC = () => {
                     </h4>
                     <div className="space-y-4">
                         <div className="p-4 bg-amber-50/50 dark:bg-amber-900/10 rounded-lg border border-amber-100">
-                            <h5 className="font-bold text-amber-700 dark:text-amber-400 text-[10px] uppercase mb-2">Phần 1: Thưởng thăng cấp (Cố định)</h5>
+                            <h5 className="font-bold text-amber-700 dark:text-amber-400 text-[10px] uppercase mb-2">Đồng chia Bể Quỹ (Theo Danh hiệu)</h5>
                             <p className="text-[11px] text-amber-600 dark:text-amber-500 mb-3 italic">
-                                * Ưu tiên chi trả ngay khi thành viên đạt mốc doanh thu và đủ điều kiện nhánh. Reset doanh thu sau mỗi mốc.
+                                * Tổng Quỹ Leader thu được từ doanh thu hệ thống sẽ được phân loại thành các Bể (Pools) theo % thiết lập, chia đều cho danh sách thành viên đạt cấp độ trong kỳ.
                             </p>
                             <div className="max-h-48 overflow-y-auto pr-2 scrollbar-thin">
                                 <table className="w-full text-[11px] text-left">
                                     <thead className="text-amber-800 dark:text-amber-300 bg-amber-100/50">
                                         <tr>
                                             <th className="p-2 sticky top-0 bg-amber-50">Cấp bậc</th>
-                                            <th className="p-2 text-right sticky top-0 bg-amber-50">Doanh thu thêm</th>
-                                            <th className="p-2 text-right sticky top-0 bg-amber-50">Thưởng</th>
+                                            <th className="p-2 text-right sticky top-0 bg-amber-50">Doanh thu yêu cầu</th>
+                                            <th className="p-2 text-right sticky top-0 bg-amber-50">Đồng chia Quỹ</th>
                                             <th className="p-2 text-center sticky top-0 bg-amber-50">Nhánh</th>
                                         </tr>
                                     </thead>
@@ -261,11 +265,11 @@ const FundManagementPage: React.FC = () => {
                                         {systemSettings.levelSettings.filter((s:any) => s.level > 1).map((lvl: any) => (
                                             <tr key={lvl.level}>
                                                 <td className="p-2 text-amber-900 dark:text-amber-200 font-medium">{lvl.name}</td>
-                                                <td className="p-2 text-right font-mono">{lvl.requiredEarnings.toLocaleString()}đ</td>
-                                                <td className="p-2 text-right font-bold text-green-600">+{lvl.bonusAmount.toLocaleString()}đ</td>
+                                                <td className="p-2 text-right font-mono">{(lvl.requiredGroupRevenue || lvl.requiredEarnings || 0).toLocaleString()}đ</td>
+                                                <td className="p-2 text-right font-bold text-orange-600">{lvl.rewardPercentage}% Quỹ</td>
                                                 <td className="p-2 text-center">
-                                                    {lvl.branchRequirements.map((r: any) => (
-                                                        <span key={r.targetLevel} className="px-1.5 py-0.5 rounded-full bg-amber-200/50 text-[10px] whitespace-nowrap">
+                                                    {lvl.branchRequirements.map((r: any, i: number) => (
+                                                        <span key={i} className="px-1.5 py-0.5 rounded-full bg-amber-200/50 text-[10px] whitespace-nowrap inline-block mr-1">
                                                             {r.count}n. C.{r.targetLevel}
                                                         </span>
                                                     ))}
@@ -278,19 +282,18 @@ const FundManagementPage: React.FC = () => {
                         </div>
 
                         <div className="p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100">
-                            <h5 className="font-bold text-indigo-700 dark:text-indigo-400 text-[10px] uppercase mb-2">Phần 2: Thưởng tích lũy (Chia dư)</h5>
+                            <h5 className="font-bold text-indigo-700 dark:text-indigo-400 text-[10px] uppercase mb-2">Thưởng Vinh danh (Cố định 1 lần)</h5>
                             <p className="text-[11px] text-indigo-600 dark:text-indigo-500 mb-3 italic">
-                                * Toàn bộ số dư còn lại sau khi trừ thưởng thăng cấp sẽ được chia cho các Leader dựa trên "Điểm thành tích".
+                                * Được chi trả 1 lần duy nhất ngay khi thành viên thăng cấp (ví dụ Cúp, Chuyến du lịch hoặc tiền mặt).
                             </p>
                             <div className="grid grid-cols-2 gap-3">
-                                {systemSettings.leaderAchievements.map((ach: any) => (
-                                    <div key={ach.id} className="p-2 bg-white dark:bg-slate-800 rounded border border-indigo-100 flex justify-between items-center">
+                                {systemSettings.levelSettings.filter((s:any) => !!s.honorAward).map((lvl: any) => (
+                                    <div key={lvl.level} className="p-2 bg-white dark:bg-slate-800 rounded border border-indigo-100 flex justify-between items-center">
                                         <div>
-                                            <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{ach.name}</p>
-                                            <p className="text-[9px] text-slate-500">Mỗi {ach.rule.target.toLocaleString()} {ach.rule.metric === 'f1Count' ? 'F1' : 'user'}</p>
+                                            <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{lvl.name}</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-indigo-600 font-bold text-xs">+{ach.weight} đ</p>
+                                            <p className="text-indigo-600 font-bold text-xs">{lvl.honorAward}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -429,6 +432,8 @@ const FundManagementPage: React.FC = () => {
     const [leaderPayoutPreview, setLeaderPayoutPreview] = useState<{ 
         fixedLeaders: LeaderPayoutItem[]; 
         totalFixed: number;
+        poolLeaders: LeaderPayoutItem[];
+        totalPool: number;
         availableBalance: number;
     } | null>(null);
 
@@ -451,34 +456,43 @@ const FundManagementPage: React.FC = () => {
          let fixedLeaders: LeaderPayoutItem[] = [];
          let totalFixed = 0;
 
-         allFlatUsers.forEach(u => {
-             if (u.status !== UserStatus.Active) return;
+         let remainingBalance = leaderFund.balance - totalFixed;
+         let poolLeaders: LeaderPayoutItem[] = [];
+         let totalPool = 0;
 
-             // 1. Fixed Bonus (Level Up - One Time)
-             levelSettings.forEach(lvl => {
-                if (u.rankLevel >= lvl.level && lvl.bonusAmount > 0) {
-                    const hasReceivedThisRank = allTransactions.some(t => 
-                        t.userId === u.id && 
-                        t.type === TransactionType.LeaderBonus && 
-                        t.description.includes(`Thăng cấp: ${lvl.name}`)
-                    );
-                    
-                    if (!hasReceivedThisRank) {
-                        fixedLeaders.push({ 
-                            user: u, 
-                            reason: `Thăng cấp: ${lvl.name}`, 
-                            payoutAmount: lvl.bonusAmount, 
-                            isFixed: true 
-                        });
-                        totalFixed += lvl.bonusAmount;
-                    }
-                }
-             });
-         });
+         if (remainingBalance > 0) {
+             const totalRewardPercentage = levelSettings.reduce((sum: number, lvl: any) => sum + (lvl.rewardPercentage || 0), 0);
+             
+             if (totalRewardPercentage > 0) {
+                 levelSettings.forEach((lvl: any) => {
+                     if (!lvl.rewardPercentage || lvl.rewardPercentage <= 0) return;
+                     
+                     const usersInLevel = allFlatUsers.filter(u => u.status === UserStatus.Active && u.rankLevel === lvl.level);
+                     if (usersInLevel.length > 0) {
+                         const poolAmount = (remainingBalance * (lvl.rewardPercentage / totalRewardPercentage));
+                         const payoutPerUser = Math.floor(poolAmount / usersInLevel.length);
+
+                         if (payoutPerUser > 0) {
+                             usersInLevel.forEach(u => {
+                                 poolLeaders.push({
+                                     user: u,
+                                     reason: `Đồng chia Quỹ (Danh hiệu ${lvl.name})`,
+                                     payoutAmount: payoutPerUser,
+                                     isFixed: false
+                                 });
+                                 totalPool += payoutPerUser;
+                             });
+                         }
+                     }
+                 });
+             }
+         }
 
          setLeaderPayoutPreview({
             fixedLeaders,
             totalFixed,
+            poolLeaders,
+            totalPool,
             availableBalance: leaderFund.balance
          });
     };
@@ -544,10 +558,10 @@ const FundManagementPage: React.FC = () => {
 
         setIsDistributing(true);
         
-        const allItems = leaderPayoutPreview.fixedLeaders.filter(i => i.payoutAmount > 0);
+        const allItems = [...leaderPayoutPreview.fixedLeaders, ...leaderPayoutPreview.poolLeaders].filter(i => i.payoutAmount > 0);
         
         if (allItems.length === 0) {
-             addToast("Không có thành viên nào cần nhận thưởng mới.", "info");
+             addToast("Không có khoản chi nào trong đợt này.", "info");
              setIsDistributing(false);
              setLeaderPayoutPreview(null);
              return;
@@ -557,7 +571,7 @@ const FundManagementPage: React.FC = () => {
             userId: l.user.id,
             user: { name: l.user.name, avatar: l.user.avatar },
             amount: l.payoutAmount,
-            reason: l.isFixed ? `Thưởng Leader: ${l.reason}` : `Thưởng Leader: ${l.reason}`,
+            reason: l.isFixed ? `Thưởng Vinh danh: ${l.reason}` : l.reason,
             metadata: { 
                 leaderBonus: { 
                     isFixed: l.isFixed 
@@ -605,22 +619,22 @@ const FundManagementPage: React.FC = () => {
                     isFixed: true
                 }));
             
-            const weightedLeaders = relatedTransactions
+            const poolLeaders = relatedTransactions
                 .filter(t => !t.metadata?.leaderBonus?.isFixed)
                 .map(t => ({
                     user: t.user ? { ...t.user, id: t.userId } : { name: 'Unknown', id: t.userId },
                     reason: t.description,
                     payoutAmount: t.amount,
-                    multiplier: t.metadata?.leaderBonus?.multiplier || 1
+                    isFixed: false
                 }));
 
             return {
                 type: 'leader',
                 data: {
                     fixedLeaders,
-                    weightedLeaders,
+                    poolLeaders,
                     totalFixed: fixedLeaders.reduce((sum: number, i: any) => sum + i.payoutAmount, 0),
-                    totalWeighted: weightedLeaders.reduce((sum: number, i: any) => sum + i.payoutAmount, 0),
+                    totalPool: poolLeaders.reduce((sum: number, i: any) => sum + i.payoutAmount, 0),
                     totalAmount: Math.abs(viewingTransaction.amount)
                 }
             };
@@ -686,7 +700,7 @@ const FundManagementPage: React.FC = () => {
                             </div>
                             <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 ring-2 ring-emerald-500/50">
                                 <p className="text-[10px] font-bold text-emerald-600 uppercase">TỔNG CHI ĐỢT NÀY</p>
-                                <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{leaderPayoutPreview.totalFixed.toLocaleString()}đ</p>
+                                <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{(leaderPayoutPreview.totalFixed + leaderPayoutPreview.totalPool).toLocaleString()}đ</p>
                             </div>
                         </div>
 
@@ -701,26 +715,46 @@ const FundManagementPage: React.FC = () => {
                             {leaderPayoutPreview.fixedLeaders.length > 0 && (
                                 <PaginatedPreviewTable 
                                     data={leaderPayoutPreview.fixedLeaders}
-                                    title={<h4 className="text-xs font-bold text-blue-500 uppercase flex items-center gap-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div>Thưởng thăng hạng (Ưu tiên - Duy nhất 1 lần)</h4>}
+                                    title={<h4 className="text-xs font-bold text-blue-500 uppercase flex items-center gap-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div>Thưởng Vinh danh (Cố định 1 lần)</h4>}
                                     filterFunction={(item: any, term) => item.user.name.toLowerCase().includes(term.toLowerCase())}
                                     renderHeader={() => (
-                                        <tr><th className="px-4 py-2">Thành viên</th><th className="px-4 py-2">Cấp đạt được</th><th className="px-4 py-2 text-right">Tiền thưởng</th></tr>
+                                        <tr><th className="px-4 py-2">Thành viên</th><th className="px-4 py-2">Danh hiệu</th><th className="px-4 py-2 text-right">Tiền thưởng</th></tr>
                                     )}
                                     renderRow={(l, i) => (
                                         <tr key={i}><td className="px-4 py-2 font-medium">{l.user.name}</td><td className="px-4 py-2 text-blue-500 font-semibold">{l.reason.replace('Thăng cấp: ', '')}</td><td className="px-4 py-2 text-right font-bold text-green-600">+{l.payoutAmount.toLocaleString()}đ</td></tr>
                                     )}
                                     renderFooter={() => (
                                          <tr className="font-bold text-slate-900 dark:text-white">
-                                            <td colSpan={2} className="px-4 py-2 text-right uppercase text-[10px]">Cộng bảng thăng hạng:</td>
+                                            <td colSpan={2} className="px-4 py-2 text-right uppercase text-[10px]">Tổng Cố định:</td>
                                             <td className="px-4 py-2 text-right text-indigo-600 dark:text-indigo-400">{leaderPayoutPreview.totalFixed.toLocaleString()}đ</td>
                                         </tr>
                                     )}
                                 />
                             )}
 
-                            {leaderPayoutPreview.fixedLeaders.length === 0 && (
+                            {leaderPayoutPreview.poolLeaders.length > 0 && (
+                                <PaginatedPreviewTable 
+                                    data={leaderPayoutPreview.poolLeaders}
+                                    title={<h4 className="text-xs font-bold text-orange-500 uppercase flex items-center gap-2"><div className="w-2 h-2 bg-orange-500 rounded-full"></div>Đồng chia Bể Quỹ Leader</h4>}
+                                    filterFunction={(item: any, term) => item.user.name.toLowerCase().includes(term.toLowerCase())}
+                                    renderHeader={() => (
+                                        <tr><th className="px-4 py-2">Thành viên</th><th className="px-4 py-2">Bể chia (Danh hiệu)</th><th className="px-4 py-2 text-right">Tiền thưởng</th></tr>
+                                    )}
+                                    renderRow={(l, i) => (
+                                        <tr key={i}><td className="px-4 py-2 font-medium">{l.user.name}</td><td className="px-4 py-2 text-orange-500 font-semibold">{l.reason.replace('Đồng chia Quỹ (Danh hiệu ', '').replace(')', '')}</td><td className="px-4 py-2 text-right font-bold text-green-600">+{l.payoutAmount.toLocaleString()}đ</td></tr>
+                                    )}
+                                    renderFooter={() => (
+                                         <tr className="font-bold text-slate-900 dark:text-white">
+                                            <td colSpan={2} className="px-4 py-2 text-right uppercase text-[10px]">Tổng Đồng chia Quỹ:</td>
+                                            <td className="px-4 py-2 text-right text-orange-600 dark:text-orange-400">{leaderPayoutPreview.totalPool.toLocaleString()}đ</td>
+                                        </tr>
+                                    )}
+                                />
+                            )}
+
+                            {leaderPayoutPreview.fixedLeaders.length === 0 && leaderPayoutPreview.poolLeaders.length === 0 && (
                                 <div className="text-center py-10 text-slate-500 italic">
-                                    Không có mốc thăng cấp nào mới từ lần chi trước.
+                                    Không có mốc thăng cấp nào mới hoặc không có ai đủ điều kiện nhận Bể chia thưởng kỳ này.
                                 </div>
                             )}
                         </div>
@@ -817,27 +851,26 @@ const FundManagementPage: React.FC = () => {
                                 )}
                                 
                                 {/* @ts-ignore */}
-                                {historicalDetail.data.weightedLeaders.length > 0 && (
+                                {historicalDetail.data.poolLeaders.length > 0 && (
                                      <PaginatedPreviewTable<any> 
-                                        data={historicalDetail.data.weightedLeaders as any[]}
-                                        title={<h4 className="text-xs font-bold text-purple-500 uppercase flex items-center gap-2"><div className="w-2 h-2 bg-purple-500 rounded-full"></div>2. Thưởng thành tích (Chia dư)</h4>}
+                                        data={historicalDetail.data.poolLeaders as any[]}
+                                        title={<h4 className="text-xs font-bold text-orange-500 uppercase flex items-center gap-2"><div className="w-2 h-2 bg-orange-500 rounded-full"></div>2. Đồng chia Bể Quỹ</h4>}
                                         filterFunction={(item: any, term) => item.user.name.toLowerCase().includes(term.toLowerCase())}
                                         renderHeader={() => (
-                                            <tr><th className="px-4 py-2">Thành viên</th><th className="px-4 py-2">Lý do</th><th className="px-4 py-2 text-center">Hệ số</th><th className="px-4 py-2 text-right">Tiền thưởng</th></tr>
+                                            <tr><th className="px-4 py-2">Thành viên</th><th className="px-4 py-2">Lý do</th><th className="px-4 py-2 text-right">Tiền thưởng</th></tr>
                                         )}
                                         renderRow={(l: any, i) => (
                                             <tr key={i}>
                                                 <td className="px-4 py-2 font-medium">{l.user.name}</td>
-                                                <td className="px-4 py-2 text-slate-500">{l.reason.replace('Thưởng Leader: ', '')}</td>
-                                                <td className="px-4 py-2 text-center font-mono text-indigo-500">x{l.multiplier}</td>
+                                                <td className="px-4 py-2 text-slate-500">{l.reason.replace('Thưởng Quỹ: ', '')}</td>
                                                 <td className="px-4 py-2 text-right font-bold text-green-600">+{l.payoutAmount.toLocaleString()}đ</td>
                                             </tr>
                                         )}
                                         renderFooter={() => (
                                             <tr className="font-bold text-slate-900 dark:text-white">
-                                                <td colSpan={3} className="px-4 py-2 text-right uppercase text-[10px]">Tổng chia dư:</td>
+                                                <td colSpan={2} className="px-4 py-2 text-right uppercase text-[10px]">Tổng Bể chia:</td>
                                                 {/* @ts-ignore */}
-                                                <td className="px-4 py-2 text-right text-indigo-600 dark:text-indigo-400">{historicalDetail.data.totalWeighted.toLocaleString()}đ</td>
+                                                <td className="px-4 py-2 text-right text-orange-600 dark:text-orange-400">{historicalDetail.data.totalPool.toLocaleString()}đ</td>
                                             </tr>
                                         )}
                                     />
@@ -935,6 +968,17 @@ const FundManagementPage: React.FC = () => {
                                 </div>
                             );
                         })}
+                    </div>
+                </FundCard>
+                <FundCard 
+                     title="Thuế TNCN (10%)" 
+                     statusData={fundStatus[FundType.TNCN_TAX]} 
+                     onDistribute={() => addToast("Tiền thuế TNCN được khấu trừ từ các lệnh rút. Admin sẽ thực hiện nộp thuế theo định kỳ.", "info")}
+                     extraHeader={<div className="bg-orange-100 text-orange-600 p-1 rounded-md"><SparklesIcon className="h-3 w-3" /></div>}
+                >
+                    <div className="text-center py-4">
+                        <BanknotesIcon className="h-12 w-12 text-orange-200 mx-auto mb-2" />
+                        <p className="text-[11px] text-slate-500 italic">Khấu trừ 10% từ thu nhập của thành viên khi rút tiền.</p>
                     </div>
                 </FundCard>
             </div>

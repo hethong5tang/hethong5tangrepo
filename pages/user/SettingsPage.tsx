@@ -632,7 +632,7 @@ const SettingsPage: React.FC = () => {
                                 <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6 max-w-3xl">
                                     <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
                                         <BanknotesIcon className="h-5 w-5 text-indigo-500" />
-                                        Tài khoản Ngân hàng (Nhận Hoa hồng)
+                                        Tài khoản Ngân hàng (Nhận Chiết khấu)
                                     </h3>
                                     <div className="space-y-4">
                                          <div>
@@ -709,7 +709,7 @@ const SettingsPage: React.FC = () => {
                             <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6 max-w-2xl">
                                 <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">Cài đặt Thông báo</h3>
                                 <div className="divide-y divide-gray-200 dark:divide-slate-700">
-                                    <ToggleSwitch label="Nhận hoa hồng mới" enabled={settings.notifications.newCommission} onToggle={() => handleToggle('newCommission')} />
+                                    <ToggleSwitch label="Nhận chiết khấu mới" enabled={settings.notifications.newCommission} onToggle={() => handleToggle('newCommission')} />
                                     <ToggleSwitch label="Trạng thái rút tiền thay đổi" enabled={settings.notifications.withdrawalStatusChange} onToggle={() => handleToggle('withdrawalStatusChange')} />
                                     <ToggleSwitch label="Hoạt động mạng lưới mới" enabled={settings.notifications.networkActivity} onToggle={() => handleToggle('networkActivity')} />
                                 </div>
@@ -721,8 +721,8 @@ const SettingsPage: React.FC = () => {
                                 <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">Tự động hóa tài khoản</h3>
                                 <div className="divide-y divide-gray-200 dark:divide-slate-700">
                                     <ToggleSwitch 
-                                        label="Tự động gia hạn phí duy trì"
-                                        description="Khi bật, hệ thống sẽ tự động trừ phí duy trì từ ví của bạn khi đến hạn, miễn là bạn có đủ số dư."
+                                        label="Tự động gia hạn phí thuê bao"
+                                        description="Khi bật, hệ thống sẽ tự động trừ phí thuê bao từ ví của bạn khi đến hạn, miễn là bạn có đủ số dư."
                                         enabled={settings.autoRenewMaintenance}
                                         onToggle={() => setSettings(prev => ({ ...prev, autoRenewMaintenance: !prev.autoRenewMaintenance }))}
                                     />

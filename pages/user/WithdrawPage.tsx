@@ -241,8 +241,19 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onNavigate }) => {
                         <div className="space-y-6 animate-fadeIn">
                             <h3 className="text-xl font-bold text-center text-slate-800 dark:text-slate-200">Xác nhận thông tin & Bảo mật</h3>
                             <div className="p-6 bg-slate-100 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
-                                <div><p className="text-sm text-slate-500 dark:text-slate-400">Số tiền rút</p><p className="font-bold text-lg text-red-500">-{amount.toLocaleString('vi-VN')}đ</p></div>
-                                 <div>
+                                <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-2">
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">Số tiền yêu cầu rút</p>
+                                    <p className="font-bold text-lg text-slate-800 dark:text-slate-200">{amount.toLocaleString('vi-VN')}đ</p>
+                                </div>
+                                <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-2">
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">Khấu trừ Thuế TNCN (10%)</p>
+                                    <p className="font-semibold text-red-500">-{Math.floor(amount * 0.1).toLocaleString('vi-VN')}đ</p>
+                                </div>
+                                <div className="flex justify-between items-center pt-2">
+                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Thực nhận về tài khoản</p>
+                                    <p className="font-black text-2xl text-green-600 dark:text-green-400">{Math.floor(amount * 0.9).toLocaleString('vi-VN')}đ</p>
+                                </div>
+                                <div className="pt-4">
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Phương thức nhận tiền</label>
                                     <select value={method} onChange={(e) => setMethod(e.target.value as 'bank' | 'momo')} className="mt-1 block w-full px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700">
                                         <option value="bank">Tài khoản Ngân hàng</option>

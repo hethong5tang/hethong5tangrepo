@@ -24,6 +24,7 @@ export enum TransactionType {
   SupportFundPayout = 'support_fund_payout',
   CreditConversion = 'credit_conversion',
   AdminAdjustment = 'admin_adjustment',
+  TaxDeduction = 'tax_deduction',
 }
 
 export enum WithdrawalStatus {
@@ -35,7 +36,10 @@ export enum WithdrawalStatus {
 export enum FundType {
     Admin = 'admin_wallet', 
     LeaderBonus = 'leader_bonus',
-    Support = 'support'
+    Support = 'support',
+    VAT = 'vat',
+    CorporateTax = 'corporate_tax',
+    TNCN_TAX = 'tncn_tax'
 }
 
 export interface Commission {
@@ -111,6 +115,7 @@ export interface FundTransaction {
     type: 'inflow' | 'outflow';
     amount: number;
     description: string;
+    metadata?: any;
 }
 
 export interface FundStatus {
@@ -142,7 +147,7 @@ export interface MilestoneBonusRequest {
 
 export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
     [TransactionType.ParticipationFee]: 'Phí Tham Gia',
-    [TransactionType.MaintenanceFee]: 'Phí Duy Trì',
+    [TransactionType.MaintenanceFee]: 'Phí Dịch Vụ',
     [TransactionType.Payout]: 'Ví Admin Chi Trả', 
     [TransactionType.PenaltyFee]: 'Phí Phạt',
     [TransactionType.LeaderBonus]: 'Thưởng Leader',
@@ -157,6 +162,7 @@ export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
     [TransactionType.CommissionDifference]: 'Chênh lệch Ví Admin', 
     [TransactionType.CreditConversion]: 'Đổi Credit',
     [TransactionType.AdminAdjustment]: 'Điều chỉnh tài khoản',
+    [TransactionType.TaxDeduction]: 'Khấu trừ Thuế TNCN (10%)',
 };
 
 export const TRANSACTION_STATUS_LABELS: Record<TransactionStatus, string> = {

@@ -43,15 +43,16 @@ const RankProgressWidget: React.FC = () => {
     const nextLevelData = nextLevelInfo || levelSettings[0];
     if(!nextLevelData) return null; 
 
-    const currentLevelRequired = currentLevelInfo ? currentLevelInfo.requiredEarnings : 0;
-    const nextLevelRequired = nextLevelData.requiredEarnings;
+    const currentLevelRequired = currentLevelInfo ? (currentLevelInfo.requiredGroupRevenue || currentLevelInfo.requiredEarnings || 0) : 0;
+    const nextLevelRequired = nextLevelData.requiredGroupRevenue || nextLevelData.requiredEarnings || 0;
     
-    const earningsInCurrentLevel = user.totalEarnings - currentLevelRequired;
+    const currentSales = user.currentLevelRevenue || 0;
+    const earningsInCurrentLevel = currentSales - currentLevelRequired;
     const earningsForNextLevel = nextLevelRequired - currentLevelRequired;
     
     const progressPercentage = earningsForNextLevel > 0 ? (earningsInCurrentLevel / earningsForNextLevel) * 100 : 0;
     
-    const neededForNext = Math.max(0, nextLevelRequired - user.totalEarnings);
+    const neededForNext = Math.max(0, nextLevelRequired - currentSales);
 
     return (
         <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6">
@@ -61,12 +62,12 @@ const RankProgressWidget: React.FC = () => {
                         Cấp bậc hiện tại: <span className="text-indigo-500">{currentLevelName}</span>
                     </h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                        Tổng thu nhập: <span className="font-semibold text-green-500">{user.totalEarnings.toLocaleString('vi-VN')}đ</span>
+                        Doanh số nhóm: <span className="font-semibold text-green-500">{(user.currentLevelRevenue || 0).toLocaleString('vi-VN')}đ</span>
                     </p>
                 </div>
                 <div className="text-right">
                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                        Còn <span className="text-xl text-green-500">{neededForNext.toLocaleString('vi-VN')}đ</span> nữa để đạt cấp <span className="text-indigo-500">{nextLevelData.name}</span>
+                        Còn <span className="text-xl text-green-500">{(neededForNext || 0).toLocaleString('vi-VN')}đ</span> doanh số nữa để đạt cấp <span className="text-indigo-500">{nextLevelData.name}</span>
                     </p>
                 </div>
             </div>
@@ -78,8 +79,8 @@ const RankProgressWidget: React.FC = () => {
                     ></div>
                 </div>
                 <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    <span>{currentLevelRequired.toLocaleString('vi-VN')}đ</span>
-                    <span>{nextLevelRequired.toLocaleString('vi-VN')}đ</span>
+                    <span>{(currentLevelRequired || 0).toLocaleString('vi-VN')}đ</span>
+                    <span>{(nextLevelRequired || 0).toLocaleString('vi-VN')}đ</span>
                 </div>
             </div>
         </div>

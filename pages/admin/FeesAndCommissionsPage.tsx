@@ -170,10 +170,10 @@ export const FeesAndCommissionsPage: React.FC<FeesAndCommissionsPageProps> = () 
         });
     };
 
-    const participationTotalAllocation = settings.profitSettings.participation.adminWallet + settings.profitSettings.participation.leaderBonusFund + settings.profitSettings.participation.supportFund;
+    const participationTotalAllocation = settings.profitSettings.participation.adminWallet + (settings.profitSettings.participation.vat || 10) + (settings.profitSettings.participation.corporateTax || 3) + settings.profitSettings.participation.leaderBonusFund + settings.profitSettings.participation.supportFund;
     const participationCommissionablePercentage = 100 - participationTotalAllocation;
 
-    const maintenanceTotalAllocation = settings.profitSettings.maintenance.adminWallet + settings.profitSettings.maintenance.leaderBonusFund + settings.profitSettings.maintenance.supportFund;
+    const maintenanceTotalAllocation = settings.profitSettings.maintenance.adminWallet + (settings.profitSettings.maintenance.vat || 10) + (settings.profitSettings.maintenance.corporateTax || 3) + settings.profitSettings.maintenance.leaderBonusFund + settings.profitSettings.maintenance.supportFund;
     const maintenanceCommissionablePercentage = 100 - maintenanceTotalAllocation;
 
     const TabButton: React.FC<{ tabName: string, label: string }> = ({ tabName, label }) => (
@@ -242,17 +242,17 @@ export const FeesAndCommissionsPage: React.FC<FeesAndCommissionsPageProps> = () 
                         <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6">
                             <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2"><BanknotesIcon className="h-5 w-5 text-indigo-500" />Phí Gói Thành viên</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <CurrencyInput label={`${settings.tierSettings.starter.name} - Phí tham gia`} value={settings.participationFee} onChange={value => handleSettingChange('participationFee', value)} />
-                                <CurrencyInput label={`${settings.tierSettings.starter.name} - Phí duy trì`} value={settings.maintenanceFee} onChange={value => handleSettingChange('maintenanceFee', value)} />
-                                <CurrencyInput label={`${settings.tierSettings.pro.name} - Phí tham gia`} value={settings.proParticipationFee} onChange={value => handleSettingChange('proParticipationFee', value)} />
-                                <CurrencyInput label={`${settings.tierSettings.pro.name} - Phí duy trì`} value={settings.proMaintenanceFee} onChange={value => handleSettingChange('proMaintenanceFee', value)} />
-                                <CurrencyInput label={`${settings.tierSettings.master.name} - Phí tham gia`} value={settings.masterParticipationFee} onChange={value => handleSettingChange('masterParticipationFee', value)} />
-                                <CurrencyInput label={`${settings.tierSettings.master.name} - Phí duy trì`} value={settings.masterMaintenanceFee} onChange={value => handleSettingChange('masterMaintenanceFee', value)} />
+                                <CurrencyInput label={`${settings.tierSettings.starter.name} - Phí đăng ký`} value={settings.participationFee} onChange={value => handleSettingChange('participationFee', value)} />
+                                <CurrencyInput label={`${settings.tierSettings.starter.name} - Phí thuê bao`} value={settings.maintenanceFee} onChange={value => handleSettingChange('maintenanceFee', value)} />
+                                <CurrencyInput label={`${settings.tierSettings.pro.name} - Phí đăng ký`} value={settings.proParticipationFee} onChange={value => handleSettingChange('proParticipationFee', value)} />
+                                <CurrencyInput label={`${settings.tierSettings.pro.name} - Phí thuê bao`} value={settings.proMaintenanceFee} onChange={value => handleSettingChange('proMaintenanceFee', value)} />
+                                <CurrencyInput label={`${settings.tierSettings.master.name} - Phí đăng ký`} value={settings.masterParticipationFee} onChange={value => handleSettingChange('masterParticipationFee', value)} />
+                                <CurrencyInput label={`${settings.tierSettings.master.name} - Phí thuê bao`} value={settings.masterMaintenanceFee} onChange={value => handleSettingChange('masterMaintenanceFee', value)} />
                             </div>
                         </div>
                          <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6">
                              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2"><Cog6ToothIcon className="h-5 w-5 text-indigo-500" />Phí Khác</h3>
-                             <NumberInput label="Tỷ lệ % Phạt trễ phí duy trì" value={settings.penaltyFeeRate} onChange={value => handleSettingChange('penaltyFeeRate', value)} adornment="%" />
+                             <NumberInput label="Tỷ lệ % Phạt trễ phí thuê bao" value={settings.penaltyFeeRate} onChange={value => handleSettingChange('penaltyFeeRate', value)} adornment="%" />
                          </div>
                     </div>
                 )}
@@ -262,8 +262,8 @@ export const FeesAndCommissionsPage: React.FC<FeesAndCommissionsPageProps> = () 
                          <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
                             <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2"><ReceiptPercentIcon className="h-5 w-5 text-indigo-500" />Cấu hình Hoa hồng Tầng (F1-Fn)</h3>
                              <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
-                                 <button onClick={() => setCommissionType('participation')} className={`px-3 py-1 text-xs font-semibold rounded-md ${commissionType === 'participation' ? 'bg-white dark:bg-slate-600 shadow' : 'text-slate-500 dark:text-slate-400'}`}>Phí Tham Gia</button>
-                                 <button onClick={() => setCommissionType('maintenance')} className={`px-3 py-1 text-xs font-semibold rounded-md ${commissionType === 'maintenance' ? 'bg-white dark:bg-slate-600 shadow' : 'text-slate-500 dark:text-slate-400'}`}>Phí Duy Trì</button>
+                                 <button onClick={() => setCommissionType('participation')} className={`px-3 py-1 text-xs font-semibold rounded-md ${commissionType === 'participation' ? 'bg-white dark:bg-slate-600 shadow' : 'text-slate-500 dark:text-slate-400'}`}>Phí Đăng ký</button>
+                                 <button onClick={() => setCommissionType('maintenance')} className={`px-3 py-1 text-xs font-semibold rounded-md ${commissionType === 'maintenance' ? 'bg-white dark:bg-slate-600 shadow' : 'text-slate-500 dark:text-slate-400'}`}>Phí Thuê bao</button>
                              </div>
                          </div>
                         {(() => {
@@ -273,8 +273,8 @@ export const FeesAndCommissionsPage: React.FC<FeesAndCommissionsPageProps> = () 
                             
                             // Calculate based on profit allocation
                             const allocatedToFunds = type === 'participation' 
-                                ? (settings.profitSettings.participation.adminWallet + settings.profitSettings.participation.leaderBonusFund + settings.profitSettings.participation.supportFund)
-                                : (settings.profitSettings.maintenance.adminWallet + settings.profitSettings.maintenance.leaderBonusFund + settings.profitSettings.maintenance.supportFund);
+                                ? (settings.profitSettings.participation.adminWallet + (settings.profitSettings.participation.vat || 10) + (settings.profitSettings.participation.corporateTax || 3) + settings.profitSettings.participation.leaderBonusFund + settings.profitSettings.participation.supportFund)
+                                : (settings.profitSettings.maintenance.adminWallet + (settings.profitSettings.maintenance.vat || 10) + (settings.profitSettings.maintenance.corporateTax || 3) + settings.profitSettings.maintenance.leaderBonusFund + settings.profitSettings.maintenance.supportFund);
                             
                             const commissionablePercentage = 100 - allocatedToFunds;
                             const commissionableAmount = baseAmount * (commissionablePercentage / 100);
@@ -284,20 +284,20 @@ export const FeesAndCommissionsPage: React.FC<FeesAndCommissionsPageProps> = () 
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <div className="p-4 bg-slate-100 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700 text-center">
-                                            <p className="text-sm text-slate-500 dark:text-slate-400">Trích Quỹ (Cố định 20%)</p>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">Trích Quỹ (Cố định 40%)</p>
                                             <p className="text-2xl font-bold text-orange-600">
                                                 {allocatedToFunds}%
                                             </p>
                                             <p className="text-[10px] text-slate-400 mt-1">
-                                                Admin 10% + Leader 5% + Hỗ trợ 5%
+                                                Thuế 13% + Admin 17% + Leader 5% + Hỗ trợ 5%
                                             </p>
                                         </div>
                                         <div className="p-4 bg-slate-100 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700 text-center">
-                                            <p className="text-sm text-slate-500 dark:text-slate-400">Tổng Hoa hồng (80%)</p>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">Tổng Hoa hồng (60%)</p>
                                             <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                                                 {totalCommissionPercentage}%
                                             </p>
-                                            <p className="text-[10px] text-slate-400 mt-1">Phân bổ 5 tầng F1-F5</p>
+                                            <p className="text-[10px] text-slate-400 mt-1">Phân bổ 2 tầng F1-F2</p>
                                         </div>
                                         <div className="p-4 bg-slate-100 dark:bg-slate-900/30 rounded-lg border border-slate-200 dark:border-slate-700 text-center">
                                             <p className="text-sm text-slate-500 dark:text-slate-400">Kiểm tra Logic</p>
@@ -375,28 +375,32 @@ export const FeesAndCommissionsPage: React.FC<FeesAndCommissionsPageProps> = () 
                             <div className="space-y-6">
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
-                                        <h4 className="font-medium text-slate-800 dark:text-slate-200">Nguồn từ Phí Tham Gia</h4>
-                                        <span className="text-xs text-slate-500">Tổng phân bổ cho Quỹ: {settings.profitSettings.participation.adminWallet + settings.profitSettings.participation.leaderBonusFund + settings.profitSettings.participation.supportFund}%</span>
+                                        <h4 className="font-medium text-slate-800 dark:text-slate-200">Nguồn từ Phí Đăng ký</h4>
+                                        <span className="text-xs text-slate-500">Tổng phân bổ cho Quỹ: {settings.profitSettings.participation.adminWallet + (settings.profitSettings.participation.vat || 10) + (settings.profitSettings.participation.corporateTax || 3) + settings.profitSettings.participation.leaderBonusFund + settings.profitSettings.participation.supportFund}%</span>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                        <NumberInput label="Trích nạp Ví Admin" value={settings.profitSettings.participation.adminWallet} onChange={value => handleProfitSettingChange('participation', 'adminWallet', value)} adornment="%" />
-                                        <NumberInput label="Trích nạp Quỹ Leader" value={settings.profitSettings.participation.leaderBonusFund} onChange={value => handleProfitSettingChange('participation', 'leaderBonusFund', value)} adornment="%" />
-                                        <NumberInput label="Trích nạp Quỹ Hỗ Trợ" value={settings.profitSettings.participation.supportFund} onChange={value => handleProfitSettingChange('participation', 'supportFund', value)} adornment="%" />
+                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-2">
+                                        <NumberInput label="Ví Admin" value={settings.profitSettings.participation.adminWallet} onChange={value => handleProfitSettingChange('participation', 'adminWallet', value)} adornment="%" />
+                                        <NumberInput label="Thuế VAT" value={settings.profitSettings.participation.vat || 10} onChange={value => handleProfitSettingChange('participation', 'vat', value)} adornment="%" />
+                                        <NumberInput label="Thuế TNDN" value={settings.profitSettings.participation.corporateTax || 3} onChange={value => handleProfitSettingChange('participation', 'corporateTax', value)} adornment="%" />
+                                        <NumberInput label="Quỹ Leader" value={settings.profitSettings.participation.leaderBonusFund} onChange={value => handleProfitSettingChange('participation', 'leaderBonusFund', value)} adornment="%" />
+                                        <NumberInput label="Quỹ Hỗ Trợ" value={settings.profitSettings.participation.supportFund} onChange={value => handleProfitSettingChange('participation', 'supportFund', value)} adornment="%" />
                                     </div>
-                                    <div className="mt-2 text-[10px] text-slate-500 italic">Số % còn lại ({100 - (settings.profitSettings.participation.adminWallet + settings.profitSettings.participation.leaderBonusFund + settings.profitSettings.participation.supportFund)}%) sẽ dùng để chi trả Hoa hồng Hệ thống.</div>
+                                    <div className="mt-2 text-[10px] text-slate-500 italic">Số % còn lại ({100 - (settings.profitSettings.participation.adminWallet + (settings.profitSettings.participation.vat || 10) + (settings.profitSettings.participation.corporateTax || 3) + settings.profitSettings.participation.leaderBonusFund + settings.profitSettings.participation.supportFund)}%) sẽ dùng để chi trả Chiết khấu Hệ thống.</div>
                                 </div>
 
                                  <div className="pt-6 border-t border-slate-200 dark:border-slate-700">
                                     <div className="flex items-center justify-between mb-2">
-                                        <h4 className="font-medium text-slate-800 dark:text-slate-200">Nguồn từ Phí Duy Trì</h4>
-                                        <span className="text-xs text-slate-500">Tổng phân bổ cho Quỹ: {settings.profitSettings.maintenance.adminWallet + settings.profitSettings.maintenance.leaderBonusFund + settings.profitSettings.maintenance.supportFund}%</span>
+                                        <h4 className="font-medium text-slate-800 dark:text-slate-200">Nguồn từ Phí Thuê bao</h4>
+                                        <span className="text-xs text-slate-500">Tổng phân bổ cho Quỹ: {settings.profitSettings.maintenance.adminWallet + (settings.profitSettings.maintenance.vat || 10) + (settings.profitSettings.maintenance.corporateTax || 3) + settings.profitSettings.maintenance.leaderBonusFund + settings.profitSettings.maintenance.supportFund}%</span>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                        <NumberInput label="Trích nạp Ví Admin" value={settings.profitSettings.maintenance.adminWallet} onChange={value => handleProfitSettingChange('maintenance', 'adminWallet', value)} adornment="%" />
-                                        <NumberInput label="Trích nạp Quỹ Leader" value={settings.profitSettings.maintenance.leaderBonusFund || 0} onChange={value => handleProfitSettingChange('maintenance', 'leaderBonusFund', value)} adornment="%" />
-                                        <NumberInput label="Trích nạp Quỹ Hỗ Trợ" value={settings.profitSettings.maintenance.supportFund} onChange={value => handleProfitSettingChange('maintenance', 'supportFund', value)} adornment="%" />
+                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-2">
+                                        <NumberInput label="Ví Admin" value={settings.profitSettings.maintenance.adminWallet} onChange={value => handleProfitSettingChange('maintenance', 'adminWallet', value)} adornment="%" />
+                                        <NumberInput label="Thuế VAT" value={settings.profitSettings.maintenance.vat || 10} onChange={value => handleProfitSettingChange('maintenance', 'vat', value)} adornment="%" />
+                                        <NumberInput label="Thuế TNDN" value={settings.profitSettings.maintenance.corporateTax || 3} onChange={value => handleProfitSettingChange('maintenance', 'corporateTax', value)} adornment="%" />
+                                        <NumberInput label="Quỹ Leader" value={settings.profitSettings.maintenance.leaderBonusFund || 0} onChange={value => handleProfitSettingChange('maintenance', 'leaderBonusFund', value)} adornment="%" />
+                                        <NumberInput label="Quỹ Hỗ Trợ" value={settings.profitSettings.maintenance.supportFund} onChange={value => handleProfitSettingChange('maintenance', 'supportFund', value)} adornment="%" />
                                     </div>
-                                    <div className="mt-2 text-[10px] text-slate-500 italic">Số % còn lại ({100 - (settings.profitSettings.maintenance.adminWallet + settings.profitSettings.maintenance.leaderBonusFund + settings.profitSettings.maintenance.supportFund)}%) sẽ dùng để chi trả Hoa hồng Hệ thống.</div>
+                                    <div className="mt-2 text-[10px] text-slate-500 italic">Số % còn lại ({100 - (settings.profitSettings.maintenance.adminWallet + (settings.profitSettings.maintenance.vat || 10) + (settings.profitSettings.maintenance.corporateTax || 3) + settings.profitSettings.maintenance.leaderBonusFund + settings.profitSettings.maintenance.supportFund)}%) sẽ dùng để chi trả Chiết khấu Hệ thống.</div>
                                 </div>
                             </div>
                         </div>

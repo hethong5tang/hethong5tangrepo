@@ -100,7 +100,7 @@ export const createUserActions = (deps: {
                                 type: 'ADD_NOTIFICATION',
                                 payload: {
                                     userId: u.id,
-                                    message: `Hệ thống đã trích ra ${recoveredAmount.toLocaleString('vi-VN')}đ từ hoa hồng bạn vừa kiếm được để hoàn trả lại số tiền đã nhận hỗ trợ từ hệ thống.`,
+                                    message: `Hệ thống đã trích ra ${recoveredAmount.toLocaleString('vi-VN')}đ từ chiết khấu bạn vừa kiếm được để hoàn trả lại số tiền đã nhận hỗ trợ từ hệ thống.`,
                                     link: 'Ví Của Tôi'
                                 }
                             });
@@ -183,7 +183,7 @@ export const createUserActions = (deps: {
                             type: 'ADD_NOTIFICATION',
                             payload: {
                                 userId: u.id,
-                                message: `Hệ thống đã trích ra ${recoveredAmount.toLocaleString('vi-VN')}đ từ hoa hồng bạn vừa kiếm được để hoàn trả lại số tiền đã nhận hỗ trợ từ hệ thống.`,
+                                message: `Hệ thống đã trích ra ${recoveredAmount.toLocaleString('vi-VN')}đ từ chiết khấu bạn vừa kiếm được để hoàn trả lại số tiền đã nhận hỗ trợ từ hệ thống.`,
                                 link: 'Ví Của Tôi'
                             }
                         });
@@ -217,7 +217,7 @@ export const createUserActions = (deps: {
                     type: TransactionType.PenaltyFee, description: `Phí phạt trễ hạn`, amount: -penaltyAmount, status: TransactionStatus.Completed
                 }});
             }
-            addToast('Thanh toán phí duy trì thành công!', 'success');
+            addToast('Thanh toán phí thuê bao thành công!', 'success');
         }
     };
 
@@ -257,7 +257,7 @@ export const createUserActions = (deps: {
         const bulkUpdates: any[] = [{
             id: freshUser.id,
             balance: freshUser.balance - upgradeCost, // Deduct only the difference
-            creditBalance: freshUser.creditBalance + (upgradeCost / 1000), // Bonus credits based on payment
+            creditBalance: freshUser.creditBalance + (upgradeCost / 100), // Bonus credits based on payment (100k = 1000P => 1 VND = 0.01P)
             membershipTier: newTier,
             nextMaintenanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
         }];
@@ -360,7 +360,7 @@ export const createUserActions = (deps: {
     const handleConvertVndToCredits = (userId: string, currentBalance: number, currentCredits: number, userName: string, userAvatar: string, vndAmount: number) => {
         const u = findUserInTree(userState.allUsers, userId);
         if (!u || u.balance < vndAmount) return;
-        const credits = vndAmount / 1000;
+        const credits = vndAmount / 100;
         userDispatch({ type: 'UPDATE_USER', payload: { id: userId, balance: u.balance - vndAmount, creditBalance: u.creditBalance + credits } });
         financeDispatch({ type: 'ADD_TRANSACTION', payload: {
             id: `conv_${Date.now()}`, userId, user: { name: userName, avatar: userAvatar },

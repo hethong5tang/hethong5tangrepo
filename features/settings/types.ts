@@ -56,10 +56,12 @@ export interface BranchRequirement {
 export interface LevelSetting {
     level: number;
     name: string;
-    requiredEarnings: number;
-    bonusAmount: number; // Tiền thưởng thăng cấp cố định
-    rewardPercentage?: number; // % thưởng từ Quỹ Leader
+    subTitle: string;
+    requiredGroupRevenue: number;
+    rewardPercentage: number; // % thưởng Đồng chia (trích từ Quỹ Leader)
+    honorAward: string; // Thưởng vinh danh (Hiện vật/Bằng khen)
     branchRequirements?: BranchRequirement[]; // Điều kiện số nhánh phải đạt cấp độ nhất định
+    f1Requirement?: number; // Điều kiện số F1 tham gia gói
 }
 
 export interface MilestoneBonus {
@@ -198,13 +200,19 @@ export interface SystemSettings {
     commissionSettings: CommissionTierSettings;
     minWithdrawal: number;
     profitSettings: {
+        leaderFundAutoPayout?: boolean;
+        leaderFundPayoutDay?: number;
         participation: {
-            adminWallet: number;
-            leaderBonusFund: number;
-            supportFund: number;
+            adminWallet: number; // 17%
+            vat: number;         // 10%
+            corporateTax: number;// 3%
+            leaderBonusFund: number; // 5%
+            supportFund: number;     // 5%
         };
         maintenance: {
             adminWallet: number;
+            vat: number;
+            corporateTax: number;
             leaderBonusFund: number;
             supportFund: number;
         };
@@ -216,6 +224,8 @@ export interface SystemSettings {
     tierSettings: Record<MembershipTier.Starter | MembershipTier.Pro | MembershipTier.Master, {
         name: string;
         visible: boolean;
+        credits: number;
+        benefits: string[];
     }>;
     leaderboardSettings: LeaderboardSettings;
     useLeaderboardMockData: boolean;

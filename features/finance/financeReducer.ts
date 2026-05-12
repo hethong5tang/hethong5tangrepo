@@ -34,15 +34,28 @@ export const financeReducer = (state: FinanceState, action: FinanceAction): Fina
     case 'PROCESS_WITHDRAWAL_APPROVE': {
         const request = action.payload;
         const date = new Date().toISOString().split('T')[0];
+        const taxAmount = Math.floor(request.amount * 0.1);
+        const actualPayout = request.amount - taxAmount;
         
-        const newTransaction: Transaction = {
+        const payoutTransaction: Transaction = {
             id: `txn_approve_${request.id}`,
             userId: request.userId,
             user: request.user,
             date,
             type: TransactionType.Payout,
-            description: `Ví Admin chi trả rút tiền (${request.paymentMethod.toUpperCase()})`,
-            amount: -request.amount,
+            description: `Ví Admin chi trả rút tiền (${request.paymentMethod.toUpperCase()}) - (Đã trừ thuế)`,
+            amount: -actualPayout,
+            status: TransactionStatus.Completed,
+        };
+
+        const taxTransaction: Transaction = {
+            id: `txn_tax_${request.id}`,
+            userId: request.userId,
+            user: request.user,
+            date,
+            type: TransactionType.TaxDeduction,
+            description: `Khấu trừ Thuế TNCN 10% cho lệnh rút #${request.id}`,
+            amount: -taxAmount,
             status: TransactionStatus.Completed,
         };
 
@@ -53,13 +66,29 @@ export const financeReducer = (state: FinanceState, action: FinanceAction): Fina
             totalOut: updatedFundStatus[FundType.Admin].totalOut + request.amount,
         };
 
+        // NEW: Di chuyển thuế TNCN vào quỹ riêng
+        updatedFundStatus[FundType.TNCN_TAX] = {
+            ...updatedFundStatus[FundType.TNCN_TAX],
+            balance: (updatedFundStatus[FundType.TNCN_TAX]?.balance || 0) + taxAmount,
+            totalIn: (updatedFundStatus[FundType.TNCN_TAX]?.totalIn || 0) + taxAmount,
+        };
+
         const newFundTx: FundTransaction = {
             id: `ft_wd_${Date.now()}`,
             date,
             fund: FundType.Admin,
             type: 'outflow',
             amount: -request.amount,
-            description: `Chi trả rút tiền cho ${request.user.name}`
+            description: `Chi trả rút tiền cho ${request.user.name} (Gồm Thuế TNCN 10%)`
+        };
+
+        const taxFundTx: FundTransaction = {
+            id: `ft_tax_tncn_${Date.now()}`,
+            date,
+            fund: FundType.TNCN_TAX,
+            type: 'inflow',
+            amount: taxAmount,
+            description: `Thuế TNCN trích từ lệnh rút #${request.id} của ${request.user.name}`
         };
 
         return {
@@ -67,9 +96,9 @@ export const financeReducer = (state: FinanceState, action: FinanceAction): Fina
             withdrawalRequests: state.withdrawalRequests.map(r =>
                 r.id === request.id ? { ...r, status: WithdrawalStatus.Approved, updatedAt: date } : r
             ),
-            allTransactions: [newTransaction, ...state.allTransactions],
+            allTransactions: [payoutTransaction, taxTransaction, ...state.allTransactions],
             fundStatus: updatedFundStatus,
-            fundTransactions: [newFundTx, ...state.fundTransactions]
+            fundTransactions: [newFundTx, taxFundTx, ...state.fundTransactions]
         };
     }
 
@@ -196,19 +225,10 @@ export const financeReducer = (state: FinanceState, action: FinanceAction): Fina
             const fundKey = key as FundType;
             updatedFundStatus[fundKey] = {
                 ...updatedFundStatus[fundKey],
-                balance: updatedFundStatus[fundKey].balance + (fundUpdates[fundKey]?.balanceChange || 0),
-                totalIn: updatedFundStatus[fundKey].totalIn + (fundUpdates[fundKey]?.totalInChange || 0),
+                balance: (updatedFundStatus[fundKey]?.balance || 0) + (fundUpdates[fundKey]?.balanceChange || 0),
+                totalIn: (updatedFundStatus[fundKey]?.totalIn || 0) + (fundUpdates[fundKey]?.totalInChange || 0),
             };
         });
-
-        const adminProfitTx = newTransactions.find((t: any) => t.type === TransactionType.SystemProfit);
-        if (adminProfitTx) {
-            updatedFundStatus[FundType.Admin] = {
-                ...updatedFundStatus[FundType.Admin],
-                balance: updatedFundStatus[FundType.Admin].balance + adminProfitTx.amount,
-                totalIn: updatedFundStatus[FundType.Admin].totalIn + adminProfitTx.amount,
-            };
-        }
 
         return {
             ...state,

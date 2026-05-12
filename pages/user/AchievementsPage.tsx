@@ -192,17 +192,17 @@ const AchievementsPage: React.FC = () => {
     // 1. Generate Achievements automatically from Levels
     const rankAchievements: Achievement[] = useMemo(() => {
         return levelSettings
-            .filter(lvl => lvl.requiredEarnings > 0) // Skip base level if 0
+            .filter(lvl => (lvl.requiredGroupRevenue || lvl.requiredEarnings || 0) > 0) // Skip base level if 0
             .map(lvl => ({
                 id: `rank_auto_${lvl.level}`,
                 name: `Chinh phục ${lvl.name}`,
-                description: `Đạt cột mốc tổng thu nhập ${lvl.requiredEarnings.toLocaleString('vi-VN')}đ để thăng cấp.`,
+                description: `Đạt cột mốc tổng thu nhập ${(lvl.requiredGroupRevenue || lvl.requiredEarnings || 0).toLocaleString('vi-VN')}đ để thăng cấp.`,
                 icon: 'CrownIcon',
                 customIconUrl: undefined,
                 weight: lvl.level,
                 rule: {
                     metric: AchievementMetric.TotalEarnings,
-                    target: lvl.requiredEarnings
+                    target: lvl.requiredGroupRevenue || lvl.requiredEarnings || 0
                 }
             }));
     }, [levelSettings]);

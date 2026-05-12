@@ -24,8 +24,8 @@ const IncomeEstimator: React.FC<IncomeEstimatorProps> = ({ systemSettings }) => 
         const { participation, maintenance } = systemSettings.profitSettings;
 
         const totalAllocationPercentage = isParticipation
-            ? participation.adminWallet + participation.leaderBonusFund + participation.supportFund
-            : maintenance.adminWallet + maintenance.supportFund;
+            ? participation.adminWallet + (participation.vat || 10) + (participation.corporateTax || 3) + participation.leaderBonusFund + participation.supportFund
+            : maintenance.adminWallet + (maintenance.vat || 10) + (maintenance.corporateTax || 3) + maintenance.leaderBonusFund + maintenance.supportFund;
 
         const baseFeeStarter = isParticipation ? systemSettings.participationFee : systemSettings.maintenanceFee;
         const baseFeePro = isParticipation ? systemSettings.proParticipationFee : systemSettings.proMaintenanceFee;
@@ -110,7 +110,7 @@ const IncomeEstimator: React.FC<IncomeEstimatorProps> = ({ systemSettings }) => 
         <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6">
             <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-2">Công cụ Mô phỏng Thu nhập</h2>
             <p className="text-slate-500 dark:text-slate-400 mb-6">
-                Mô phỏng tiềm năng thu nhập từ hoa hồng {activeTab === 'participation' ? 'phí tham gia' : 'phí duy trì'} khi mạng lưới của bạn phát triển theo cấp số nhân.
+                Mô phỏng tiềm năng thu nhập từ hoa hồng {activeTab === 'participation' ? 'phí đăng ký' : 'phí thuê bao'} khi mạng lưới của bạn phát triển theo cấp số nhân.
             </p>
 
             <div className="border-b border-slate-200 dark:border-slate-700 mb-6">
@@ -123,7 +123,7 @@ const IncomeEstimator: React.FC<IncomeEstimatorProps> = ({ systemSettings }) => 
                                 : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:hover:text-slate-200 dark:hover:border-slate-600'
                         }`}
                     >
-                        Hoa hồng Phí tham gia
+                        Chiết khấu Đăng ký
                     </button>
                     <button
                         onClick={() => setActiveTab('maintenance')}
@@ -133,7 +133,7 @@ const IncomeEstimator: React.FC<IncomeEstimatorProps> = ({ systemSettings }) => 
                                 : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:hover:text-slate-200 dark:hover:border-slate-600'
                         }`}
                     >
-                        Hoa hồng Phí duy trì
+                        Chiết khấu Thuê bao
                     </button>
                 </nav>
             </div>

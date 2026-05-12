@@ -12,66 +12,66 @@ const MOCK_LANDING_PAGE_LEADERS = [
 ];
 
 export const initialLandingPageState: LandingPageState = {
-    layout: ['hero', 'features', 'whyUs', 'leaderboard', 'pricing', 'faq'],
+    layout: ['hero', 'features', 'career', 'whyUs', 'leaderboard', 'pricing', 'faq'],
     content: {
         hero: {
-            title: 'Hệ thống kiếm tiền <br class="hidden md:block" /> <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">thông minh & bền vững</span>',
-            subtitle: `Chỉ với ... tham gia, nhận hoa hồng đến F5, thưởng Leader và Quỹ Hỗ Trợ.`,
+            title: 'Hệ thống Liên kết kinh doanh <br class="hidden md:block" /> <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Tài nguyên AI bền vững</span>',
+            subtitle: `Giải pháp kinh doanh số trên nền tảng Affiliate SaaS AI. Nhận chiết khấu dịch vụ 2 tầng, thưởng Leader và đồng chia lợi nhuận cộng đồng.`,
             ctaText: 'Tham gia ngay',
-            logoText: 'Monetize',
+            logoText: 'Affiliate SaaS AI',
             logoUrl: '',
             useWideLogo: false,
             logoObjectPosition: 'center',
             stats: [
                 { id: 'stat1', label: 'Tổng Thành viên', value: '17.848' },
                 { id: 'stat2', label: 'Thành viên mới hôm nay', value: '+128' },
-                { id: 'stat3', label: 'Giao dịch Hôm nay', value: '+2.145' },
-                { id: 'stat4', label: 'Tổng Tiền đã chi trả', value: '1.250.000.000đ' },
+                { id: 'stat3', label: 'Giao dịch mới', value: '+2.145' },
+                { id: 'stat4', label: 'Tổng lợi nhuận đã chi trả', value: '1.250.000.000đ' },
             ],
         },
         features: {
-            title: 'Giá trị <span class="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Cốt lõi</span>',
-            description: 'Nền tảng được xây dựng trên các nguyên tắc minh bạch, công bằng và tăng trưởng bền vững cho mọi thành viên.',
+            title: 'Giá trị <span class="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Cơ bản</span>',
+            description: 'Nền tảng được xây dựng trên các nguyên tắc minh bạch, chia sẻ giá trị và tăng trưởng bền vững cho mọi đối tác.',
             items: [
-                { id: 'f1', icon: 'CurrencyDollarIcon', title: '💰 Hoa hồng F1–F5', description: 'Nhận hoa hồng đến tầng 5 từ phí tham gia & duy trì.' },
-                { id: 'f2', icon: 'TrophyIcon', title: '🏆 Quỹ Leader', description: 'Thưởng cho người đạt mốc, top tháng, và doanh thu F6 trở đi.' },
-                { id: 'f3', icon: 'UserGroupIcon', title: '🤝 Quỹ Hỗ Trợ', description: `Chia cho người chưa có F1, tối đa .../người.` },
+                { id: 'f1', icon: 'CurrencyDollarIcon', title: '💰 Chiết khấu Liên kết', description: 'Nhận chiết khấu dịch vụ lên đến 60% từ 2 tầng (F1-F2).' },
+                { id: 'f2', icon: 'TrophyIcon', title: '🏆 Thưởng Leader', description: 'Phần thưởng dành cho đối tác đạt mốc tăng trưởng từ quỹ 5% doanh thu hệ thống.' },
+                { id: 'f3', icon: 'UserGroupIcon', title: '🤝 Quỹ Hỗ Trợ Cộng đồng', description: `Nguồn lực hỗ trợ những thành viên mới tiếp cận và sử dụng công nghệ.` },
             ],
         },
         whyUs: {
-            title: 'Tại sao chọn <span class="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Monetize?</span>',
-            description: 'Nền tảng của chúng tôi được thiết kế để mang lại sự minh bạch, bền vững và tiềm năng thu nhập không giới hạn.',
+            title: 'Tại sao chọn <span class="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Giải pháp của chúng tôi?</span>',
+            description: 'Nền tảng của chúng tôi cam kết sự minh bạch, tuân thủ pháp luật và tạo giá trị thực.',
             items: [
-                { id: 'w1', icon: 'TableCellsIcon', title: 'Minh bạch & Rõ ràng', description: 'Mọi giao dịch, hoa hồng và dòng tiền đều được ghi nhận chi tiết trên dashboard, giúp bạn dễ dàng theo dõi và kiểm soát.' },
-                { id: 'w2', icon: 'ShieldCheckIcon', title: 'Cơ chế Bền vững', description: 'Mô hình chia sẻ lợi nhuận thông minh cùng các quỹ chung đảm bảo sự phát triển ổn định và lâu dài cho toàn hệ thống.' },
-                { id: 'w3', icon: 'CpuChipIcon', title: 'Tự động & Chính xác', description: 'Hệ thống tự động tính toán và chi trả hoa hồng tức thì, loại bỏ sai sót của con người và đảm bảo quyền lợi của bạn.' },
-                { id: 'w4', icon: 'ArrowTrendingUpIcon', title: 'Tiềm năng Tăng trưởng', description: 'Với sơ đồ 5 tầng và các mốc thưởng hấp dẫn, tiềm năng thu nhập của bạn là không giới hạn khi mạng lưới phát triển.' },
+                { id: 'w1', icon: 'TableCellsIcon', title: 'Minh bạch & Hợp pháp', description: 'Mọi dòng tiền và chiết khấu đều được công khai. Khấu trừ 10% thuế TNCN tự động, thực hiện đầy đủ nghĩa vụ Nhà nước.' },
+                { id: 'w2', icon: 'ShieldCheckIcon', title: 'Sản phẩm Công nghệ Thực', description: 'Mô hình kinh doanh SaaS cung cấp dịch vụ AI thực tế. Tham gia để nhận Credit sử dụng các mô hình AI tiên tiến.' },
+                { id: 'w3', icon: 'CpuChipIcon', title: 'Vận hành Tự động', description: 'Hệ thống đối soát và phân bổ lợi nhuận tự động, đảm bảo chính xác và tức thì cho mọi giao dịch.' },
+                { id: 'w4', icon: 'ArrowTrendingUpIcon', title: 'Cơ hội Phát triển', description: 'Chính sách chiết khấu 2 tầng hấp dẫn giúp xây dựng nguồn thu nhập thụ động bền vững từ việc phát triển cộng đồng.' },
             ]
         },
         leaderboard: {
-            title: 'Vinh danh <span class="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Leader Tháng 8</span>',
+            title: 'Vinh danh <span class="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Leader Tháng Này</span>',
             description: 'Chúc mừng các Leader xuất sắc nhất!',
             leaders: MOCK_LANDING_PAGE_LEADERS,
             metric: LeaderboardMetric.TotalEarnings,
         },
         pricing: {
-            title: 'Gói <span class="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Thành Viên</span>',
+            title: 'Gói <span class="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Dịch Vụ AI</span>',
             plans: [
-                { id: 'p1', name: 'Starter', tier: MembershipTier.Starter, price: 0, maintenanceFee: 0, features: ['Mở khóa hoa hồng 5 tầng', 'Truy cập dashboard quản lý'], popular: false },
-                { id: 'p2', name: 'Pro', tier: MembershipTier.Pro, price: 0, maintenanceFee: 0, features: ['<span class="font-bold text-blue-400">x10</span> Mọi quyền lợi tài financial', 'Mở khóa hoa hồng 5 tầng', 'Ưu tiên hỗ trợ'], popular: true },
-                { id: 'p3', name: 'Master', tier: MembershipTier.Master, price: 0, maintenanceFee: 0, features: ['<span class="font-bold text-amber-400">x100</span> Mọi quyền lợi tài financial', 'Mọi quyền lợi gói Pro', 'Đào tạo chiến lược đặc biệt'], popular: false }
+                { id: 'p1', name: 'Starter', tier: MembershipTier.Starter, price: 0, maintenanceFee: 0, features: ['Trải nghiệm các bộ công cụ AI tiêu chuẩn', 'Mở khóa hệ thống chiết khấu 2 tầng', 'Báo cáo và quản lý mạng lưới đối tác'], popular: false },
+                { id: 'p2', name: 'Pro', tier: MembershipTier.Pro, price: 0, maintenanceFee: 0, features: ['Truy cập không giới hạn Model AI cao cấp', 'Trọn bộ tài liệu & kịch bản Marketing', 'Huy hiệu đối tác Pro & Hỗ trợ ưu tiên'], popular: true },
+                { id: 'p3', name: 'Master', tier: MembershipTier.Master, price: 0, maintenanceFee: 0, features: ['<span class="font-bold text-amber-500">Mở khóa toàn bộ đặc quyền nền tảng</span>', 'Tham gia cộng đồng Leader chiến lược', 'Kênh hỗ trợ kỹ thuật trực tiếp 1-kèm-1'], popular: false }
             ]
         },
         faq: {
             title: 'Câu hỏi <span class="inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Thường gặp</span>',
             items: [
-                { id: 'q1', question: 'Nếu không đóng phí duy trì thì sao?', answer: 'Tài khoản của bạn sẽ bị tạm khóa và không nhận được hoa hồng. Bạn có thể kích hoạt lại bằng cách đóng phí.' },
-                { id: 'q2', question: 'Rút tiền thế nào?', answer: 'Bạn có thể tạo yêu cầu rút tiền trong dashboard cá nhân. Tiền sẽ được chuyển về tài khoản ngân hàng của bạn trong vòng 24-48 giờ làm việc sau khi được duyệt.' },
-                { id: 'q3', question: 'Quỹ Leader chia ra sao?', answer: 'Quỹ Leader được tổng kết và chia vào cuối mỗi tháng cho các thành viên đủ điều kiện (đạt mốc, top doanh thu...) dựa trên các quy tắc được công bố.' }
+                { id: 'q1', question: 'Duy trì tài khoản dịch vụ như thế nào?', answer: 'Tài khoản cần được duy trì phí thuê bao hàng tháng để đảm bảo quyền truy cập và nhận chiết khấu. Hệ thống sẽ có thông báo trước khi đến kỳ hạn.' },
+                { id: 'q2', question: 'Quy trình đối soát và chi trả?', answer: 'Bạn có thể tạo yêu cầu rút lợi nhuận trong dashboard. Hệ thống sẽ phê duyệt và chuyển khoản trong vòng 24-48 giờ làm việc sau khi khấu trừ thuế theo quy định.' },
+                { id: 'q3', question: 'Cơ chế thưởng Leader?', answer: 'Phần thưởng Leader được tổng kết dựa trên kết quả phát triển cộng đồng và doanh số thực tế của nhóm đối tác, được chi trả định kỳ hàng tháng.' }
             ]
         },
         footer: {
-            tagline: 'Xây dựng tương lai tài chính của bạn.',
+            tagline: 'Đồng hành cùng sự thịnh vượng của bạn.',
             columns: [
                 {
                     id: 'col1',
@@ -92,14 +92,14 @@ export const initialLandingPageState: LandingPageState = {
                     ]
                 }
             ],
-            copyright: '© 2024 Monetization Platform. All rights reserved.',
+            copyright: '© 2026 Affiliate SaaS AI. All rights reserved.',
         },
         socialProof: {
             enabled: true,
             items: [
                 { id: 'sp_1', content: '{name} vừa tham gia hệ thống.' },
-                { id: 'sp_2', content: '{name} vừa nhận được {amount}đ hoa hồng.' },
-                { id: 'sp_3', content: '{name} vừa rút thành công {amount}đ.' },
+                { id: 'sp_2', content: '{name} vừa nhận được {amount}đ chiết khấu dịch vụ.' },
+                { id: 'sp_3', content: '{name} vừa nhận thành công {amount}đ lợi nhuận.' },
                 { id: 'sp_4', content: '{name} vừa kích hoạt gói Pro.' },
             ]
         }

@@ -14,14 +14,13 @@ describe('financeService', () => {
         masterParticipationFee: 10000000,
         masterMaintenanceFee: 5000000,
         profitSettings: {
-            participation: { adminWallet: 10, leaderBonusFund: 10, supportFund: 5 },
-            maintenance: { adminWallet: 5, supportFund: 5 },
+            participation: { adminWallet: 17, vat: 10, corporateTax: 3, leaderBonusFund: 5, supportFund: 5 },
+            maintenance: { adminWallet: 17, vat: 10, corporateTax: 3, leaderBonusFund: 5, supportFund: 5 },
         },
         commissionSettings: {
             participationCommissions: [
                 { level: 'F1', percentage: 40 },
                 { level: 'F2', percentage: 20 },
-                { level: 'F3', percentage: 10 },
             ],
             maintenanceCommissions: [],
         },
@@ -54,12 +53,12 @@ describe('financeService', () => {
 
         const feeAmount = mockSystemSettings.participationFee; // 100,000
         const { participation } = mockSystemSettings.profitSettings;
-        const totalAllocationPercentage = participation.adminWallet + participation.leaderBonusFund + participation.supportFund; // 25%
+        const totalAllocationPercentage = participation.adminWallet + (participation.vat || 10) + (participation.corporateTax || 3) + participation.leaderBonusFund + participation.supportFund; // 40%
         
-        const systemProfit = feeAmount * (participation.adminWallet / 100); // 10,000
-        const leaderBonus = feeAmount * (participation.leaderBonusFund / 100); // 10,000
+        const systemProfit = feeAmount * (participation.adminWallet / 100) + feeAmount * ((participation.vat || 10)/100) + feeAmount * ((participation.corporateTax || 3)/100); // 17,000 + 10,000 + 3,000 = 30,000
+        const leaderBonus = feeAmount * (participation.leaderBonusFund / 100); // 5,000
         const supportFund = feeAmount * (participation.supportFund / 100); // 5,000
-        const commissionableAmount = feeAmount * (1 - totalAllocationPercentage / 100); // 75,000
+        const commissionableAmount = feeAmount * (1 - totalAllocationPercentage / 100); // 60,000
 
         // Check system profit transaction
         const profitTx = result.newTransactions.find(t => t.type === TransactionType.SystemProfit);
@@ -77,25 +76,31 @@ describe('financeService', () => {
 
 
         // Check F1 commission (for u2)
-        const f1Commission = commissionableAmount * 0.40; // 30,000
+        const f1Commission = feeAmount * 0.40; // 40,000
         const u2Update = result.userUpdates['u2'];
         expect(u2Update.balanceChange).toBe(f1Commission);
         const f1Tx = result.newTransactions.find(t => t.userId === 'u2');
         expect(f1Tx?.amount).toBe(f1Commission);
 
         // Check F2 commission (for u1, who is Pro)
-        const potentialF2Commission = commissionableAmount * 0.20; // 15,000
+        const potentialF2Commission = feeAmount * 0.20; // 20,000
         // u1's entitlement is based on their Pro fee
-        const u1CommissionableAmount = mockSystemSettings.proParticipationFee * (1 - totalAllocationPercentage / 100);
-        const u1Entitlement = u1CommissionableAmount * 0.20; // 1,000,000 * 0.75 * 0.2 = 150,000
-        const actualF2Commission = Math.min(potentialF2Commission, u1Entitlement); // 15,000
+        const u1CommissionableAmount = mockSystemSettings.proParticipationFee; // 1,000,000
+        const u1Entitlement = u1CommissionableAmount * 0.20; // 1,000,000 * 0.2 = 200,000
+        const actualF2Commission = Math.min(potentialF2Commission, u1Entitlement); // 20,000
         const u1Update = result.userUpdates['u1'];
         expect(u1Update.balanceChange).toBe(actualF2Commission);
 
         // Check commission difference
-        const missedCommission = 30000; // 7,500 (F3 missing) + 22,500 (unallocated pool 30%)
+        const missedCommission = feeAmount * 0.60 - f1Commission - actualF2Commission; // 60,000 - 40,000 - 20,000 = 0
+        // Wait, commissionable pool is 60%. If all 60% are allocated, diff should be 0.
         const diffTx = result.newTransactions.find(t => t.type === TransactionType.CommissionDifference);
-        expect(diffTx?.amount).toBeCloseTo(missedCommission); 
+        
+        if (missedCommission > 0) {
+            expect(diffTx?.amount).toBeCloseTo(missedCommission);
+        } else {
+            expect(diffTx).toBeUndefined();
+        } 
     });
     
      it('should calculate commission difference when upline has a lower tier', () => {
@@ -111,29 +116,27 @@ describe('financeService', () => {
         if(!result) return;
         
         const { participation } = mockSystemSettings.profitSettings;
-        const totalAllocationPercentage = participation.adminWallet + participation.leaderBonusFund + participation.supportFund;
+        const totalAllocationPercentage = participation.adminWallet + (participation.vat || 10) + (participation.corporateTax || 3) + participation.leaderBonusFund + participation.supportFund;
 
         const feeAmount = mockSystemSettings.proParticipationFee; // 1,000,000
-        const commissionableAmount = feeAmount * (1 - totalAllocationPercentage / 100); // 750,000
 
         // F1 commission for u2 (Starter)
-        const potentialF1Commission = commissionableAmount * 0.40; // 300,000
+        const potentialF1Commission = feeAmount * 0.40; // 400,000
         // u2's entitlement is based on their Starter fee
-        const u2CommissionableAmount = mockSystemSettings.participationFee * (1 - totalAllocationPercentage / 100);
-        const u2Entitlement = u2CommissionableAmount * 0.40; // 100,000 * 0.75 * 0.4 = 30,000
-        const actualF1Commission = Math.min(potentialF1Commission, u2Entitlement); // 30,000
-        const missedF1Commission = potentialF1Commission - actualF1Commission; // 270,000
+        const u2FeeAmount = mockSystemSettings.participationFee; // 100,000
+        const u2Entitlement = u2FeeAmount * 0.40; // 100,000 * 0.4 = 40,000
+        const actualF1Commission = Math.min(potentialF1Commission, u2Entitlement); // 40,000
+        const missedF1Commission = potentialF1Commission - actualF1Commission; // 360,000
         
         // F2 commission for u1 (Pro)
-        // potentialF2Commission = 750,000 * 0.20 = 150,000. Cap is 150,000. So missed is 0.
-        // F3 missing = 75,000.
-        // Unallocated 30% = 225,000.
-        // Total sys diff = 270,000 + 0 + 75,000 + 225,000 = 570,000.
+        const potentialF2Commission = feeAmount * 0.20; // 200,000
+        // Cap is 200,000. So missed is 0.
+        // Total sys diff = 360,000.
 
         const u2Update = result.userUpdates['u2'];
         expect(u2Update.balanceChange).toBe(actualF1Commission);
 
         const diffTx = result.newTransactions.find(t => t.type === TransactionType.CommissionDifference);
-        expect(diffTx?.amount).toBeCloseTo(570000);
+        expect(diffTx?.amount).toBeCloseTo(360000);
     });
 });

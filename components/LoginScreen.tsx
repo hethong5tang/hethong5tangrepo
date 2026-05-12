@@ -32,21 +32,21 @@ const loginHints: LoginHintGroup[] = [
         ]
     },
     {
-        group: '2. Kịch bản: Cây hệ thống 5 Tầng',
+        group: '2. Kịch bản: Cây hệ thống',
         hints: [
             { role: 'Trùm Mạng Lưới', email: 'boss@example.com', pass: 'bosspassword', description: 'Tài khoản F0, người đứng đầu hệ thống thử nghiệm' },
             { role: 'Thành viên F1', email: 'f1.test@example.com', pass: 'password', description: 'Cấp F1 - Hưởng hoa hồng trực tiếp' },
-            { role: 'Thành viên F2', email: 'f2.test@example.com', pass: 'password', description: 'Cấp F2' },
-            { role: 'Thành viên F3', email: 'f3.test@example.com', pass: 'password', description: 'Cấp F3' },
-            { role: 'Thành viên F4', email: 'f4.test@example.com', pass: 'password', description: 'Cấp F4' },
-            { role: 'Thành viên F5', email: 'f5.test@example.com', pass: 'password', description: 'Cấp F5 cuối cùng (để test phát sinh hoa hồng cho tuyến trên)' }
+            { role: 'Thành viên F2', email: 'f2.test@example.com', pass: 'password', description: 'Cấp F2 - Tuyến dưới gián tiếp' },
+            { role: 'Thành viên F3', email: 'f3.test@example.com', pass: 'password', description: 'Cấp F3 (không sinh hoa hồng cho F0)' },
+            { role: 'Thành viên F4', email: 'f4.test@example.com', pass: 'password', description: 'Cấp F4 (không sinh hoa hồng cho F0)' },
+            { role: 'Thành viên F5', email: 'f5.test@example.com', pass: 'password', description: 'Cấp F5 (để test sự giới hạn số tầng)' }
         ]
     },
     {
         group: '3. Kịch bản: Các nghiệp vụ đặc biệt',
         hints: [
             { role: 'Leader đạt mốc', email: 'leader.test@example.com', pass: 'leaderpassword', description: 'Có nhiều thành viên F1, để kiểm tra tính năng Thưởng Leader' },
-            { role: 'Người dùng vi phạm', email: 'violator@example.com', pass: 'violatorpassword', description: 'Tài khoản đang bị khóa do thiếu phí duy trì (Đang nợ phạt)' },
+            { role: 'Người dùng vi phạm', email: 'violator@example.com', pass: 'violatorpassword', description: 'Tài khoản đang bị khóa do thiếu phí thuê bao (Đang nợ phạt)' },
             { role: 'Người dùng mới', email: 'newbie@example.com', pass: 'password', description: 'Chưa có F1 nào mạng lưới trống, dùng để test Ref Link' }
         ]
     }
@@ -87,13 +87,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
     const [isHintsOpen, setIsHintsOpen] = useState(false);
     const isDemoMode = typeof window !== 'undefined' && window.location.hostname.includes('-dev-');
 
-    // Auto-fill admin credentials in "real" environment
+    // Auto-fill admin credentials in all environments (development, staging, prod)
     useEffect(() => {
-        if (!isDemoMode && view === 'login') {
+        if (view === 'login') {
             setLoginEmail(ADMIN_CREDENTIALS.email);
             setLoginPassword(ADMIN_CREDENTIALS.password);
         }
-    }, [isDemoMode, view]);
+    }, [view]);
 
     // Watch for pending Google Auth to auto-fill
     useEffect(() => {

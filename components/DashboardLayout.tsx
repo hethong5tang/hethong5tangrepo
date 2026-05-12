@@ -49,7 +49,7 @@ const baseAdminNavItems = [
   { name: 'Yêu cầu Hỗ trợ', href: '#', icon: LifebuoyIcon, permission: Permission.SUPPORT_VIEW, id: 'admin-support' },
   { name: 'Quản lý Quỹ', href: '#', icon: ChartPieIcon, permission: Permission.FUNDS_VIEW, id: 'admin-funds' },
   { name: 'Quản lý Vai trò', href: '#', icon: ShieldCheckIcon, permission: Permission.USER_MANAGE_ROLES, id: 'admin-roles' },
-  { name: 'Phí & Hoa hồng', href: '#', icon: ReceiptPercentIcon, permission: Permission.SETTINGS_FEES_COMMISSIONS_VIEW, id: 'admin-fees' },
+  { name: 'Phí & Chiết khấu', href: '#', icon: ReceiptPercentIcon, permission: Permission.SETTINGS_FEES_COMMISSIONS_VIEW, id: 'admin-fees' },
   { name: 'Quản lý Cấp bậc', href: '#', icon: TrophyIcon, permission: Permission.SETTINGS_ACHIEVEMENTS_MANAGE, id: 'admin-levels' },
   { name: 'Quản lý Thành tích', href: '#', icon: TrophyIcon, permission: Permission.SETTINGS_ACHIEVEMENTS_MANAGE, id: 'admin-achievements' },
   { name: 'Quản lý Bảng xếp hạng', href: '#', icon: ChartBarIcon, permission: Permission.SETTINGS_ACHIEVEMENTS_MANAGE, id: 'admin-leaderboard' },
