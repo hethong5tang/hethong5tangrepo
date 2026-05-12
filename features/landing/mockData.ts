@@ -12,7 +12,7 @@ const MOCK_LANDING_PAGE_LEADERS = [
 ];
 
 export const initialLandingPageState: LandingPageState = {
-    layout: ['hero', 'features', 'career', 'whyUs', 'leaderboard', 'pricing', 'faq'],
+    layout: ['hero', 'features', 'whyUs', 'leaderboard', 'pricing', 'faq'],
     content: {
         hero: {
             title: 'Hệ thống Liên kết kinh doanh <br class="hidden md:block" /> <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">Tài nguyên AI bền vững</span>',

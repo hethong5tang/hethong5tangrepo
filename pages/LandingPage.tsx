@@ -441,81 +441,7 @@ const FaqSection: React.FC<{ data: any; }> = ({ data }) => {
     );
 };
 
-const CareerSection: React.FC<{ data: any }> = ({ data }) => {
-    const { settingsState: { systemSettings } } = useSettings();
-    const addToRefs = useIntersectionObserver({ threshold: 0.1 });
-    
-    return (
-        <section id="career" className="py-24 bg-slate-50 dark:bg-slate-900/50 transition-colors duration-300 relative overflow-hidden">
-            <div className="container mx-auto px-6 relative z-10">
-                <div className="text-center mb-16 px-4">
-                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-4">Lộ trình <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-500">Thăng tiến</span> Leader</h2>
-                    <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-lg">Hệ thống vinh danh và chia sẻ lợi nhuận bền vững dành cho những đối tác nỗ lực xây dựng cộng đồng.</p>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                    {systemSettings.levelSettings.sort((a,b) => a.level - b.level).map((level, idx) => (
-                        <div key={idx} ref={addToRefs} className="animate-on-scroll relative group">
-                            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-xl group-hover:shadow-indigo-500/20 group-hover:border-indigo-500/50 transition-all duration-300 transform group-hover:-translate-y-2 h-full flex flex-col relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
-                                
-                                <div className="absolute -top-3 -right-3 w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center font-black text-xl shadow-lg border-4 border-white dark:border-slate-900 z-10">
-                                    {level.level}
-                                </div>
-
-                                <div className="mb-6">
-                                    <div className="text-indigo-600 dark:text-indigo-400 font-extrabold text-xs uppercase tracking-widest mb-1">{level.name}</div>
-                                    <h3 className="text-xl font-black text-slate-900 dark:text-white leading-tight">{level.subTitle}</h3>
-                                </div>
-
-                                <div className="space-y-4 flex-grow">
-                                    <div className="p-4 bg-slate-50 dark:bg-slate-900/70 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-inner">
-                                        <div className="text-[10px] text-slate-500 uppercase font-black mb-1 opacity-70 tracking-widest text-center">Doanh số nhóm</div>
-                                        <div className="text-xl font-black text-slate-900 dark:text-white text-center tabular-nums">{((level.requiredGroupRevenue || level.requiredEarnings || 0)).toLocaleString()}đ</div>
-                                    </div>
-                                    
-                                    <div className="space-y-3 pt-2">
-                                        <div className="flex items-start gap-3">
-                                            <div className="w-6 h-6 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
-                                                <CheckCircleFillIcon className="h-4 w-4 text-green-600" />
-                                            </div>
-                                            <div className="text-sm">
-                                                <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Đồng chia Quỹ</span>
-                                                <span className="font-black text-green-600 dark:text-green-400 text-lg leading-none">{level.rewardPercentage}%</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="flex items-start gap-3">
-                                            <div className="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-                                                <TrophyIcon className="h-4 w-4 text-amber-600" />
-                                            </div>
-                                            <div className="text-sm">
-                                                <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-bold tracking-wider mb-0.5">Khen thưởng</span>
-                                                <span className="font-bold text-slate-900 dark:text-white text-xs leading-snug block">{level.honorAward}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700/50">
-                                     <div className="flex items-center gap-1.5">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                                        <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 italic">
-                                            {level.f1Requirement ? `Yêu cầu ít nhất ${level.f1Requirement} F1 tham gia` : 
-                                             level.branchRequirements && level.branchRequirements.length > 0 ? 
-                                             `Yêu cầu ${level.branchRequirements[0].count} nhánh đạt Cấp ${level.branchRequirements[0].targetLevel}` : 
-                                             'Hệ thống tự động xét duyệt'}
-                                        </div>
-                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-};
 
 // --- Main Component ---
 
@@ -587,12 +513,10 @@ const LandingPage: React.FC = () => {
       leaderboard: LeaderboardSection,
       pricing: PricingSection,
       faq: FaqSection,
-      career: CareerSection,
   };
   
   const navLinks = [
       { id: 'features', label: 'Tính năng' },
-      { id: 'career', label: 'Lộ trình' },
       { id: 'why-us', label: 'Tại sao' },
       { id: 'leaderboard', label: 'Xếp hạng' },
       { id: 'pricing', label: 'Gói thành viên' },
