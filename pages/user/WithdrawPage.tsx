@@ -83,6 +83,18 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onNavigate }) => {
         return null;
     }
 
+    // Kiểm tra tài khoản bị hạn chế
+    const isOverdue = !!(user?.nextMaintenanceDate && new Date() > new Date(user.nextMaintenanceDate));
+    const isStatusRestricted = user?.status !== UserStatus.Active;
+    const isRestricted = isStatusRestricted || isOverdue;
+
+    // React to restriction by forcing walletType to support
+    React.useEffect(() => {
+        if (isRestricted && walletType === 'main') {
+            setWalletType('support');
+        }
+    }, [isRestricted, walletType]);
+
     // NẾU CÓ YÊU CẦU PENDING -> HIỂN THỊ MÀN HÌNH CHỜ
     if (pendingRequest) {
         const safeAmount = typeof pendingRequest?.amount === 'number' ? pendingRequest.amount.toLocaleString('vi-VN') : '0';
@@ -120,20 +132,6 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onNavigate }) => {
             </div>
         );
     }
-
-    // Kiểm tra tài khoản bị hạn chế
-    const isOverdue = !!(user.nextMaintenanceDate && new Date() > new Date(user.nextMaintenanceDate));
-    const isStatusRestricted = user.status !== UserStatus.Active;
-    const isRestricted = isStatusRestricted || isOverdue;
-
-    // React to restriction by forcing walletType to support
-    React.useEffect(() => {
-        if (isRestricted && walletType === 'main') {
-            setWalletType('support');
-        }
-    }, [isRestricted, walletType]);
-
-    // Bỏ view block page khi bị khoá. Thay vào đó, trong form sẽ vô hiệu ví chính.
     /*
     if (isRestricted) {
         ...
