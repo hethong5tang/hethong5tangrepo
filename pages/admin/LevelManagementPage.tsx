@@ -592,11 +592,11 @@ const LevelManagementPage: React.FC = () => {
                 {poolData.map((p) => (
                     <div key={p.level} className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-white dark:bg-slate-800 shadow-sm transition-all hover:shadow-md h-full flex flex-col justify-between">
                         <div>
-                            <p className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-1 justify-between mb-2 whitespace-nowrap">
+                            <p className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1 justify-between mb-2 whitespace-nowrap">
                                 <span className="truncate max-w-[70%]">L{p.level} - {p.name}</span>
                                 <span className="text-orange-500 shrink-0">{p.rewardPercentage}%</span>
                             </p>
-                            <p className="text-xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{p.availablePool.toLocaleString()}đ</p>
+                            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 tracking-tight">{p.availablePool.toLocaleString()}đ</p>
                         </div>
                         <div>
                             <hr className="my-2 border-slate-100 dark:border-slate-700" />
