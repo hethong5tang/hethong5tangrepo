@@ -389,10 +389,64 @@ export const createUserActions = (deps: {
         userDispatch({ type: 'DELETE_SINGLE_IMAGE_FROM_RESULT', payload: { userId, taskId, imageIndex } });
     };
 
+    const handleAdjustUserFunds = (userId: string, balanceDelta: number, creditDelta: number, reason: string) => {
+        const u = findUserInTree(userState.allUsers, userId);
+        if (!u) {
+            addToast('Không tìm thấy người dùng.', 'error');
+            return;
+        }
+
+        if (balanceDelta === 0 && creditDelta === 0) return;
+
+        userDispatch({
+            type: 'UPDATE_USER',
+            payload: {
+                id: userId,
+                balance: Math.max(0, u.balance + balanceDelta),
+                creditBalance: Math.max(0, u.creditBalance + creditDelta)
+            }
+        });
+
+        const date = new Date().toISOString().split('T')[0];
+        
+        financeDispatch({ type: 'ADD_TRANSACTION', payload: {
+            id: `adj_${Date.now()}_${userId}`,
+            userId,
+            user: { name: u.name, avatar: u.avatar },
+            date,
+            type: TransactionType.AdminAdjustment,
+            description: reason,
+            amount: balanceDelta,
+            creditAmount: creditDelta,
+            status: TransactionStatus.Completed
+        }});
+        
+        notificationDispatch({
+            type: 'ADD_NOTIFICATION',
+            payload: {
+                userId,
+                message: `Tài khoản của bạn đã được admin điều chỉnh. ${balanceDelta !== 0 ? `Số dư: ${balanceDelta > 0 ? '+' : ''}${balanceDelta.toLocaleString('vi-VN')}đ. ` : ''}${creditDelta !== 0 ? `Credit: ${creditDelta > 0 ? '+' : ''}${creditDelta}P. ` : ''}Lý do: ${reason}`,
+                link: 'Ví Của Tôi'
+            }
+        });
+
+        addToast(`Đã điều chỉnh tài khoản của ${u.name} thành công.`, 'success');
+
+        if (loggedInUser) {
+            logAction({
+                userId: loggedInUser.id,
+                userName: loggedInUser.name,
+                actionType: LoggableAction.USER_UPDATE,
+                details: `Điều chỉnh tài khoản ${u.name}: VND ${balanceDelta > 0 ? '+' : ''}${balanceDelta}, Credit ${creditDelta > 0 ? '+' : ''}${creditDelta}. Lý do: ${reason}`,
+                status: 'success'
+            });
+        }
+    };
+
     return {
         handleFullAddUser, handleUpdateUser, handleDeleteUser, handlePayDues, handleUpgradeTier,
         handleSetPin, handleChangePin, handleResetPinWithPassword, handleAutomaticDeposit,
         handleConvertVndToCredits, handleUseToolCredit, handleSetGenerationHistory,
-        handleDeleteGenerationResult, handleDeleteSingleImage
+        handleDeleteGenerationResult, handleDeleteSingleImage, handleAdjustUserFunds
     };
 };

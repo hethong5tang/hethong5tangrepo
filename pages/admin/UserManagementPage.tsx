@@ -57,14 +57,13 @@ const UserManagementPage: React.FC<UserManagementPageProps> = ({ action, onActio
     const { settingsState } = useSettings();
     const { userState: { allUsers: users } } = useUser();
     const { financeState: { allTransactions: transactions } } = useFinance();
-    const { handleFullAddUser: onAddUser, handleUpdateUser, handleDeleteUser } = useActions();
+    const { handleFullAddUser: onAddUser, handleUpdateUser, handleDeleteUser, handleAdjustUserFunds } = useActions();
     
     // Stubs for actions
     const handleBulkDeleteUsers = (ids: string[]) => addToast(`Đã xóa ${ids.length} người dùng`, 'info');
     const handleSendBulkNotifications = (ids: string[], msg: string) => addToast(`Đã gửi thông báo cho ${ids.length} người dùng`, 'success');
     const handleBulkSuspendUsers = (ids: string[]) => addToast(`Đã khóa ${ids.length} người dùng`, 'info');
     const handleBulkActivateUsers = (ids: string[]) => addToast(`Đã kích hoạt ${ids.length} người dùng`, 'success');
-    const handleAdjustUserFunds = (id: string, form: any) => addToast('Đã điều chỉnh số dư thành công', 'success');
     const { tierSettings } = settingsState.systemSettings;
     const { loggedInUser } = useAuth();
     const rolesMap = useMemo(() => new Map(roleState.roles.map(r => [r.id, r.name])), [roleState.roles]);
