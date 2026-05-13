@@ -1,6 +1,6 @@
 {
-  "name": "Affiliate SaaS AI",
-  "description": "Nền tảng SaaS AI tích hợp tiếp thị liên kết 2 tầng (40/60). Quỹ hệ thống 40%, Chiết khấu Affiliate 60% (F1 40%, F2 20%).",
+  "name": "Affiliate SaaS AI - Hệ thống 2 tầng 1",
+  "description": "Nền tảng dịch vụ phần mềm AI (SaaS) tích hợp tiếp thị liên kết 2 tầng bền vững, minh bạch và hợp pháp.",
   "requestFramePermissions": [
     "camera",
     "microphone"

@@ -18,6 +18,12 @@ export interface ApiConfig {
     headers?: string;
 }
 
+export interface IntegrationSubTool {
+    id: string;
+    name: string;
+    creditCost: number;
+}
+
 export interface IntegrationTool {
     id: string;
     icon: string;
@@ -27,6 +33,7 @@ export interface IntegrationTool {
     enabled: boolean;
     type: IntegrationType;
     creditCost: number;
+    subTools?: IntegrationSubTool[];
     modelPricing?: Record<string, number>; 
     link?: string;
     apiConfig?: ApiConfig;

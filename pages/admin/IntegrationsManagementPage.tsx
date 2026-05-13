@@ -144,6 +144,51 @@ const EditModal: React.FC<{
                                 </select>
                             </div>
                         </div>
+
+                        {/* DANH SÁCH TÁC VỤ PHỤ (SUB-TOOLS) */}
+                        <div className="pt-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
+                            <div className="flex justify-between items-center">
+                                <label className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Tác vụ phụ (Mã API)</label>
+                                <button type="button" onClick={() => setFormData(p => ({...p, subTools: [...(p.subTools || []), { id: '', name: '', creditCost: p.creditCost || 10 }]}))} className="text-[10px] bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 px-2 py-1 rounded font-bold uppercase hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors">
+                                    + Thêm
+                                </button>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                {formData.subTools?.length === 0 || !formData.subTools ? (
+                                    <p className="text-[10px] text-slate-400 italic text-center py-2">Chưa có tác vụ phụ nào.</p>
+                                ) : formData.subTools.map((st, index) => (
+                                    <div key={index} className="flex flex-col gap-2 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl relative group">
+                                        <button type="button" onClick={() => {
+                                            const newSubTools = [...formData.subTools!];
+                                            newSubTools.splice(index, 1);
+                                            setFormData(p => ({...p, subTools: newSubTools}));
+                                        }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md">
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+                                        <input type="text" placeholder="Mã tác vụ (Ví dụ: remove_background)" value={st.id} onChange={e => {
+                                            const newSubTools = [...formData.subTools!];
+                                            newSubTools[index].id = e.target.value;
+                                            setFormData(p => ({...p, subTools: newSubTools}));
+                                        }} className={`${inputClasses} !py-2 !text-xs font-mono`} title="Mã này sẽ được hệ thống check tự động khi gọi API" />
+                                        <div className="flex gap-2">
+                                            <input type="text" placeholder="Tên hiển thị (Tách nền)" value={st.name} onChange={e => {
+                                                const newSubTools = [...formData.subTools!];
+                                                newSubTools[index].name = e.target.value;
+                                                setFormData(p => ({...p, subTools: newSubTools}));
+                                            }} className={`${inputClasses} flex-1 !py-2 !text-xs`} />
+                                            <div className="w-24">
+                                                <FormattedNumberInput value={st.creditCost} onChange={v => {
+                                                    const newSubTools = [...formData.subTools!];
+                                                    newSubTools[index].creditCost = v;
+                                                    setFormData(p => ({...p, subTools: newSubTools}));
+                                                }} className={`${inputClasses} !py-2 !text-xs text-center`} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -250,6 +295,8 @@ const IntegrationsManagementPage: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<Partial<IntegrationTool> | null>(null);
 
+    const [activeTab, setActiveTab] = useState<'image' | 'text' | 'video'>('image');
+
     const handleSave = (itemToSave: IntegrationTool) => {
         let newTools: IntegrationTool[];
         if (itemToSave.id) newTools = integrationTools.map(t => t.id === itemToSave.id ? itemToSave : t);
@@ -278,6 +325,12 @@ const IntegrationsManagementPage: React.FC = () => {
         
         return { text: textTools, video: videoTools, image: imageTools };
     }, [integrationTools]);
+
+    const tabs = [
+        { id: 'image', label: 'Hình ảnh', icon: PhotoIcon, color: 'from-pink-500 to-rose-500', count: groupedTools.image.length },
+        { id: 'text', label: 'Văn bản', icon: DocumentTextIcon, color: 'from-blue-500 to-indigo-500', count: groupedTools.text.length },
+        { id: 'video', label: 'Video', icon: VideoIcon, color: 'from-purple-500 to-violet-500', count: groupedTools.video.length },
+    ] as const;
 
     const renderToolCard = (tool: IntegrationTool) => {
         const Icon = iconMap[tool.icon] || PuzzlePieceIcon;
@@ -316,11 +369,28 @@ const IntegrationsManagementPage: React.FC = () => {
                         )}
                         {(!tool.modelPricing || Object.keys(tool.modelPricing).length === 0) && (
                             <div className="flex justify-between items-center text-[10px] bg-slate-50 dark:bg-slate-900/30 p-2 rounded-lg">
-                                <span className="text-slate-600 dark:text-slate-400 font-bold italic">Chưa đặt giá riêng</span>
+                                <span className="text-slate-600 dark:text-slate-400 font-bold italic">Chưa đặt giá riêng cho model</span>
                                 <span className="font-black text-slate-400">---</span>
                             </div>
                         )}
                     </div>
+                    
+                    {tool.subTools && tool.subTools.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tác vụ phụ ({tool.subTools.length})</p>
+                            <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
+                                {tool.subTools.slice(0, 3).map((st, idx) => (
+                                    <div key={idx} className="flex justify-between items-center text-[10px] bg-indigo-50/50 dark:bg-indigo-900/20 p-2 rounded-lg">
+                                        <span className="text-slate-700 dark:text-slate-300 font-bold truncate flex-1">{st.name}</span>
+                                        <span className="font-black text-indigo-600 dark:text-indigo-400">{st.creditCost} P</span>
+                                    </div>
+                                ))}
+                                {tool.subTools.length > 3 && (
+                                    <p className="text-center text-[9px] text-slate-400 italic">và {tool.subTools.length - 3} tác vụ khác...</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -330,61 +400,48 @@ const IntegrationsManagementPage: React.FC = () => {
         <div className="space-y-6">
             {isModalOpen && <EditModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSave} item={editingItem} />}
 
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Quản lý Công cụ & Định giá</h2>
-                <button onClick={() => { setEditingItem(null); setIsModalOpen(true); }} className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-md transform active:scale-95 transition-all">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-full md:w-auto">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as any)}
+                            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
+                                activeTab === tab.id 
+                                ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-md transform scale-105' 
+                                : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+                            }`}
+                        >
+                            <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-indigo-500' : ''}`} />
+                            {tab.label}
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
+                                activeTab === tab.id 
+                                ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600' 
+                                : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+                            }`}>
+                                {tab.count}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+                
+                <button onClick={() => { setEditingItem(null); setIsModalOpen(true); }} className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-black text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 active:scale-95 transition-all">
                     <PlusIcon className="h-5 w-5" /> Thêm công cụ
                 </button>
             </div>
 
-            <div className="space-y-12">
-                {/* 🎨 CÔNG CỤ TẠO ẢNH */}
-                {groupedTools.image.length > 0 && (
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-700 pb-2">
-                            <div className="p-2 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg text-white">
-                                <PhotoIcon className="w-5 h-5" />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Công cụ Hình ảnh</h3>
-                            <span className="text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-full">{groupedTools.image.length}</span>
+            <div className="min-h-[400px]">
+                {/* HIỂN THỊ CÔNG CỤ THEO TAB ĐANG CHỌN */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {groupedTools[activeTab].map(tool => renderToolCard(tool))}
+                    
+                    {groupedTools[activeTab].length === 0 && (
+                        <div className="col-span-full flex flex-col items-center justify-center py-20 opacity-40">
+                            <PuzzlePieceIcon className="w-16 h-16 mb-4 text-slate-300" />
+                            <p className="text-lg font-bold text-slate-400 uppercase tracking-widest">Chưa có công cụ nào trong nhóm này</p>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {groupedTools.image.map(tool => renderToolCard(tool))}
-                        </div>
-                    </div>
-                )}
-
-                {/* 📝 CÔNG CỤ VĂN BẢN */}
-                {groupedTools.text.length > 0 && (
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-700 pb-2">
-                            <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg text-white">
-                                <DocumentTextIcon className="w-5 h-5" />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Công cụ Văn bản & Phân tích</h3>
-                            <span className="text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-full">{groupedTools.text.length}</span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {groupedTools.text.map(tool => renderToolCard(tool))}
-                        </div>
-                    </div>
-                )}
-
-                {/* 🎬 CÔNG CỤ VIDEO */}
-                {groupedTools.video.length > 0 && (
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-700 pb-2">
-                            <div className="p-2 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg text-white">
-                                <VideoIcon className="w-5 h-5" />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Công cụ Video & Hiệu ứng</h3>
-                            <span className="text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-full">{groupedTools.video.length}</span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {groupedTools.video.map(tool => renderToolCard(tool))}
-                        </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );
