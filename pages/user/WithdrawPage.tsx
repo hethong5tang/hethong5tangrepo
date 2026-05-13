@@ -85,6 +85,7 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onNavigate }) => {
 
     // NẾU CÓ YÊU CẦU PENDING -> HIỂN THỊ MÀN HÌNH CHỜ
     if (pendingRequest) {
+        const safeAmount = typeof pendingRequest?.amount === 'number' ? pendingRequest.amount.toLocaleString('vi-VN') : '0';
         return (
             <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Rút tiền</h2>
@@ -95,7 +96,7 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onNavigate }) => {
                         </div>
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Đang có lệnh rút tiền chờ xử lý</h3>
                         <p className="text-slate-600 dark:text-slate-400 mb-2">
-                            Bạn đang có một yêu cầu rút tiền trị giá <span className="font-bold text-red-600 dark:text-red-400">{pendingRequest.amount.toLocaleString('vi-VN')}đ</span> chưa được duyệt.
+                            Bạn đang có một yêu cầu rút tiền trị giá <span className="font-bold text-red-600 dark:text-red-400">{safeAmount}đ</span> chưa được duyệt.
                         </p>
                         <p className="text-sm text-slate-500 dark:text-slate-500 mb-8">
                             Để đảm bảo an toàn, bạn chỉ có thể tạo lệnh rút tiền mới khi lệnh cũ đã hoàn tất.
