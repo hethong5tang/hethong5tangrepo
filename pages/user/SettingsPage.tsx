@@ -216,7 +216,11 @@ const TwoFactorSetupModal: React.FC<{
     );
 };
 
-const SettingsPage: React.FC = () => {
+interface SettingsPageProps {
+    initialTab?: 'security' | 'payment' | 'notifications' | 'automation';
+}
+
+const SettingsPage: React.FC<SettingsPageProps> = ({ initialTab }) => {
     const { loggedInUser: user } = useAuth();
     const { settingsState } = useSettings();
     const { userSettings } = settingsState;
@@ -224,8 +228,21 @@ const SettingsPage: React.FC = () => {
     const { addToast } = useToast();
     const [settings, setSettings] = useState<UserSettings>(userSettings);
     const [isSaving, setIsSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<'security' | 'payment' | 'notifications' | 'automation'>('security');
     
+    // Robustly handle initialTab prop
+    const initialActiveTab = useMemo(() => {
+        if (initialTab && ['security', 'payment', 'notifications', 'automation'].includes(initialTab)) {
+            return initialTab as 'security' | 'payment' | 'notifications' | 'automation';
+        }
+        return 'security' as const;
+    }, [initialTab]);
+
+    const [activeTab, setActiveTab] = useState<'security' | 'payment' | 'notifications' | 'automation'>(initialActiveTab);
+    
+    useEffect(() => {
+        setActiveTab(initialActiveTab);
+    }, [initialActiveTab]);
+
     // Password state
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -573,49 +590,31 @@ const SettingsPage: React.FC = () => {
                                         )}
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6">
-                                        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Đổi Mật khẩu</h3>
-                                        <form onSubmit={handlePasswordChange} className="space-y-4">
-                                            <div className="relative">
-                                                <input type={showCurrentPassword ? 'text' : 'password'} placeholder="Mật khẩu hiện tại" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required className="block w-full px-3 pr-10 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
-                                                <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500">
-                                                    {showCurrentPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                                                </button>
-                                            </div>
-                                            <div className="relative">
-                                                <input type={showNewPassword ? 'text' : 'password'} placeholder="Mật khẩu mới" value={newPassword} onChange={e => setNewPassword(e.target.value)} required className="block w-full px-3 pr-10 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
-                                                <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500">
-                                                    {showNewPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                                                </button>
-                                            </div>
-                                            {passwordValidation && <PasswordStrengthMeter validationResult={passwordValidation} />}
-                                            <div className="relative">
-                                                <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Xác nhận mật khẩu mới" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required className="block w-full px-3 pr-10 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
-                                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500">
-                                                    {showConfirmPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                                                </button>
-                                            </div>
-                                            {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
-                                            <button type="submit" className="w-full px-4 py-2 text-sm font-medium text-white bg-slate-600 rounded-lg hover:bg-slate-700">Đổi mật khẩu</button>
-                                        </form>
-                                    </div>
-                                    <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Mã PIN Rút Tiền</h3>
-                                            {user.pin && (
-                                                <button onClick={() => setIsForgotPinModalOpen(true)} className="text-sm font-medium text-indigo-600 hover:text-indigo-500">Quên mã PIN?</button>
-                                            )}
+                                <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6">
+                                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">Đổi Mật khẩu</h3>
+                                    <form onSubmit={handlePasswordChange} className="space-y-4">
+                                        <div className="relative">
+                                            <input type={showCurrentPassword ? 'text' : 'password'} placeholder="Mật khẩu hiện tại" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required className="block w-full px-3 pr-10 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                                            <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500">
+                                                {showCurrentPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                                            </button>
                                         </div>
-                                        <form onSubmit={handlePinFormSubmit} className="space-y-4">
-                                            {user.pin && <input type={showPin ? 'text' : 'password'} placeholder="PIN hiện tại" value={currentPin} onChange={e => setCurrentPin(e.target.value)} required maxLength={4} className="block w-full px-3 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white" />}
-                                            <input type={showPin ? 'text' : 'password'} placeholder={user.pin ? "PIN mới (4 số)" : "Nhập PIN (4 số)"} value={newPin} onChange={e => setNewPin(e.target.value)} required maxLength={4} className="block w-full px-3 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
-                                            <input type={showPin ? 'text' : 'password'} placeholder="Xác nhận PIN mới" value={confirmNewPin} onChange={e => setConfirmNewPin(e.target.value)} required maxLength={4} className="block w-full px-3 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
-                                            <div className="flex items-center gap-2"><input type="checkbox" id="show-pin" checked={showPin} onChange={() => setShowPin(!showPin)} className="rounded text-indigo-600 focus:ring-indigo-500" /><label htmlFor="show-pin" className="text-sm">Hiển thị PIN</label></div>
-                                            {pinError && <p className="text-sm text-red-500">{pinError}</p>}
-                                            <button type="submit" className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">{user.pin ? 'Đổi Mã PIN' : 'Tạo Mã PIN'}</button>
-                                        </form>
-                                    </div>
+                                        <div className="relative">
+                                            <input type={showNewPassword ? 'text' : 'password'} placeholder="Mật khẩu mới" value={newPassword} onChange={e => setNewPassword(e.target.value)} required className="block w-full px-3 pr-10 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                                            <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500">
+                                                {showNewPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                                            </button>
+                                        </div>
+                                        {passwordValidation && <PasswordStrengthMeter validationResult={passwordValidation} />}
+                                        <div className="relative">
+                                            <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Xác nhận mật khẩu mới" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required className="block w-full px-3 pr-10 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                                            <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500">
+                                                {showConfirmPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                                            </button>
+                                        </div>
+                                        {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
+                                        <button type="submit" className="w-full px-4 py-2 text-sm font-medium text-white bg-slate-600 rounded-lg hover:bg-slate-700">Đổi mật khẩu</button>
+                                    </form>
                                 </div>
                                 <div className="bg-red-50 dark:bg-red-900/10 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-red-500/20 p-6">
                                     <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2 flex items-center gap-2"><ExclamationTriangleIcon className="h-5 w-5" />Vùng Nguy hiểm</h3>
@@ -629,76 +628,114 @@ const SettingsPage: React.FC = () => {
                         
                         {activeTab === 'payment' && (
                              <div className="space-y-6">
-                                <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6 max-w-3xl">
-                                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-                                        <BanknotesIcon className="h-5 w-5 text-indigo-500" />
-                                        Tài khoản Ngân hàng (Nhận Chiết khấu)
-                                    </h3>
-                                    <div className="space-y-4">
-                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Chọn Ngân hàng</label>
-                                            <select 
-                                                value={paymentForm.bankShortName} 
-                                                onChange={e => handleBankSelect(e.target.value)} 
-                                                className="mt-1 block w-full px-3 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                                            >
-                                                <option value="">-- Chọn ngân hàng --</option>
-                                                {VIETQR_BANKS.map(bank => (
-                                                    <option key={bank.code} value={bank.shortName}>{bank.name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Số tài khoản</label>
-                                                <div className="relative mt-1">
-                                                    <input 
-                                                        type="text" 
-                                                        value={paymentForm.bankAccountNumber} 
-                                                        onChange={e => handlePaymentChange('bankAccountNumber', e.target.value)}
-                                                        className={`block w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-700 dark:text-white ${bankError ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 dark:border-slate-600 focus:ring-indigo-500'}`}
-                                                    />
-                                                     {bankError && (
-                                                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                                            <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
-                                                        </div>
-                                                    )}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                                    {/* Cột trái: Thông tin nhận tiền */}
+                                    <div className="space-y-6">
+                                        <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6 h-full">
+                                            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+                                                <BanknotesIcon className="h-5 w-5 text-indigo-500" />
+                                                Tài khoản Ngân hàng (Nhận Chiết khấu)
+                                            </h3>
+                                            <div className="space-y-4">
+                                                 <div>
+                                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Chọn Ngân hàng</label>
+                                                    <select 
+                                                        value={paymentForm.bankShortName} 
+                                                        onChange={e => handleBankSelect(e.target.value)} 
+                                                        className="mt-1 block w-full px-3 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                                    >
+                                                        <option value="">-- Chọn ngân hàng --</option>
+                                                        {VIETQR_BANKS.map(bank => (
+                                                            <option key={bank.code} value={bank.shortName}>{bank.name}</option>
+                                                        ))}
+                                                    </select>
                                                 </div>
-                                                {bankError && <p className="mt-1 text-xs text-red-500">{bankError}</p>}
-                                                {paymentForm.bankShortName && !bankError && (
-                                                    <p className="mt-1 text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1">
-                                                        <InformationCircleIcon className="h-3 w-3" />
-                                                        <span>{BANK_RULES[paymentForm.bankShortName]?.description || BANK_RULES['DEFAULT'].description}</span>
-                                                    </p>
-                                                )}
+                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Số tài khoản</label>
+                                                        <div className="relative mt-1">
+                                                            <input 
+                                                                type="text" 
+                                                                value={paymentForm.bankAccountNumber} 
+                                                                onChange={e => handlePaymentChange('bankAccountNumber', e.target.value)}
+                                                                className={`block w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-700 dark:text-white ${bankError ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 dark:border-slate-600 focus:ring-indigo-500'}`}
+                                                            />
+                                                             {bankError && (
+                                                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                                    <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        {bankError && <p className="mt-1 text-xs text-red-500">{bankError}</p>}
+                                                        {paymentForm.bankShortName && !bankError && (
+                                                            <p className="mt-1 text-xs text-indigo-500 dark:text-indigo-400 flex items-center gap-1">
+                                                                <InformationCircleIcon className="h-3 w-3" />
+                                                                <span>{BANK_RULES[paymentForm.bankShortName]?.description || BANK_RULES['DEFAULT'].description}</span>
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Chủ tài khoản (Không dấu)</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={paymentForm.bankAccountName} 
+                                                            onChange={e => handlePaymentChange('bankAccountName', e.target.value)}
+                                                            className="mt-1 block w-full px-3 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white uppercase"
+                                                        />
+                                                    </div>
+                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6 h-full">
+                                            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+                                                <CreditCardIcon className="h-5 w-5 text-pink-500" />
+                                                Ví điện tử (Momo)
+                                            </h3>
                                             <div>
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Chủ tài khoản (Không dấu)</label>
+                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Số điện thoại Momo</label>
                                                 <input 
                                                     type="text" 
-                                                    value={paymentForm.bankAccountName} 
-                                                    onChange={e => handlePaymentChange('bankAccountName', e.target.value)}
-                                                    className="mt-1 block w-full px-3 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white uppercase"
+                                                    value={paymentForm.momoPhoneNumber} 
+                                                    onChange={e => handlePaymentChange('momoPhoneNumber', e.target.value)}
+                                                    className="mt-1 block w-full px-3 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                                    placeholder="09xxx..."
                                                 />
                                             </div>
-                                         </div>
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6 max-w-3xl">
-                                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-                                        <CreditCardIcon className="h-5 w-5 text-pink-500" />
-                                        Ví điện tử (Momo)
-                                    </h3>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Số điện thoại Momo</label>
-                                        <input 
-                                            type="text" 
-                                            value={paymentForm.momoPhoneNumber} 
-                                            onChange={e => handlePaymentChange('momoPhoneNumber', e.target.value)}
-                                            className="mt-1 block w-full px-3 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                                            placeholder="09xxx..."
-                                        />
+
+                                    {/* Cột phải: Bảo mật thanh toán */}
+                                    <div className="space-y-6 lg:sticky lg:top-6">
+                                        <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                                    <KeyIcon className="h-5 w-5 text-amber-500" />
+                                                    Mã PIN Rút Tiền
+                                                </h3>
+                                                {user.pin && (
+                                                    <button onClick={() => setIsForgotPinModalOpen(true)} className="text-sm font-medium text-indigo-600 hover:text-indigo-500">Quên mã PIN?</button>
+                                                )}
+                                            </div>
+                                            <form onSubmit={handlePinFormSubmit} className="space-y-4">
+                                                {user.pin && <input type={showPin ? 'text' : 'password'} placeholder="PIN hiện tại" value={currentPin} onChange={e => setCurrentPin(e.target.value)} required maxLength={4} className="block w-full px-3 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white" />}
+                                                <input type={showPin ? 'text' : 'password'} placeholder={user.pin ? "PIN mới (4 số)" : "Nhập PIN (4 số)"} value={newPin} onChange={e => setNewPin(e.target.value)} required maxLength={4} className="block w-full px-3 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                                                <input type={showPin ? 'text' : 'password'} placeholder="Xác nhận PIN mới" value={confirmNewPin} onChange={e => setConfirmNewPin(e.target.value)} required maxLength={4} className="block w-full px-3 py-2 border border-gray-200 rounded-md bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                                                <div className="flex items-center gap-2">
+                                                    <input type="checkbox" id="show-pin" checked={showPin} onChange={() => setShowPin(!showPin)} className="rounded text-indigo-600 focus:ring-indigo-500" />
+                                                    <label htmlFor="show-pin" className="text-sm">Hiển thị PIN</label>
+                                                </div>
+                                                {pinError && <p className="text-sm text-red-500">{pinError}</p>}
+                                                <button type="submit" className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">{user.pin ? 'Đổi Mã PIN' : 'Tạo Mã PIN'}</button>
+                                            </form>
+                                        </div>
+
+                                        <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4">
+                                            <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                                                <InformationCircleIcon className="h-4 w-4 inline-block mr-1 mb-0.5" />
+                                                <strong>Lưu ý:</strong> Thông tin thanh toán này dùng để nhận chiết khấu trực tiếp. Vui lòng đảm bảo thông tin chính xác để tránh gián đoạn khi rút tiền.
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                                 <SaveFooter onSave={handleSavePayment} isDirty={isPaymentDirty} />

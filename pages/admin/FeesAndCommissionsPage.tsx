@@ -201,11 +201,11 @@ export const FeesAndCommissionsPage: React.FC<FeesAndCommissionsPageProps> = () 
                 onConfirm={() => { onResetToDefault(); setIsResetModalOpen(false); }}
                 confirmButtonVariant="danger"
             >
-                <p className="text-sm text-slate-500 dark:text-slate-400">Bạn có chắc chắn muốn khôi phục tất cả cài đặt Phí & Hoa hồng về trạng thái mặc định không?</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Bạn có chắc chắn muốn khôi phục tất cả cài đặt Phí & Chiết khấu về trạng thái mặc định không?</p>
             </Modal>
 
             <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Phí & Hoa hồng</h2>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Phí & Chiết khấu</h2>
                 {canEdit && (
                     <button onClick={() => setIsResetModalOpen(true)} className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/50 rounded-lg hover:bg-red-200 dark:hover:bg-red-900">
                         <ArrowPathIcon className="h-4 w-4" /> Khôi phục Mặc định

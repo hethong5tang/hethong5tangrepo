@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { AdminManagedUser, UserStatus } from '../../features/users/types';
+import { AdminManagedUser, UserStatus, MembershipTier } from '../../features/users/types';
 import { CheckCircleFillIcon, InformationCircleIcon, ExclamationTriangleIcon, BanknotesIcon, ShieldCheckIcon, CheckIcon, ArrowLeftIcon, ClockIcon } from '../../components/Icons';
 import FormattedNumberInput from '../../components/FormattedNumberInput';
 import { useAuth } from '../../features/auth/useAuth';
@@ -139,22 +139,33 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onNavigate }) => {
     }
     */
 
+    const getMinWithdrawal = () => {
+        if (walletType === 'main') {
+            return systemSettings?.minWithdrawal || 0;
+        }
+        
+        // Ví Hỗ Trợ: Tối thiểu 20% giá trị gói
+        const packagePrice = (
+            user.membershipTier === MembershipTier.Master ? systemSettings?.masterParticipationFee :
+            user.membershipTier === MembershipTier.Pro ? systemSettings?.proParticipationFee :
+            systemSettings?.participationFee
+        ) || 0;
+        
+        return Math.floor(packagePrice * 0.2);
+    };
+
+    const minWithdrawal = getMinWithdrawal();
+
     const handleNextStep1 = () => {
         setError('');
         if (amount <= 0) { setError('Số tiền rút phải lớn hơn 0.'); return; }
         
-        const availableBalance = walletType === 'main' ? user.balance : (user.supportWalletBalance || 0);
+        const availableBalance = walletType === 'main' ? (user.balance || 0) : (user.supportWalletBalance || 0);
         
-        // Hạn mức
-        let minWithdrawal = systemSettings.minWithdrawal;
-        if (walletType === 'support') {
-             const packagePrice = user.membershipTier === MembershipTier.Master ? systemSettings.masterParticipationFee :
-                                  user.membershipTier === MembershipTier.Pro ? systemSettings.proParticipationFee :
-                                  systemSettings.participationFee;
-             minWithdrawal = packagePrice * 0.2;
+        if (amount < minWithdrawal) { 
+            setError(`Số tiền rút tối thiểu là ${minWithdrawal.toLocaleString('vi-VN')}đ.`); 
+            return; 
         }
-
-        if (amount < minWithdrawal) { setError(`Số tiền rút tối thiểu là ${minWithdrawal.toLocaleString('vi-VN')}đ.`); return; }
         if (amount > availableBalance) { setError('Số dư không đủ.'); return; }
         setStep(2);
     };
@@ -227,11 +238,7 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onNavigate }) => {
                             </div>
                             <div className="flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400 pt-1">
                                 <InformationCircleIcon className="h-4 w-4" />
-                                <span>Số tiền rút tối thiểu là <strong>
-                                    {walletType === 'main' 
-                                        ? systemSettings.minWithdrawal.toLocaleString('vi-VN') 
-                                        : ((user.membershipTier === MembershipTier.Master ? systemSettings.masterParticipationFee : user.membershipTier === MembershipTier.Pro ? systemSettings.proParticipationFee : systemSettings.participationFee) * 0.2).toLocaleString('vi-VN')}đ
-                                </strong>.</span>
+                                <span>Số tiền rút tối thiểu là <strong>{minWithdrawal.toLocaleString('vi-VN')}đ</strong>.</span>
                             </div>
                             {error && <p className="text-sm text-red-500 text-center">{error}</p>}
                             <button onClick={handleNextStep1} disabled={!amount} className="w-full px-6 py-3 text-base font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors">Tiếp tục</button>
@@ -267,7 +274,7 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onNavigate }) => {
                                             <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
                                             <div>
                                                 <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-200">Thông tin thanh toán chưa được thiết lập.</p>
-                                                <button onClick={() => onNavigate('Thông tin cá nhân')} className="text-sm text-yellow-700 dark:text-yellow-300 hover:underline font-medium">Cập nhật ngay</button>
+                                                <button onClick={() => onNavigate('Cài đặt/payment')} className="text-sm text-yellow-700 dark:text-yellow-300 hover:underline font-medium">Cập nhật ngay</button>
                                             </div>
                                         </div>
                                     ) : (

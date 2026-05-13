@@ -130,7 +130,7 @@ const AdminDashboard: React.FC = () => {
             permissions: [Permission.USER_MANAGE_ROLES],
             props: {}
         },
-        'Phí & Hoa hồng': {
+        'Phí & Chiết khấu': {
             component: FeesAndCommissionsPage,
             permissions: [Permission.SETTINGS_FEES_COMMISSIONS_VIEW],
             props: {}
@@ -189,7 +189,14 @@ const AdminDashboard: React.FC = () => {
 
 
     const renderContent = () => {
-        const config = pageConfig[currentPage as keyof typeof pageConfig] || pageConfig['Bảng điều khiển'];
+        // Chuẩn hóa tên trang để lookup (loại bỏ hoa thường và khoảng trắng thừa)
+        const normalizedCurrentPage = (currentPage || '').trim().toLowerCase().normalize('NFC');
+        
+        const configKey = Object.keys(pageConfig).find(k => 
+            k.trim().toLowerCase().normalize('NFC') === normalizedCurrentPage
+        ) as keyof typeof pageConfig;
+
+        const config = pageConfig[configKey] || pageConfig['Bảng điều khiển'];
         
         const isProductionDeployed = !window.location.hostname.includes('run.app') && !window.location.hostname.includes('localhost');
         if (currentPage === 'Đồng bộ GitHub' && isProductionDeployed) {

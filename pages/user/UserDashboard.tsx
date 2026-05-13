@@ -141,13 +141,35 @@ const UserDashboard: React.FC = () => {
     }
 
     const pageName = hashParts[0];
-    const config = pageConfig[pageName as keyof typeof pageConfig] || pageConfig['Bảng điều khiển'];
+    const subPage = hashParts[1];
+
+    // Chuẩn hóa tên trang để lookup (loại bỏ hoa thường và khoảng trắng thừa)
+    const normalizedPageName = (pageName || '').trim().toLowerCase().normalize('NFC');
+    
+    const configKey = Object.keys(pageConfig).find(k => 
+        k.trim().toLowerCase().normalize('NFC') === normalizedPageName
+    ) as keyof typeof pageConfig;
+
+    const config = pageConfig[configKey] || pageConfig['Bảng điều khiển'];
     const PageComponent = config.component;
 
+    // Special handling for certain pages to pass subPage as initialTab
+    let customProps = { ...config.props };
+    
+    // Explicitly check for Settings page by many possible names/keys
+    const isSettings = 
+        configKey === 'Cài đặt' || 
+        normalizedPageName === 'cài đặt' || 
+        (typeof PageComponent === 'object' && 'displayName' in PageComponent && PageComponent.displayName === 'SettingsPage');
+    
+    if (isSettings && subPage) {
+        customProps.initialTab = subPage;
+    }
+
     return (
-        <div className="page-enter-active">
+        <div className="page-enter-active" key={`${configKey}-${subPage || 'root'}`}>
             <Suspense fallback={<PageLoader />}>
-                <PageComponent {...config.props} />
+                <PageComponent {...customProps} />
             </Suspense>
         </div>
     );
