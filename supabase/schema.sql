@@ -399,9 +399,30 @@ CREATE POLICY "Admin quản lý tất cả lệnh nạp rút"
 ON public.payment_requests FOR ALL USING (public.is_admin());
 
 
--- ==========================================
--- 10. RPC FUNCTIONS BẢO MẬT GIAO DỊCH
--- ==========================================
+-- Admin Thanh toán hóa đơn API
+CREATE OR REPLACE FUNCTION admin_pay_api_bill(p_amount NUMERIC, p_description TEXT) RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_admin_balance NUMERIC;
+BEGIN
+    IF NOT public.is_admin() THEN RAISE EXCEPTION 'Permission Denied'; END IF;
+
+    SELECT balance INTO v_admin_balance FROM public.funds WHERE id = 'admin';
+    IF v_admin_balance < p_amount THEN
+        RAISE EXCEPTION 'Số dư ví Admin không đủ để thanh toán hóa đơn này';
+    END IF;
+
+    -- Trừ tiền ví Admin
+    UPDATE public.funds SET balance = balance - p_amount, total_out = total_out + p_amount WHERE id = 'admin';
+    
+    -- Ghi lịch sử
+    INSERT INTO public.fund_transactions (fund_id, type, amount, description) 
+    VALUES ('admin', 'outflow', p_amount, 'Thanh toán hóa đơn API: ' || p_description);
+END;
+$$;
+
 
 -- Tạo yêu cầu nạp tiền trực tiếp qua Database an toàn
 CREATE OR REPLACE FUNCTION request_deposit(

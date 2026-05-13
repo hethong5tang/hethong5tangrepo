@@ -258,6 +258,74 @@ const IntegrationsManagementPage: React.FC = () => {
         setIsModalOpen(false);
     };
 
+    const groupedTools = useMemo(() => {
+        const textTools: IntegrationTool[] = [];
+        const videoTools: IntegrationTool[] = [];
+        const imageTools: IntegrationTool[] = [];
+        
+        integrationTools.forEach(t => {
+            const id = t.id.toLowerCase();
+            const title = t.title.toLowerCase();
+            
+            if (id.includes('video') || title.includes('video')) {
+                videoTools.push(t);
+            } else if (id.includes('text') || id.includes('writer') || id.includes('ocr') || title.includes('văn bản') || title.includes('viết') || title.includes('nội dung')) {
+                textTools.push(t);
+            } else {
+                imageTools.push(t);
+            }
+        });
+        
+        return { text: textTools, video: videoTools, image: imageTools };
+    }, [integrationTools]);
+
+    const renderToolCard = (tool: IntegrationTool) => {
+        const Icon = iconMap[tool.icon] || PuzzlePieceIcon;
+        return (
+            <div key={tool.id} className="bg-white dark:bg-slate-800 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700 hover:border-indigo-500/30 transition-all p-6 group flex flex-col h-full">
+                <div className="flex items-start justify-between mb-4 flex-shrink-0">
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-400 text-white shadow-lg transform group-hover:rotate-3 transition-transform overflow-hidden">
+                        {tool.customIconUrl ? (
+                            <img src={tool.customIconUrl} alt={tool.title} className="h-6 w-6 object-contain" />
+                        ) : (
+                            <Icon className="h-6 w-6" />
+                        )}
+                    </div>
+                    <div className="flex gap-2">
+                        <button onClick={() => { setEditingItem(tool); setIsModalOpen(true); }} className="p-2 text-slate-400 hover:text-indigo-600 bg-slate-50 dark:bg-slate-700 rounded-full transition-colors"><PencilSquareIcon className="h-4 w-4"/></button>
+                        <button className="p-2 text-slate-400 hover:text-red-600 bg-slate-50 dark:bg-slate-700 rounded-full transition-colors"><TrashIcon className="h-4 w-4"/></button>
+                    </div>
+                </div>
+                <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex-shrink-0">{tool.title}</h3>
+                <p className="text-xs text-slate-500 mt-1 line-clamp-3 leading-relaxed flex-grow">{tool.description}</p>
+                
+                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-700/50 flex-shrink-0">
+                    <div className="flex justify-between items-center mb-3">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bảng giá Model ({Object.keys(tool.modelPricing || {}).length})</p>
+                        <span className="text-[9px] bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 px-1.5 py-0.5 rounded font-bold">{tool.creditCost} P mặc định</span>
+                    </div>
+                    <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
+                        {Object.entries(tool.modelPricing || {}).slice(0, 3).map(([mId, price]) => (
+                            <div key={mId} className="flex justify-between items-center text-[10px] bg-slate-50 dark:bg-slate-900/30 p-2 rounded-lg">
+                                <span className="text-slate-600 dark:text-slate-400 font-bold uppercase tracking-tighter truncate w-32">{mId.replace('gemini-', '').replace('preview', 'pro')}</span>
+                                <span className="font-black text-indigo-600 dark:text-indigo-400">{price} P</span>
+                            </div>
+                        ))}
+                        {Object.keys(tool.modelPricing || {}).length > 3 && (
+                            <p className="text-center text-[9px] text-slate-400 italic">và {Object.keys(tool.modelPricing || {}).length - 3} model khác...</p>
+                        )}
+                        {(!tool.modelPricing || Object.keys(tool.modelPricing).length === 0) && (
+                            <div className="flex justify-between items-center text-[10px] bg-slate-50 dark:bg-slate-900/30 p-2 rounded-lg">
+                                <span className="text-slate-600 dark:text-slate-400 font-bold italic">Chưa đặt giá riêng</span>
+                                <span className="font-black text-slate-400">---</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="space-y-6">
             {isModalOpen && <EditModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSave} item={editingItem} />}
@@ -269,53 +337,54 @@ const IntegrationsManagementPage: React.FC = () => {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {integrationTools.map(tool => {
-                    const Icon = iconMap[tool.icon] || PuzzlePieceIcon;
-                    return (
-                        <div key={tool.id} className="bg-white dark:bg-slate-800 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700 hover:border-indigo-500/30 transition-all p-6 group">
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-400 text-white shadow-lg transform group-hover:rotate-3 transition-transform overflow-hidden">
-                                    {tool.customIconUrl ? (
-                                        <img src={tool.customIconUrl} alt={tool.title} className="h-6 w-6 object-contain" />
-                                    ) : (
-                                        <Icon className="h-6 w-6" />
-                                    )}
-                                </div>
-                                <div className="flex gap-2">
-                                    <button onClick={() => { setEditingItem(tool); setIsModalOpen(true); }} className="p-2 text-slate-400 hover:text-indigo-600 bg-slate-50 dark:bg-slate-700 rounded-full transition-colors"><PencilSquareIcon className="h-4 w-4"/></button>
-                                    <button className="p-2 text-slate-400 hover:text-red-600 bg-slate-50 dark:bg-slate-700 rounded-full transition-colors"><TrashIcon className="h-4 w-4"/></button>
-                                </div>
+            <div className="space-y-12">
+                {/* 🎨 CÔNG CỤ TẠO ẢNH */}
+                {groupedTools.image.length > 0 && (
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-700 pb-2">
+                            <div className="p-2 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg text-white">
+                                <PhotoIcon className="w-5 h-5" />
                             </div>
-                            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg">{tool.title}</h3>
-                            <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{tool.description}</p>
-                            
-                            <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-700/50">
-                                <div className="flex justify-between items-center mb-3">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bảng giá Model ({Object.keys(tool.modelPricing || {}).length})</p>
-                                    <span className="text-[9px] bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 px-1.5 py-0.5 rounded font-bold">{tool.creditCost} P mặc định</span>
-                                </div>
-                                <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
-                                    {Object.entries(tool.modelPricing || {}).slice(0, 3).map(([mId, price]) => (
-                                        <div key={mId} className="flex justify-between items-center text-[10px] bg-slate-50 dark:bg-slate-900/30 p-2 rounded-lg">
-                                            <span className="text-slate-600 dark:text-slate-400 font-bold uppercase tracking-tighter truncate w-32">{mId.replace('gemini-', '').replace('preview', 'pro')}</span>
-                                            <span className="font-black text-indigo-600 dark:text-indigo-400">{price} P</span>
-                                        </div>
-                                    ))}
-                                    {Object.keys(tool.modelPricing || {}).length > 3 && (
-                                        <p className="text-center text-[9px] text-slate-400 italic">và {Object.keys(tool.modelPricing || {}).length - 3} model khác...</p>
-                                    )}
-                                    {(!tool.modelPricing || Object.keys(tool.modelPricing).length === 0) && (
-                                        <div className="flex justify-between items-center text-[10px] bg-slate-50 dark:bg-slate-900/30 p-2 rounded-lg">
-                                            <span className="text-slate-600 dark:text-slate-400 font-bold italic">Chưa đặt giá riêng</span>
-                                            <span className="font-black text-slate-400">---</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Công cụ Hình ảnh</h3>
+                            <span className="text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-full">{groupedTools.image.length}</span>
                         </div>
-                    );
-                })}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {groupedTools.image.map(tool => renderToolCard(tool))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 📝 CÔNG CỤ VĂN BẢN */}
+                {groupedTools.text.length > 0 && (
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-700 pb-2">
+                            <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg text-white">
+                                <DocumentTextIcon className="w-5 h-5" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Công cụ Văn bản & Phân tích</h3>
+                            <span className="text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-full">{groupedTools.text.length}</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {groupedTools.text.map(tool => renderToolCard(tool))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 🎬 CÔNG CỤ VIDEO */}
+                {groupedTools.video.length > 0 && (
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-700 pb-2">
+                            <div className="p-2 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg text-white">
+                                <VideoIcon className="w-5 h-5" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Công cụ Video & Hiệu ứng</h3>
+                            <span className="text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-full">{groupedTools.video.length}</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {groupedTools.video.map(tool => renderToolCard(tool))}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -16,6 +16,7 @@ import {
 import { GoogleGenAI, Type } from "@google/genai";
 import { useToast } from '../../components/ToastProvider';
 import { useSettings } from '../../features/settings/useSettings';
+import { supabase } from '../../services/supabaseClient';
 
 const USD_RATE = 25500; 
 
@@ -63,6 +64,79 @@ const ApiConsumptionPage: React.FC = () => {
     const [refreshStep, setRefreshStep] = useState(0);
     const [showOnlyIntegrated, setShowOnlyIntegrated] = useState(true);
     const [sources, setSources] = useState<{title: string, uri: string}[]>([]);
+
+    // API Payment States
+    const [adminBalance, setAdminBalance] = useState<number>(0);
+    const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
+    const [isPayModalOpen, setIsPayModalOpen] = useState(false);
+    const [payAmount, setPayAmount] = useState<string>('');
+    const [payDescription, setPayDescription] = useState<string>('');
+    const [isPaying, setIsPaying] = useState(false);
+
+    useEffect(() => {
+        fetchAdminFinance();
+    }, []);
+
+    const fetchAdminFinance = async () => {
+        try {
+            const { data: fundData, error: fundError } = await supabase
+                .from('funds')
+                .select('balance')
+                .eq('id', 'admin')
+                .single();
+            if (fundData && !fundError) setAdminBalance(fundData.balance);
+
+            const { data: historyData, error: historyError } = await supabase
+                .from('fund_transactions')
+                .select('*')
+                .eq('fund_id', 'admin')
+                .eq('type', 'outflow')
+                .like('description', 'Thanh toán hóa đơn API:%')
+                .order('created_at', { ascending: false });
+            if (historyData && !historyError) setPaymentHistory(historyData);
+        } catch (err) {
+            console.error("Error fetching financial info:", err);
+        }
+    };
+
+    const handlePayBill = async () => {
+        const amount = parseFloat(payAmount);
+        if (isNaN(amount) || amount <= 0) {
+            addToast("Số tiền không hợp lệ", "error");
+            return;
+        }
+        if (!payDescription) {
+            addToast("Vui lòng nhập mô tả hóa đơn", "error");
+            return;
+        }
+
+        setIsPaying(true);
+        try {
+            const { error } = await supabase.rpc('admin_pay_api_bill', {
+                p_amount: amount,
+                p_description: payDescription
+            });
+
+            if (error) {
+                // Parse the specific error message if it's "Số dư ví Admin không đủ"
+                if (error.message.includes('Số dư ví Admin không đủ')) {
+                    throw new Error("Số dư quỹ lợi nhuận không đủ để thanh toán.");
+                } else {
+                    throw error;
+                }
+            }
+
+            addToast("Thanh toán hóa đơn API thành công!", "success");
+            setIsPayModalOpen(false);
+            setPayAmount('');
+            setPayDescription('');
+            fetchAdminFinance();
+        } catch (error: any) {
+            addToast(error.message || "Lỗi khi thanh toán", "error");
+        } finally {
+            setIsPaying(false);
+        }
+    };
 
     const handleResetFilters = () => {
         setFilterProvider('all');
@@ -229,6 +303,13 @@ const ApiConsumptionPage: React.FC = () => {
                     Bảng giá & Thống kê API
                 </h2>
                 <div className="flex flex-wrap items-center gap-4">
+                    <button 
+                        onClick={() => setIsPayModalOpen(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-md transition-all active:scale-95"
+                    >
+                        <CurrencyDollarIcon className="h-5 w-5" />
+                        Chi trả hóa đơn API
+                    </button>
                     <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
                         <button 
                             onClick={() => setShowOnlyIntegrated(true)}
@@ -385,6 +466,16 @@ const ApiConsumptionPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-2xl shadow-lg border border-indigo-400 relative overflow-hidden text-white">
+                    <div className="absolute -right-4 -bottom-4 opacity-10">
+                        <CurrencyDollarIcon className="w-32 h-32" />
+                    </div>
+                    <p className="text-xs font-bold text-indigo-100 mb-2 uppercase tracking-widest relative z-10">Ví Lợi Nhuận Admin</p>
+                    <p className="text-3xl font-bold relative z-10">{adminBalance.toLocaleString()}đ</p>
+                    <div className="mt-3 flex items-center gap-1 text-[10px] font-bold text-white bg-white/20 px-2 py-1 flex-inline rounded-md w-fit relative z-10 w-auto">
+                        Quỹ hệ thống
+                    </div>
+                </div>
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
                     <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">Tiêu thụ thực tế</p>
                     <p className="text-3xl font-bold text-slate-900 dark:text-white">${stats.totalCostUsd.toFixed(3)}</p>
@@ -394,19 +485,12 @@ const ApiConsumptionPage: React.FC = () => {
                 </div>
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
                     <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">Chi phí VND (Gốc)</p>
-                    <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{(stats.totalCostUsd * USD_RATE).toLocaleString()}đ</p>
+                    <p className="text-3xl font-bold text-rose-500">{(stats.totalCostUsd * USD_RATE).toLocaleString()}đ</p>
                 </div>
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
                     <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">Lưu lượng</p>
                     <p className="text-3xl font-bold text-pink-500">{stats.totalRequests.toLocaleString()}</p>
                     <p className="text-[10px] text-slate-500 mt-2 uppercase font-bold">Lượt gọi thành công</p>
-                </div>
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
-                    <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">Trạng thái API</p>
-                    <div className="flex items-center gap-2 mt-1">
-                        <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]"></div>
-                        <span className="text-xl font-bold text-green-500 uppercase">Hoạt động</span>
-                    </div>
                 </div>
             </div>
 
@@ -471,6 +555,115 @@ const ApiConsumptionPage: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* API Payment History Table */}
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700 overflow-hidden">
+                <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                        <DocumentTextIcon className="h-5 w-5 text-slate-500" /> 
+                        Lịch sử thanh toán API
+                    </h3>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                        <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 font-bold uppercase text-[10px]">
+                            <tr>
+                                <th className="px-6 py-4">Mã giao dịch</th>
+                                <th className="px-6 py-4">Thời gian</th>
+                                <th className="px-6 py-4 border-l border-slate-200 dark:border-slate-700">Mô tả</th>
+                                <th className="px-6 py-4 text-right">Số tiền xuất quỹ</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                            {paymentHistory.map((row) => (
+                                <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <td className="px-6 py-4 font-mono text-slate-400">#{row.id.split('-')[0]}</td>
+                                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                                        {new Date(row.created_at).toLocaleString('vi-VN')}
+                                    </td>
+                                    <td className="px-6 py-4 font-medium text-slate-800 dark:text-white border-l border-slate-100 dark:border-slate-700">
+                                        {row.description}
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-bold text-rose-500">
+                                        -{row.amount.toLocaleString()}đ
+                                    </td>
+                                </tr>
+                            ))}
+                            {paymentHistory.length === 0 && (
+                                <tr>
+                                    <td colSpan={4} className="px-6 py-12 text-center text-slate-400 text-sm">
+                                        Chưa có khoản chi trả nào được ghi nhận.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Payment Modal */}
+            {isPayModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => !isPaying && setIsPayModalOpen(false)}></div>
+                    <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-springUp">
+                         <div className="p-6 border-b border-slate-100 dark:border-slate-700">
+                            <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                <CurrencyDollarIcon className="h-6 w-6 text-indigo-500" />
+                                Thanh toán hóa đơn API
+                            </h3>
+                            <p className="text-xs text-slate-500 mt-2">
+                                Trừ tiền từ Ví Admin (Lợi nhuận) để thanh toán chi phí API cho đối tác.
+                            </p>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Ví Admin hiện tại</label>
+                                <p className="text-2xl font-bold text-indigo-600">{adminBalance.toLocaleString()}đ</p>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Số tiền cần chi (VNĐ)</label>
+                                <input
+                                    type="number"
+                                    value={payAmount}
+                                    onChange={(e) => setPayAmount(e.target.value)}
+                                    placeholder="Ví dụ: 500000"
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Nội dung thanh toán</label>
+                                <input
+                                    type="text"
+                                    value={payDescription}
+                                    onChange={(e) => setPayDescription(e.target.value)}
+                                    placeholder="Tháng 05/2026 - Google Cloud..."
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                />
+                            </div>
+                        </div>
+                        <div className="p-6 bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-700">
+                             <button
+                                onClick={() => setIsPayModalOpen(false)}
+                                disabled={isPaying}
+                                className="px-5 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all"
+                            >
+                                Hủy bỏ
+                            </button>
+                            <button
+                                onClick={handlePayBill}
+                                disabled={isPaying}
+                                className="px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-all flex items-center gap-2"
+                            >
+                                {isPaying ? (
+                                    <><ArrowPathIcon className="h-4 w-4 animate-spin" /> Đang xử lý...</>
+                                ) : (
+                                    <><CheckCircleIcon className="h-4 w-4" /> Xác nhận chi trả</>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
