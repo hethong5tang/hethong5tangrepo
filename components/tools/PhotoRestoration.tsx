@@ -34,12 +34,14 @@ const PhotoRestoration: React.FC<RestorationViewProps> = ({ tool, initialImage, 
         // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
         const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
         if (toolSpecificModels.length > 0) {
-            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id));
+            const toolFiltered = ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && m.category === 'image');
+            if (toolFiltered.length > 0) return toolFiltered;
         }
 
         const activeIds = settingsState.systemSettings.activeGeminiModels || [];
-        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id));
-        return filtered.length > 0 ? filtered : [ALL_GEMINI_MODELS[0]];
+        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id) && m.category === 'image');
+        const fallback = ALL_GEMINI_MODELS.filter(m => m.category === 'image');
+        return filtered.length > 0 ? filtered : (fallback.length > 0 ? [fallback[0]] : [ALL_GEMINI_MODELS[0]]);
     }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
 
     // Use correct key from environment

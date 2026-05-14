@@ -149,12 +149,14 @@ const HairstyleProTool: React.FC<HairstyleProToolProps> = ({ tool, onNavigate })
         // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
         const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
         if (toolSpecificModels.length > 0) {
-            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id));
+            const toolFiltered = ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && m.category === 'image');
+            if (toolFiltered.length > 0) return toolFiltered;
         }
 
         const activeIds = settingsState.systemSettings.activeGeminiModels || [];
-        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id));
-        return filtered.length > 0 ? filtered : [ALL_GEMINI_MODELS[0]];
+        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id) && m.category === 'image');
+        const fallback = ALL_GEMINI_MODELS.filter(m => m.category === 'image');
+        return filtered.length > 0 ? filtered : (fallback.length > 0 ? [fallback[0]] : [ALL_GEMINI_MODELS[0]]);
     }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
 
     // State
@@ -577,9 +579,35 @@ const HairstyleProTool: React.FC<HairstyleProToolProps> = ({ tool, onNavigate })
             }
         }
 
+        const expectedCount = mode === 'presets' ? selectedStyles.length : 1;
+        const failedCount = expectedCount - finalImages.length;
+        let actualCost = totalCost;
+
+        if (failedCount > 0) {
+            const costPerImage = tool.creditCost;
+            const refundAmount = failedCount * costPerImage;
+            actualCost -= refundAmount;
+            
+            if (refundAmount > 0) {
+                const userForRefund = findUserInTree(userState.allUsers, loggedInUser.id);
+                if (userForRefund) {
+                    await handleUseToolCredit(userForRefund.id, { ...tool, creditCost: -refundAmount });
+                }
+            }
+
+            if (finalImages.length === 0) {
+                 addToast(`Tạo ảnh thất bại. Đã hoàn lại ${refundAmount} Credit.`, 'error');
+            } else {
+                 addToast(`Tạo xong ${finalImages.length}/${expectedCount} ảnh. Đã hoàn ${refundAmount} Credit.`, 'info');
+            }
+        } else {
+             addToast('Đã hoàn tất tạo mẫu tóc!', 'success');
+        }
+
         if (finalImages.length > 0) {
             // Encode style names into imageStyle field as JSON for recovery
             const stylesMetadata = styleNames.map((name, idx) => ({ idx, name }));
+            const freshUser = findUserInTree(userState.allUsers, loggedInUser.id); // Get latest balance
 
             const newResult: GenerationResult = {
                 taskId: `hair_${Date.now()}`,
@@ -592,15 +620,14 @@ const HairstyleProTool: React.FC<HairstyleProToolProps> = ({ tool, onNavigate })
                     generationMode: 'Chất lượng', 
                     imageStyle: JSON.stringify(stylesMetadata) // Save style names map
                 },
-                cost: totalCost,
-                balanceAfter: freshUser!.creditBalance - totalCost,
+                cost: actualCost,
+                balanceAfter: freshUser ? freshUser.creditBalance : (loggedInUser.creditBalance - actualCost),
                 creationTime: new Date().toLocaleTimeString(),
             };
             handleSetGenerationHistory(loggedInUser.id, newResult);
         }
         
         setIsProcessing(false);
-        addToast('Đã hoàn tất tạo mẫu tóc!', 'success');
     };
     
     const handleDownload = (url: string, name: string) => {
