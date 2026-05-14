@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { GoogleGenAI, Modality, Type } from '@google/genai';
+import { Modality, Type } from '@google/genai';
 import { 
     ArrowLeftIcon, SparklesIcon, DocumentArrowDownIcon, 
     PhotoIcon, CheckCircleIcon, TrashIcon, ArrowPathIcon, 
@@ -23,6 +23,7 @@ import CreditBalanceDisplay from './CreditBalanceDisplay';
 import Modal from '../../components/Modal';
 import { ensureSupportedImageFormat } from '../../utils/imageProcessing';
 import ExpandView from './image-gen/ExpandView';
+import { aiService, checkApiKey, requestApiKey } from '../../services/aiService';
 
 interface FaceSwapToolProps {
     tool: IntegrationTool;
@@ -98,6 +99,16 @@ const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
         centerX?: number;
         centerY?: number;
     }>({ mode: 'none', startX: 0, startY: 0, initialBox: [], initialRotation: 0 });
+
+    const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        const verifyKey = async () => {
+            const hasKey = await checkApiKey();
+            setHasApiKey(hasKey);
+        };
+        verifyKey();
+    }, []);
 
     // Layout State for Canvas Redraw
     const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -178,20 +189,17 @@ const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
 
     // --- FACE DETECTION LOGIC ---
     const detectFacesInImage = async (imageBase64: string) => {
-        if (!process.env.GEMINI_API_KEY && !process.env.API_KEY) return;
-        
         setIsDetecting(true);
         setDetectedFaces([]);
         setSelectedFaceIndex(null);
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
             const mimeType = imageBase64.split(';')[0].split(':')[1] || 'image/png';
             const imagePart = { inlineData: { data: imageBase64.split(',')[1], mimeType } };
 
             const prompt = "Detect all human faces. Return bounding boxes.";
             
-            const response = await ai.models.generateContent({
+            const response = await aiService.generateContent({
                 model: 'gemini-3-flash-preview',
                 contents: { parts: [imagePart, { text: prompt }] },
                 config: {
@@ -246,7 +254,6 @@ const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
         setSourceFaces(prev => ({ ...prev, [index]: rawImage }));
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
             const mimeType = rawImage.split(';')[0].split(':')[1] || 'image/png';
             const imagePart = { inlineData: { data: rawImage.split(',')[1], mimeType } };
 
@@ -262,7 +269,7 @@ const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
             6. Output ONLY the aligned face image on a neutral background.
             `;
 
-            const response = await ai.models.generateContent({
+            const response = await aiService.generateContent({
                 model: selectedModel,
                 contents: { parts: [imagePart, { text: prompt }] },
                 config: { responseModalities: [Modality.IMAGE] },
@@ -649,8 +656,6 @@ const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
         }
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY as string });
-            
             const img = baseImageObjRef.current || new Image();
             if (!baseImageObjRef.current) {
                 await new Promise(r => { img.onload = r; img.src = baseImage; });
@@ -719,7 +724,7 @@ const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
             OUTPUT: The FULL composite image.
             `;
 
-            const response = await ai.models.generateContent({
+            const response = await aiService.generateContent({
                 model: selectedModel,
                 contents: { parts: [compositePart, sourcePart, { text: prompt }] },
                 config: { responseModalities: [Modality.IMAGE] },

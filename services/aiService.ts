@@ -4,16 +4,44 @@ import { GoogleGenAI, GenerateContentResponse, Chat } from "@google/genai";
 // Hàm khởi tạo Client. 
 // Sử dụng GEMINI_API_KEY được hệ thống AI Studio cung cấp tự động.
 const getClient = () => {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+    
     if (!apiKey) {
-        console.warn("GEMINI_API_KEY chưa được cấu hình. Đang thử dùng API_KEY cũ làm dự phòng...");
-        const fallbackKey = process.env.API_KEY;
-        if (!fallbackKey) {
-            throw new Error("API Key missing. Vui lòng thiết lập GEMINI_API_KEY trong Environment Variables.");
-        }
-        return new GoogleGenAI({ apiKey: fallbackKey });
+        // Nếu không có key, có thể model yêu cầu người dùng chọn key (Paid/Billing models)
+        // Chúng ta sẽ ném lỗi kèm hướng dẫn mở trình chọn key nếu đang ở môi trường AI Studio
+        const errorMsg = "API Key missing. Vui lòng thiết lập GEMINI_API_KEY trong Secrets hoặc chọn API Key từ bảng điều khiển.";
+        console.error(errorMsg);
+        throw new Error(errorMsg);
     }
+    
     return new GoogleGenAI({ apiKey });
+};
+
+/**
+ * Kiểm tra xem người dùng đã chọn API Key chưa (đối với model trả phí/billing)
+ */
+export const checkApiKey = async (): Promise<boolean> => {
+    if (process.env.GEMINI_API_KEY || process.env.API_KEY) return true;
+    
+    // @ts-ignore
+    if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
+        // @ts-ignore
+        return await window.aistudio.hasSelectedApiKey();
+    }
+    return false;
+};
+
+/**
+ * Mở trình chọn API Key
+ */
+export const requestApiKey = async (): Promise<void> => {
+    // @ts-ignore
+    if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
+        // @ts-ignore
+        await window.aistudio.openSelectKey();
+    } else {
+        alert("Vui lòng thiết lập API Key trong phần Settings > Secrets.");
+    }
 };
 
 // Interface cho tham số đầu vào để đảm bảo type safety

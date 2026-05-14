@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { IntegrationTool, IntegrationType } from '../../features/settings/types';
 import TextGenerator from '../../components/tools/TextGenerator';
 import PhotoRestoration from '../../components/tools/PhotoRestoration';
@@ -19,6 +19,8 @@ import FashionDesignerTool from '../../components/tools/FashionDesignerTool';
 import InteriorDesignTool from '../../components/tools/InteriorDesignTool';
 import ImageMixerTool from '../../components/tools/ImageMixerTool';
 import MenuDesignerTool from '../../components/tools/MenuDesignerTool';
+import { checkApiKey, requestApiKey } from '../../services/aiService';
+import { InformationCircleIcon, ArrowLeftIcon } from '../../components/Icons';
 
 interface ToolRunnerPageProps {
     tool: IntegrationTool;
@@ -26,61 +28,104 @@ interface ToolRunnerPageProps {
 }
 
 const ToolRunnerPage: React.FC<ToolRunnerPageProps> = ({ tool, onNavigate }) => {
+    const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        const verifyKey = async () => {
+            const hasKey = await checkApiKey();
+            setHasApiKey(hasKey);
+        };
+        verifyKey();
+    }, [tool.id]);
+
+    const renderBanner = () => {
+        if (hasApiKey !== false) return null;
+        
+        return (
+            <div className="bg-amber-100 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800 p-3 flex items-center justify-between z-50 sticky top-0 shadow-sm">
+                <div className="flex items-center gap-3">
+                    <InformationCircleIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                        <span className="font-bold">Cần API Key:</span> Vui lòng chọn API Key từ bảng điều khiển để sử dụng công cụ này.
+                    </p>
+                </div>
+                <button 
+                    onClick={async () => {
+                        await requestApiKey();
+                        const hasKey = await checkApiKey();
+                        setHasApiKey(hasKey);
+                    }}
+                    className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg transition-all shadow-md"
+                >
+                    Chọn ngay
+                </button>
+            </div>
+        );
+    };
+
+    const wrapTool = (component: React.ReactNode) => (
+        <div className="h-full flex flex-col relative overflow-hidden">
+            {renderBanner()}
+            <div className="flex-1 overflow-hidden">
+                {component}
+            </div>
+        </div>
+    );
     
     // Render specific components for advanced tools
     if (tool.id === 'tool_content_writer') {
-        return <TextGenerator tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<TextGenerator tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_photo_restore') {
-        return <PhotoRestoration tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<PhotoRestoration tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_image_gen_gemini') {
-        return <ImageGenerator tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<ImageGenerator tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_video_editor') {
-        return <VideoEditor tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<VideoEditor tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_vectorizer') {
-        return <VectorizeTool tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<VectorizeTool tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_hairstyle_pro') {
-        return <HairstyleProTool tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<HairstyleProTool tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_bg_remover') {
-        return <AiBackgroundRemoverPage tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<AiBackgroundRemoverPage tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_ai_video_gen') {
-        return <AiVideoGenerator tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<AiVideoGenerator tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_face_swap') {
-        return <FaceSwapTool tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<FaceSwapTool tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_ad_creator') {
-        return <AdCreatorTool tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<AdCreatorTool tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_fashion_studio') {
-        return <FashionStudioTool tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<FashionStudioTool tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_portrait_editor') {
-        return <PortraitEditor tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<PortraitEditor tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_ocr_pro') {
-        return <ImageToTextTool tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<ImageToTextTool tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_mockup_generator') {
-        return <MockupGeneratorTool tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<MockupGeneratorTool tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_fashion_designer') {
-        return <FashionDesignerTool tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<FashionDesignerTool tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_interior_design') {
-        return <InteriorDesignTool tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<InteriorDesignTool tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_image_mixer') {
-        return <ImageMixerTool tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<ImageMixerTool tool={tool} onNavigate={onNavigate} />);
     }
     if (tool.id === 'tool_menu_designer') {
-        return <MenuDesignerTool tool={tool} onNavigate={onNavigate} />;
+        return wrapTool(<MenuDesignerTool tool={tool} onNavigate={onNavigate} />);
     }
 
     // Generic Runner for other types (Link, Embed, etc.)
