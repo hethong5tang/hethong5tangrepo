@@ -65,7 +65,7 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
     const { handleUpdateSystemSettings: onSave } = useActions();
     const [settings, setSettings] = useState<SystemSettings>(initialSettings);
     const [isSaving, setIsSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<'general' | 'security' | 'payment' | 'legal'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'security' | 'payment' | 'legal' | 'tiers'>('general');
     
     // Validation State
     const [bankError, setBankError] = useState<string>('');

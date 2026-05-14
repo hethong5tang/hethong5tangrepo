@@ -7,7 +7,7 @@ export const financeReducer = (state: FinanceState, action: FinanceAction): Fina
     case 'ADD_WITHDRAWAL_REQUEST': 
       return {
         ...state,
-        withdrawalRequests: [action.payload, ...state.withdrawalRequests],
+        withdrawalRequests: [action.payload, ...(state.withdrawalRequests || [])],
       };
     
     case 'PROCESS_WITHDRAWAL_REJECT': {

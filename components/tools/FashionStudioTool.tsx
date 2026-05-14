@@ -16,6 +16,8 @@ import { useAuth } from '../../features/auth/useAuth';
 import { useUser } from '../../features/users/useUser';
 import { useActions } from '../../features/actions/useActions';
 import { useToast } from '../../components/ToastProvider';
+import { useSettings } from '../../features/settings/useSettings';
+import { ALL_GEMINI_MODELS } from '../../constants';
 import { findUserInTree } from '../../services/userService';
 import { GenerationResult, ImageQuantity } from '../../features/users/types';
 import CreditBalanceDisplay from './CreditBalanceDisplay';
@@ -82,18 +84,28 @@ interface View3DState {
     isLoading: boolean;
 }
 
-type BackgroundMode = 'original' | 'upload' | 'prompt';
 
-const AVAILABLE_MODELS = [
-    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Tốc độ & Miễn phí)' },
-    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Chất lượng cao)' },
-];
+type BackgroundMode = 'original' | 'upload' | 'prompt';
 
 const FashionStudioTool: React.FC<FashionStudioToolProps> = ({ tool, onNavigate }) => {
     const { loggedInUser } = useAuth();
     const { userState } = useUser();
     const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
     const { addToast } = useToast();
+    const { settingsState } = useSettings();
+
+    // UseMemo for models
+    const activeModels = useMemo(() => {
+        // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
+        const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
+        if (toolSpecificModels.length > 0) {
+            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id));
+        }
+
+        const activeIds = settingsState.systemSettings.activeGeminiModels || [];
+        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id));
+        return filtered.length > 0 ? filtered : [ALL_GEMINI_MODELS[0]];
+    }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
 
     // Use correct key from environment
     const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
@@ -131,7 +143,13 @@ const FashionStudioTool: React.FC<FashionStudioToolProps> = ({ tool, onNavigate 
     const [isExtracting, setIsExtracting] = useState(false); 
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [showDownloadOptions, setShowDownloadOptions] = useState(false);
-    const [selectedModel, setSelectedModel] = useState<string>(AVAILABLE_MODELS[0].id);
+    const [selectedModel, setSelectedModel] = useState<string>(activeModels[0].id);
+
+    useEffect(() => {
+        if (!activeModels.some(m => m.id === selectedModel)) {
+            setSelectedModel(activeModels[0].id);
+        }
+    }, [activeModels, selectedModel]);
 
     const userInputRef = useRef<HTMLInputElement>(null);
     const garmentInputRef = useRef<HTMLInputElement>(null);
@@ -789,7 +807,7 @@ const FashionStudioTool: React.FC<FashionStudioToolProps> = ({ tool, onNavigate 
                                 onChange={(e) => setSelectedModel(e.target.value)}
                                 className="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
                             >
-                                {AVAILABLE_MODELS.map(m => (
+                                {activeModels.map(m => (
                                     <option key={m.id} value={m.id}>{m.name}</option>
                                 ))}
                             </select>

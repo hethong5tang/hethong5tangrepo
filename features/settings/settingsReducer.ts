@@ -14,7 +14,7 @@ export const settingsReducer = (state: SettingsState, action: ExtendedSettingsAc
     case 'UPDATE_SYSTEM_SETTINGS':
       return {
         ...state,
-        systemSettings: action.payload,
+        systemSettings: { ...state.systemSettings, ...action.payload },
       };
 
     case 'RESET_SYSTEM_SETTINGS_TO_DEFAULT':

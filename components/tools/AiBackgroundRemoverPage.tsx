@@ -19,22 +19,33 @@ import CreditBalanceDisplay from './CreditBalanceDisplay';
 import Modal from '../../components/Modal';
 import { ColorPickerCircle } from './video-editor/VideoEditorUI';
 import { processGreenScreenRemoval } from '../../utils/imageProcessing';
+import { useSettings } from '../../features/settings/useSettings';
+import { ALL_GEMINI_MODELS } from '../../constants';
 
 interface AiBackgroundRemoverPageProps {
     tool: IntegrationTool;
     onNavigate: (page: string) => void;
 }
 
-const AVAILABLE_MODELS = [
-    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Tốc độ & Miễn phí)' },
-    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Chất lượng cao)' },
-];
-
 const AiBackgroundRemoverPage: React.FC<AiBackgroundRemoverPageProps> = ({ tool, onNavigate }) => {
     const { loggedInUser } = useAuth();
     const { userState } = useUser();
     const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
     const { addToast } = useToast();
+    const { settingsState } = useSettings();
+
+    // UseMemo for models
+    const activeModels = useMemo(() => {
+        // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
+        const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
+        if (toolSpecificModels.length > 0) {
+            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id));
+        }
+
+        const activeIds = settingsState.systemSettings.activeGeminiModels || [];
+        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id));
+        return filtered.length > 0 ? filtered : [ALL_GEMINI_MODELS[0]];
+    }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
 
     // Use correct key from environment
     const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
@@ -48,7 +59,13 @@ const AiBackgroundRemoverPage: React.FC<AiBackgroundRemoverPageProps> = ({ tool,
     const [mode, setMode] = useState<'transparent' | 'color' | 'prompt'>('transparent');
     const [targetColor, setTargetColor] = useState('#FFFFFF');
     const [bgPrompt, setBgPrompt] = useState('');
-    const [selectedModel, setSelectedModel] = useState<string>(AVAILABLE_MODELS[0].id);
+    const [selectedModel, setSelectedModel] = useState<string>(activeModels[0].id);
+
+    useEffect(() => {
+        if (!activeModels.some(m => m.id === selectedModel)) {
+            setSelectedModel(activeModels[0].id);
+        }
+    }, [activeModels, selectedModel]);
 
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [showDownloadOptions, setShowDownloadOptions] = useState(false); // New state for download menu
@@ -300,7 +317,7 @@ const AiBackgroundRemoverPage: React.FC<AiBackgroundRemoverPageProps> = ({ tool,
                             onChange={(e) => setSelectedModel(e.target.value)}
                             className="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
                         >
-                            {AVAILABLE_MODELS.map(m => (
+                            {activeModels.map(m => (
                                 <option key={m.id} value={m.id}>{m.name}</option>
                             ))}
                         </select>

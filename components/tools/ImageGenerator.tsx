@@ -9,6 +9,10 @@ import {
     AspectRatio34Icon, AspectRatio916Icon, EraserIcon, PaintBrushIcon as ArtIcon, ArrowLeftIcon, ArrowUpTrayIcon,
     CheckCircleIcon, TagIcon, ChevronDownIcon, FilmIcon, BoltIcon
 } from '../Icons';
+import { useSettings } from '../../features/settings/useSettings';
+import { ALL_GEMINI_MODELS } from '../../constants';
+
+// Removed local ALL_IMAGE_MODELS to sync with global constants
 import { IntegrationTool } from '../../features/settings/types';
 import { useAuth } from '../../features/auth/useAuth';
 import { useActions } from '../../features/actions/useActions';
@@ -56,11 +60,6 @@ const STYLE_CATEGORIES: Record<StyleCategory, string[]> = {
         'Dưới nước', 'Dreamcore', 'Kidcore', 'Cổ tích', 'Kinh dị', 'Zombie', 'Sinh vật huyền bí', 'Thiên thần / Ác quỷ', 'Tâm linh', 'Samurai', 'Ninja'
     ]
 };
-
-const AVAILABLE_MODELS = [
-    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image (Tạo ảnh / Miễn phí)' },
-    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Tiêu chuẩn / Miễn phí)' },
-];
 
 // Flatten type for state management
 type ImageStyle = string; 
@@ -336,7 +335,26 @@ const ImageGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
     const [aspectRatio, setAspectRatio] = useState<AspectRatio>('2:3');
     const [imageQuantity, setImageQuantity] = useState<ImageQuantity>(4);
     const [customRatio, setCustomRatio] = useState<{ width: number; height: number } | null>(null);
-    const [selectedModel, setSelectedModel] = useState<string>(AVAILABLE_MODELS[0].id);
+    const { settingsState } = useSettings();
+    const activeModels = useMemo(() => {
+        // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
+        const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
+        if (toolSpecificModels.length > 0) {
+            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id));
+        }
+
+        const activeIds = settingsState.systemSettings.activeGeminiModels || [];
+        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id));
+        return filtered.length > 0 ? filtered : [ALL_GEMINI_MODELS[0]];
+    }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
+
+    const [selectedModel, setSelectedModel] = useState<string>(activeModels[0].id);
+
+    useEffect(() => {
+        if (!activeModels.some(m => m.id === selectedModel)) {
+            setSelectedModel(activeModels[0].id);
+        }
+    }, [activeModels]);
     
     // Style State
     const [imageStyle, setImageStyle] = useState<ImageStyle>('Mặc định');
@@ -1105,7 +1123,7 @@ const ImageGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
                             onChange={(e) => setSelectedModel(e.target.value)}
                             className="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
                         >
-                            {AVAILABLE_MODELS.map(m => (
+                            {activeModels.map(m => (
                                 <option key={m.id} value={m.id}>{m.name}</option>
                             ))}
                         </select>

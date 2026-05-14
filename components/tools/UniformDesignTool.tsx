@@ -13,6 +13,8 @@ import { useAuth } from '../../features/auth/useAuth';
 import { useUser } from '../../features/users/useUser';
 import { useActions } from '../../features/actions/useActions';
 import { useToast } from '../../components/ToastProvider';
+import { useSettings } from '../../features/settings/useSettings';
+import { ALL_GEMINI_MODELS } from '../../constants';
 import { findUserInTree } from '../../services/userService';
 import { GenerationResult } from '../../features/users/types';
 import CreditBalanceDisplay from './CreditBalanceDisplay';
@@ -101,6 +103,20 @@ const UniformDesignTool: React.FC<UniformDesignToolProps> = ({ tool, onNavigate 
     const { userState } = useUser();
     const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
     const { addToast } = useToast();
+    const { settingsState } = useSettings();
+
+    // UseMemo for models
+    const activeModels = useMemo(() => {
+        // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
+        const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
+        if (toolSpecificModels.length > 0) {
+            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id));
+        }
+
+        const activeIds = settingsState.systemSettings.activeGeminiModels || [];
+        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id));
+        return filtered.length > 0 ? filtered : [ALL_GEMINI_MODELS[0]];
+    }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
 
     // Use correct key from environment
     const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
@@ -108,6 +124,13 @@ const UniformDesignTool: React.FC<UniformDesignToolProps> = ({ tool, onNavigate 
     // State
     const [categoryId, setCategoryId] = useState<string>(UNIFORM_CATEGORIES[0].id);
     const [itemId, setItemId] = useState<string>(UNIFORM_CATEGORIES[0].items[0].id);
+    const [selectedModel, setSelectedModel] = useState<string>(activeModels[0].id);
+
+    useEffect(() => {
+        if (!activeModels.some(m => m.id === selectedModel)) {
+            setSelectedModel(activeModels[0].id);
+        }
+    }, [activeModels, selectedModel]);
     
     const [primaryColor, setPrimaryColor] = useState('#1e3a8a'); // Default Navy
     const [secondaryColor, setSecondaryColor] = useState('#ffffff'); // Default White
@@ -219,7 +242,7 @@ const UniformDesignTool: React.FC<UniformDesignToolProps> = ({ tool, onNavigate 
             inputParts.push({ text: systemPrompt });
 
             const response = await ai.models.generateContent({
-                model: 'gemini-1.5-flash',
+                model: selectedModel,
                 contents: { parts: inputParts },
                 config: { responseModalities: [Modality.IMAGE] },
             });
@@ -321,8 +344,22 @@ const UniformDesignTool: React.FC<UniformDesignToolProps> = ({ tool, onNavigate 
             </header>
 
             <div className="flex flex-1 overflow-hidden">
-                {/* LEFT: CONTROLS */}
+                {/* MODEL SELECTOR */}
                 <aside className="w-96 bg-slate-900 border-r border-slate-800 flex flex-col overflow-y-auto p-6 space-y-6">
+                    <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 mb-2">
+                        <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-2 block flex items-center gap-2">
+                            <SparklesIcon className="h-3 w-3 text-indigo-400" /> AI Model Engine
+                        </label>
+                        <select
+                            value={selectedModel}
+                            onChange={(e) => setSelectedModel(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                        >
+                            {activeModels.map(m => (
+                                <option key={m.id} value={m.id}>{m.name}</option>
+                            ))}
+                        </select>
+                    </div>
                     
                     {/* 1. Category */}
                     <div>

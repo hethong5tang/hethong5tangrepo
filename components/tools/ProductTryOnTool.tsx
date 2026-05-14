@@ -24,6 +24,8 @@ import { useAuth } from '../../features/auth/useAuth';
 import { useUser } from '../../features/users/useUser';
 import { useActions } from '../../features/actions/useActions';
 import { useToast } from '../../components/ToastProvider';
+import { useSettings } from '../../features/settings/useSettings';
+import { ALL_GEMINI_MODELS } from '../../constants';
 import { findUserInTree } from '../../services/userService';
 import { GenerationResult } from '../../features/users/types';
 import CreditBalanceDisplay from './CreditBalanceDisplay';
@@ -35,11 +37,26 @@ interface ProductTryOnToolProps {
     onNavigate: (page: string) => void;
 }
 
+export const db = null; // Adding this to avoid unused imports warning if any
 const ProductTryOnTool: React.FC<ProductTryOnToolProps> = ({ tool, onNavigate }) => {
     const { loggedInUser } = useAuth();
     const { userState } = useUser();
     const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
     const { addToast } = useToast();
+    const { settingsState } = useSettings();
+
+    // UseMemo for active models
+    const activeModels = useMemo(() => {
+        // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
+        const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
+        if (toolSpecificModels.length > 0) {
+            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id));
+        }
+
+        const activeIds = settingsState.systemSettings.activeGeminiModels || [];
+        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id));
+        return filtered.length > 0 ? filtered : [ALL_GEMINI_MODELS[0]];
+    }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
 
     // Use correct key from environment
     const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
@@ -62,6 +79,13 @@ const ProductTryOnTool: React.FC<ProductTryOnToolProps> = ({ tool, onNavigate })
     
     // Mode: Add (Combine) vs Replace (Swap)
     const [mixMode, setMixMode] = useState<'add' | 'replace'>('add');
+    const [selectedModel, setSelectedModel] = useState<string>(activeModels[0].id);
+
+    useEffect(() => {
+        if (!activeModels.some(m => m.id === selectedModel)) {
+            setSelectedModel(activeModels[0].id);
+        }
+    }, [activeModels, selectedModel]);
 
     const baseInputRef = useRef<HTMLInputElement>(null);
     const mixInputRef = useRef<HTMLInputElement>(null);
@@ -249,7 +273,7 @@ const ProductTryOnTool: React.FC<ProductTryOnToolProps> = ({ tool, onNavigate })
             `;
 
             const response = await ai.models.generateContent({
-                model: 'gemini-1.5-flash', 
+                model: selectedModel, 
                 contents: { parts: [basePart, ...mixParts, { text: prompt }] }
             });
 
@@ -351,7 +375,7 @@ const ProductTryOnTool: React.FC<ProductTryOnToolProps> = ({ tool, onNavigate })
             `;
 
             const response = await ai.models.generateContent({
-                model: 'gemini-1.5-flash', 
+                model: selectedModel, 
                 contents: { parts: [basePart, ...mixParts, { text: systemPrompt }] },
                 config: { responseModalities: [Modality.IMAGE] },
             });
@@ -445,6 +469,29 @@ const ProductTryOnTool: React.FC<ProductTryOnToolProps> = ({ tool, onNavigate })
             <main className="flex-1 overflow-auto p-4 md:p-8 relative">
                 {activeView === 'setup' ? (
                      <div className="max-w-6xl mx-auto h-full flex flex-col gap-6 animate-fadeIn">
+                        
+                        {/* MODEL SELECTOR */}
+                        <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex items-center justify-between shadow-lg">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-indigo-900/30 rounded-lg">
+                                    <BoltIcon className="h-5 w-5 text-indigo-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">AI Model Engine</h3>
+                                    <p className="text-[10px] text-slate-500">Chọn mô hình xử lý hình ảnh tối ưu</p>
+                                </div>
+                            </div>
+                            <select
+                                value={selectedModel}
+                                onChange={(e) => setSelectedModel(e.target.value)}
+                                className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none min-w-[200px]"
+                            >
+                                {activeModels.map(m => (
+                                    <option key={m.id} value={m.id}>{m.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
                         {/* INPUT AREA - CLEARLY SEPARATED */}
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                             

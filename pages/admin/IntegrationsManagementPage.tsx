@@ -16,20 +16,17 @@ import { useToast } from '../../components/ToastProvider';
 import FormattedNumberInput from '../../components/FormattedNumberInput';
 import { ensureSupportedImageFormat } from '../../utils/imageProcessing';
 
+import { ALL_GEMINI_MODELS } from '../../constants';
+
 const USD_RATE = 25500;
 const CREDIT_VAL = 1000;
 
-// Chỉ giữ lại các model đã tích hợp thực tế vào hệ thống
-const AI_MODEL_OPTIONS = [
-    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Text/Vision)', category: 'text', provider: 'Google' },
-    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Text)', category: 'text', provider: 'Google' },
-    { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image', category: 'image', provider: 'Google' },
-    { id: 'gemini-3-pro-image-preview', name: 'Gemini 3 Pro Image', category: 'image', provider: 'Google' },
-    { id: 'veo-3.1-fast-generate-preview', name: 'Google Veo (Video)', category: 'video', provider: 'Google' },
-    { id: 'gemini-2.5-flash-preview-tts', name: 'Gemini 2.5 Flash TTS (Audio)', category: 'audio', provider: 'Google' },
-];
-
+// Mapping prices for model calculation markup
 const API_BASE_PRICES: Record<string, number> = {
+    'gemini-1.5-flash': 0.0001,
+    'gemini-1.5-pro': 0.0035,
+    'gemini-2.0-flash-exp': 0,
+    'gemini-2.1-flash': 0.0001,
     'gemini-2.5-flash': 0.0001,
     'gemini-3-flash-preview': 0.0001,
     'gemini-2.5-flash-image': 0.03,
@@ -37,6 +34,11 @@ const API_BASE_PRICES: Record<string, number> = {
     'veo-3.1-fast-generate-preview': 0.50,
     'gemini-2.5-flash-preview-tts': 0.01,
 };
+
+const AI_MODEL_OPTIONS = ALL_GEMINI_MODELS.map(m => ({
+    ...m,
+    provider: 'Google'
+}));
 
 const iconMap: Record<string, React.FC<{className?: string}>> = {
     SparklesIcon, UserCircleIcon, ChartBarIcon, CurrencyDollarIcon, PuzzlePieceIcon, 

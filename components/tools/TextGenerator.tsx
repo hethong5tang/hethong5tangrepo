@@ -17,6 +17,8 @@ import { findUserInTree } from '../../services/userService';
 import CreditBalanceDisplay from './CreditBalanceDisplay';
 import Modal from '../../components/Modal';
 import { aiService } from '../../services/aiService'; // Import Service
+import { useSettings } from '../../features/settings/useSettings';
+import { ALL_GEMINI_MODELS } from '../../constants';
 
 // ... (KEEP CONSTANTS: MARKETING_TOOLKITS, TONES, LANGUAGES, VOICES, parseScriptContent) ...
 // Để ngắn gọn, tôi giữ nguyên các hằng số và interface này vì chúng không đổi.
@@ -47,11 +49,6 @@ interface Toolkit {
     bgColor: string;
     features: Feature[];
 }
-
-const AVAILABLE_MODELS = [
-    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Tốc độ cao)' },
-    { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (Tư duy phức tạp)' },
-];
 
 const MARKETING_TOOLKITS: Toolkit[] = [
     {
@@ -331,11 +328,31 @@ const TextGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: string
     const { userState } = useUser();
     const { handleUseToolCredit } = useActions();
     const { addToast } = useToast();
+    const { settingsState } = useSettings();
     
+    // Custom useMemo for models
+    const activeModels = useMemo(() => {
+        // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
+        const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
+        if (toolSpecificModels.length > 0) {
+            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id));
+        }
+
+        const activeIds = settingsState.systemSettings.activeGeminiModels || [];
+        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id));
+        return filtered.length > 0 ? filtered : [ALL_GEMINI_MODELS[3], ALL_GEMINI_MODELS[4]];
+    }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
+
     // Main State
     const [activeToolkitId, setActiveToolkitId] = useState<string>(MARKETING_TOOLKITS[0].id);
     const [activeFeatureId, setActiveFeatureId] = useState<string>(MARKETING_TOOLKITS[0].features[0].id);
-    const [selectedModel, setSelectedModel] = useState<string>(AVAILABLE_MODELS[0].id);
+    const [selectedModel, setSelectedModel] = useState<string>(activeModels[0].id);
+
+    useEffect(() => {
+        if (!activeModels.some(m => m.id === selectedModel)) {
+            setSelectedModel(activeModels[0].id);
+        }
+    }, [activeModels, selectedModel]);
     
     // Form State
     const [productName, setProductName] = useState('');
@@ -895,7 +912,7 @@ const TextGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: string
                                 onChange={(e) => setSelectedModel(e.target.value)}
                                 className="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
                             >
-                                {AVAILABLE_MODELS.map(m => (
+                                {activeModels.map(m => (
                                     <option key={m.id} value={m.id}>{m.name}</option>
                                 ))}
                             </select>

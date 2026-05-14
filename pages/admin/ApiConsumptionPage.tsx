@@ -32,12 +32,21 @@ interface ModelItem {
 }
 
 const INITIAL_MODEL_CATALOG: ModelItem[] = [
-    { provider: 'Google', modelId: 'gemini-3-flash-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3 Flash', type: 'Text/Vision', basePriceUsd: 0.075, unit: '1M Tokens', category: 'flash' },
-    { provider: 'Google', modelId: 'gemini-3-pro-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3 Pro', type: 'Complex Reasoning', basePriceUsd: 1.25, unit: '1M Tokens', category: 'pro' },
+    { provider: 'Google', modelId: 'gemini-1.5-flash', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 1.5 Flash', type: 'Fast Text', basePriceUsd: 0.075, unit: '1M Tokens', category: 'flash' },
+    { provider: 'Google', modelId: 'gemini-1.5-flash-8b', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 1.5 Flash-8B', type: 'Fast Text', basePriceUsd: 0.035, unit: '1M Tokens', category: 'flash' },
+    { provider: 'Google', modelId: 'gemini-1.5-pro', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 1.5 Pro', type: 'Smart Text', basePriceUsd: 1.25, unit: '1M Tokens', category: 'pro' },
+    { provider: 'Google', modelId: 'gemini-2.0-flash-exp', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.0 Flash Exp', type: 'Experimental', basePriceUsd: 0.0, unit: '1M Tokens', category: 'flash' },
+    { provider: 'Google', modelId: 'gemini-2.0-flash-thinking-exp', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.0 Flash Thinking', type: 'Experimental Reasoning', basePriceUsd: 0.0, unit: '1M Tokens', category: 'flash' },
+    { provider: 'Google', modelId: 'gemini-2.0-pro-exp', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.0 Pro Exp', type: 'Experimental', basePriceUsd: 0.0, unit: '1M Tokens', category: 'pro' },
+    { provider: 'Google', modelId: 'gemini-2.5-flash', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.5 Flash', type: 'Fast Text', basePriceUsd: 0.075, unit: '1M Tokens', category: 'flash' },
     { provider: 'Google', modelId: 'gemini-2.5-flash-image', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.5 Flash Image', type: 'Image Gen', basePriceUsd: 0.03, unit: 'Mỗi ảnh', category: 'flash' },
+    { provider: 'Google', modelId: 'gemini-2.5-pro', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.5 Pro', type: 'Smart Text', basePriceUsd: 1.25, unit: '1M Tokens', category: 'pro' },
+    { provider: 'Google', modelId: 'gemini-3-flash-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3 Flash Preview', type: 'Text/Vision', basePriceUsd: 0.075, unit: '1M Tokens', category: 'flash' },
+    { provider: 'Google', modelId: 'gemini-3-pro-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3 Pro Preview', type: 'Complex Reasoning', basePriceUsd: 1.25, unit: '1M Tokens', category: 'pro' },
+    { provider: 'Google', modelId: 'gemini-3-pro-image-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3 Pro Image', type: 'Image Gen', basePriceUsd: 0.08, unit: 'Mỗi ảnh', category: 'pro' },
     { provider: 'OpenAI', modelId: 'gpt-4o', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg', name: 'GPT-4o', type: 'Multi-modal', basePriceUsd: 5.00, unit: '1M Tokens', category: 'premium' },
     { provider: 'OpenAI', modelId: 'o1-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg', name: 'OpenAI o1', type: 'Reasoning', basePriceUsd: 15.00, unit: '1M Tokens', category: 'premium' },
-    { provider: 'OpenAI', modelId: 'claude-3-5-sonnet', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Anthropic_logo.svg/512px-Anthropic_logo.svg.png', name: 'Claude 3.5 Sonnet', type: 'Advanced Text', basePriceUsd: 3.00, unit: '1M Tokens', category: 'premium' },
+    { provider: 'Anthropic', modelId: 'claude-3-5-sonnet', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Anthropic_logo.svg/512px-Anthropic_logo.svg.png', name: 'Claude 3.5 Sonnet', type: 'Advanced Text', basePriceUsd: 3.00, unit: '1M Tokens', category: 'premium' },
 ];
 
 const LOADING_STEPS = [
@@ -54,7 +63,7 @@ const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
 
 const ApiConsumptionPage: React.FC = () => {
     const { loggingState } = useLogging();
-    const { settingsState } = useSettings();
+    const { settingsState, settingsDispatch } = useSettings();
     const { addToast } = useToast();
     
     const [filterProvider, setFilterProvider] = useState<string>('all');
@@ -157,9 +166,28 @@ const ApiConsumptionPage: React.FC = () => {
         return () => clearInterval(interval);
     }, [isRefreshing]);
 
+    const handleToggleGeminiModel = (modelId: string) => {
+        const currentActive = settingsState.systemSettings.activeGeminiModels || [];
+        const isActive = currentActive.includes(modelId);
+        let newActive: string[];
+        
+        if (isActive) {
+            newActive = currentActive.filter(id => id !== modelId);
+            addToast(`Đã gỡ model ${modelId} khỏi hệ thống.`, "info");
+        } else {
+            newActive = [...currentActive, modelId];
+            addToast(`Đã thêm model ${modelId} vào hệ thống.`, "success");
+        }
+        
+        settingsDispatch({
+            type: 'UPDATE_SYSTEM_SETTINGS',
+            payload: { activeGeminiModels: newActive }
+        });
+    };
+
     const integratedModelIds = useMemo(() => {
         const ids = new Set<string>();
-        settingsState.systemSettings.integrationTools.forEach(tool => {
+        settingsState.systemSettings.integrationTools?.forEach(tool => {
             if (tool.modelPricing) {
                 Object.keys(tool.modelPricing).forEach(mId => ids.add(mId));
             }
@@ -167,8 +195,11 @@ const ApiConsumptionPage: React.FC = () => {
             if (tool.id.includes('image')) ids.add('gemini-2.5-flash-image');
             if (tool.id.includes('content')) ids.add('gemini-3-flash-preview');
         });
+        if (settingsState.systemSettings.activeGeminiModels) {
+            settingsState.systemSettings.activeGeminiModels.forEach(mId => ids.add(mId));
+        }
         return ids;
-    }, [settingsState.systemSettings.integrationTools]);
+    }, [settingsState.systemSettings.integrationTools, settingsState.systemSettings.activeGeminiModels]);
 
     const visibleModelsByUsage = useMemo(() => {
         return catalog.filter(m => !showOnlyIntegrated || integratedModelIds.has(m.modelId));
@@ -179,7 +210,7 @@ const ApiConsumptionPage: React.FC = () => {
         return ['all', ...Array.from(p)];
     }, [visibleModelsByUsage]);
 
-    useMemo(() => {
+    useEffect(() => {
         if (filterProvider !== 'all' && !providers.includes(filterProvider)) {
             setFilterProvider('all');
         }
@@ -441,7 +472,14 @@ const ApiConsumptionPage: React.FC = () => {
                                         {Math.round(m.basePriceUsd * USD_RATE).toLocaleString()}đ
                                     </td>
                                     <td className="px-4 py-4 text-center">
-                                        {isIntegrated ? (
+                                        {m.provider === 'Google' ? (
+                                            <button 
+                                                onClick={() => handleToggleGeminiModel(m.modelId)}
+                                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out ${settingsState.systemSettings.activeGeminiModels?.includes(m.modelId) ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                            >
+                                                <span aria-hidden="true" className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${settingsState.systemSettings.activeGeminiModels?.includes(m.modelId) ? 'translate-x-2' : '-translate-x-2'}`} />
+                                            </button>
+                                        ) : isIntegrated ? (
                                             /* Import CheckCircleIcon in the component top to fix the error */
                                             <CheckCircleIcon className="h-5 w-5 text-emerald-500 mx-auto" />
                                         ) : (

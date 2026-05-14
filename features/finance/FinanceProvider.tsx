@@ -53,6 +53,11 @@ const init = (initial: FinanceState): FinanceState => {
   return {
     ...initial,
     ...stored,
+    allTransactions: Array.isArray(stored?.allTransactions) ? stored.allTransactions : (initial.allTransactions || []),
+    withdrawalRequests: Array.isArray(stored?.withdrawalRequests) ? stored.withdrawalRequests : (initial.withdrawalRequests || []),
+    depositRequests: Array.isArray(stored?.depositRequests) ? stored.depositRequests : (initial.depositRequests || []),
+    fundTransactions: Array.isArray(stored?.fundTransactions) ? stored.fundTransactions : (initial.fundTransactions || []),
+    milestoneBonusRequests: Array.isArray(stored?.milestoneBonusRequests) ? stored.milestoneBonusRequests : (initial.milestoneBonusRequests || []),
     fundStatus: migratedFundStatus
   };
 };

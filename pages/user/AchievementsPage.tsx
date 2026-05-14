@@ -185,10 +185,6 @@ const AchievementsPage: React.FC = () => {
     const { systemSettings } = settingsState;
     const { leaderAchievements, levelSettings } = systemSettings;
 
-    if (!user) {
-        return null;
-    }
-
     // 1. Generate Achievements automatically from Levels
     const rankAchievements: Achievement[] = useMemo(() => {
         return levelSettings
@@ -206,6 +202,10 @@ const AchievementsPage: React.FC = () => {
                 }
             }));
     }, [levelSettings]);
+
+    if (!user) {
+        return null;
+    }
 
     // 2. Merge with manual achievements
     const allAchievements = [...rankAchievements, ...leaderAchievements];

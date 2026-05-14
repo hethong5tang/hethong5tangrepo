@@ -309,6 +309,7 @@ const UserManagementPage: React.FC<UserManagementPageProps> = ({ action, onActio
             [UserStatus.Active]: "Hoạt động",
             [UserStatus.PendingFee]: "Chờ đóng phí",
             [UserStatus.Suspended]: "Bị khóa",
+            [UserStatus.Dead]: "Đã dừng",
         };
 
         const dataToExport = filteredUsers.map(u => ({

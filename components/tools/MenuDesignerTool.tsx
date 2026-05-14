@@ -28,6 +28,8 @@ import {
 } from '../Icons';
 import { IntegrationTool, IntegrationType } from '../../features/settings/types';
 import { useToast } from '../../components/ToastProvider';
+import { useSettings } from '../../features/settings/useSettings';
+import { ALL_GEMINI_MODELS } from '../../constants';
 import { findUserInTree } from '../../services/userService';
 import Modal from '../../components/Modal';
 import { ensureSupportedImageFormat } from '../../utils/imageProcessing';
@@ -65,26 +67,25 @@ const ARTISTIC_STYLES = [
   { id: 'sketch_pencil', name: 'Phác thảo bút chì' }
 ];
 
-const AVAILABLE_MODELS = [
-  {
-    id: 'gemini-1.5-flash',
-    name: 'Gemini 1.5 Flash (Tốc độ & Miễn phí)',
-    desc: 'Tốc độ cực nhanh, ổn định cho thiết kế cơ bản.',
-    provider: 'Google'
-  },
-  {
-    id: 'gemini-1.5-pro',
-    name: 'Gemini 1.5 Pro (Siêu Cấp)',
-    desc: 'Chất lượng in ấn, xử lý chi tiết typography và bố cục phức tạp.',
-    provider: 'Google'
-  },
-];
-
 const MenuDesignerTool: React.FC<MenuDesignerToolProps> = ({ tool, onNavigate }) => {
-  const { loggedInUser } = useAuth();
-  const { userState } = useUser();
-  const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
-  const { addToast } = useToast();
+    const { loggedInUser } = useAuth();
+    const { userState } = useUser();
+    const { handleUseToolCredit, handleSetGenerationHistory, handleDeleteGenerationResult } = useActions();
+    const { addToast } = useToast();
+    const { settingsState } = useSettings();
+
+    // UseMemo for models
+    const activeModels = useMemo(() => {
+        // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
+        const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
+        if (toolSpecificModels.length > 0) {
+            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id));
+        }
+
+        const activeIds = settingsState.systemSettings.activeGeminiModels || [];
+        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id));
+        return filtered.length > 0 ? filtered : [ALL_GEMINI_MODELS[0]];
+    }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
 
   // Use correct key from environment
   const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
@@ -93,7 +94,13 @@ const MenuDesignerTool: React.FC<MenuDesignerToolProps> = ({ tool, onNavigate })
   const [menuContent, setMenuContent] = useState('');
 
   // Configuration
-  const [selectedModel, setSelectedModel] = useState<string>(AVAILABLE_MODELS[0].id);
+    const [selectedModel, setSelectedModel] = useState<string>(activeModels[0].id);
+
+    useEffect(() => {
+        if (!activeModels.some(m => m.id === selectedModel)) {
+            setSelectedModel(activeModels[0].id);
+        }
+    }, [activeModels, selectedModel]);
   const [selectedLayout, setSelectedLayout] = useState(MENU_LAYOUTS[0].id);
   const [selectedColorTheme, setSelectedColorTheme] = useState(COLOR_THEMES[0].id);
   const [selectedArtStyle, setSelectedArtStyle] = useState(ARTISTIC_STYLES[0].id);
@@ -295,7 +302,7 @@ const MenuDesignerTool: React.FC<MenuDesignerToolProps> = ({ tool, onNavigate })
                 </label>
                 <div className="relative">
                     <select value={selectedModel} onChange={e => setSelectedModel(e.target.value)} className={selectClasses}>
-                        {AVAILABLE_MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                        {activeModels.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                     </select>
                     <ChevronDownIcon className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
                 </div>

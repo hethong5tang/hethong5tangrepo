@@ -79,10 +79,6 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onNavigate }) => {
         return withdrawalRequests.find(req => req.userId === user.id && req.status === 'pending');
     }, [withdrawalRequests, user]);
 
-    if (!user) {
-        return null;
-    }
-
     // Kiểm tra tài khoản bị hạn chế
     const isOverdue = !!(user?.nextMaintenanceDate && new Date() > new Date(user.nextMaintenanceDate));
     const isStatusRestricted = user?.status !== UserStatus.Active;
@@ -94,6 +90,10 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onNavigate }) => {
             setWalletType('support');
         }
     }, [isRestricted, walletType]);
+
+    if (!user) {
+        return null;
+    }
 
     // NẾU CÓ YÊU CẦU PENDING -> HIỂN THỊ MÀN HÌNH CHỜ
     if (pendingRequest) {
@@ -249,15 +249,15 @@ const WithdrawPage: React.FC<WithdrawPageProps> = ({ onNavigate }) => {
                             <div className="p-6 bg-slate-100 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
                                 <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-2">
                                     <p className="text-sm text-slate-500 dark:text-slate-400">Số tiền yêu cầu rút</p>
-                                    <p className="font-bold text-lg text-slate-800 dark:text-slate-200">{amount.toLocaleString('vi-VN')}đ</p>
+                                    <p className="font-semibold text-lg text-indigo-600 dark:text-indigo-400">{amount.toLocaleString('vi-VN')}đ</p>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-2">
                                     <p className="text-sm text-slate-500 dark:text-slate-400">Khấu trừ Thuế TNCN (10%)</p>
                                     <p className="font-semibold text-red-500">-{Math.floor(amount * 0.1).toLocaleString('vi-VN')}đ</p>
                                 </div>
                                 <div className="flex justify-between items-center pt-2">
-                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Thực nhận về tài khoản</p>
-                                    <p className="font-black text-2xl text-green-600 dark:text-green-400">{Math.floor(amount * 0.9).toLocaleString('vi-VN')}đ</p>
+                                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Thực nhận về tài khoản</p>
+                                    <p className="font-bold text-2xl text-emerald-600 dark:text-emerald-400">{Math.floor(amount * 0.9).toLocaleString('vi-VN')}đ</p>
                                 </div>
                                 <div className="pt-4">
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Phương thức nhận tiền</label>

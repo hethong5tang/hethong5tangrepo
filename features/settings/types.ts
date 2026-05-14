@@ -65,6 +65,7 @@ export interface LevelSetting {
     name: string;
     subTitle: string;
     requiredGroupRevenue: number;
+    requiredEarnings?: number; // Alias or compatibility field
     rewardPercentage: number; // % thưởng Đồng chia (trích từ Quỹ Leader)
     honorAward: string; // Thưởng vinh danh (Hiện vật/Bằng khen)
     branchRequirements?: BranchRequirement[]; // Điều kiện số nhánh phải đạt cấp độ nhất định
@@ -244,4 +245,7 @@ export interface SystemSettings {
 
     // Legal Content
     legalContent: LegalContent;
+
+    // Active Gemini Models
+    activeGeminiModels?: string[];
 }

@@ -8,7 +8,7 @@ export interface SettingsState {
 }
 
 export type SettingsAction =
-  | { type: 'UPDATE_SYSTEM_SETTINGS'; payload: SystemSettings }
+  | { type: 'UPDATE_SYSTEM_SETTINGS'; payload: Partial<SystemSettings> }
   | { type: 'RESET_SYSTEM_SETTINGS_TO_DEFAULT' }
   | { type: 'UPDATE_FUND_SETTINGS'; payload: FundSettings }
   | { type: 'UPDATE_USER_SETTINGS'; payload: UserSettings };
