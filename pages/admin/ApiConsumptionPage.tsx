@@ -18,8 +18,6 @@ import { useToast } from '../../components/ToastProvider';
 import { useSettings } from '../../features/settings/useSettings';
 import { supabase } from '../../services/supabaseClient';
 
-const USD_RATE = 25500; 
-
 interface ModelItem {
     provider: string;
     logo: string;
@@ -35,18 +33,19 @@ const INITIAL_MODEL_CATALOG: ModelItem[] = [
     { provider: 'Google', modelId: 'gemini-1.5-flash', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 1.5 Flash', type: 'Fast Text', basePriceUsd: 0.075, unit: '1M Tokens', category: 'flash' },
     { provider: 'Google', modelId: 'gemini-1.5-flash-8b', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 1.5 Flash-8B', type: 'Fast Text', basePriceUsd: 0.035, unit: '1M Tokens', category: 'flash' },
     { provider: 'Google', modelId: 'gemini-1.5-pro', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 1.5 Pro', type: 'Smart Text', basePriceUsd: 1.25, unit: '1M Tokens', category: 'pro' },
-    { provider: 'Google', modelId: 'gemini-2.0-flash-exp', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.0 Flash Exp', type: 'Experimental', basePriceUsd: 0.0, unit: '1M Tokens', category: 'flash' },
-    { provider: 'Google', modelId: 'gemini-2.0-flash-thinking-exp', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.0 Flash Thinking', type: 'Experimental Reasoning', basePriceUsd: 0.0, unit: '1M Tokens', category: 'flash' },
-    { provider: 'Google', modelId: 'gemini-2.0-pro-exp', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.0 Pro Exp', type: 'Experimental', basePriceUsd: 0.0, unit: '1M Tokens', category: 'pro' },
+    { provider: 'Google', modelId: 'gemini-2.0-flash', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.0 Flash', type: 'Fast Text', basePriceUsd: 0.10, unit: '1M Tokens', category: 'flash' },
+    { provider: 'Google', modelId: 'gemini-2.0-pro-exp-02-05', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.0 Pro', type: 'Experimental', basePriceUsd: 1.25, unit: '1M Tokens', category: 'pro' },
     { provider: 'Google', modelId: 'gemini-2.5-flash', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.5 Flash', type: 'Fast Text', basePriceUsd: 0.075, unit: '1M Tokens', category: 'flash' },
     { provider: 'Google', modelId: 'gemini-2.5-flash-image', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.5 Flash Image', type: 'Image Gen', basePriceUsd: 0.03, unit: 'Mỗi ảnh', category: 'flash' },
     { provider: 'Google', modelId: 'gemini-2.5-pro', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.5 Pro', type: 'Smart Text', basePriceUsd: 1.25, unit: '1M Tokens', category: 'pro' },
     { provider: 'Google', modelId: 'gemini-3-flash-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3 Flash Preview', type: 'Text/Vision', basePriceUsd: 0.075, unit: '1M Tokens', category: 'flash' },
     { provider: 'Google', modelId: 'gemini-3-pro-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3 Pro Preview', type: 'Complex Reasoning', basePriceUsd: 1.25, unit: '1M Tokens', category: 'pro' },
     { provider: 'Google', modelId: 'gemini-3-pro-image-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3 Pro Image', type: 'Image Gen', basePriceUsd: 0.08, unit: 'Mỗi ảnh', category: 'pro' },
-    { provider: 'OpenAI', modelId: 'gpt-4o', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg', name: 'GPT-4o', type: 'Multi-modal', basePriceUsd: 5.00, unit: '1M Tokens', category: 'premium' },
-    { provider: 'OpenAI', modelId: 'o1-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg', name: 'OpenAI o1', type: 'Reasoning', basePriceUsd: 15.00, unit: '1M Tokens', category: 'premium' },
+    { provider: 'OpenAI', modelId: 'gpt-4o', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg', name: 'GPT-4o', type: 'Multi-modal', basePriceUsd: 2.50, unit: '1M Tokens', category: 'premium' },
+    { provider: 'OpenAI', modelId: 'gpt-4o-mini', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg', name: 'GPT-4o Mini', type: 'Fast Text', basePriceUsd: 0.150, unit: '1M Tokens', category: 'premium' },
+    { provider: 'OpenAI', modelId: 'o1', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg', name: 'OpenAI o1', type: 'Reasoning', basePriceUsd: 15.00, unit: '1M Tokens', category: 'premium' },
     { provider: 'Anthropic', modelId: 'claude-3-5-sonnet', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Anthropic_logo.svg/512px-Anthropic_logo.svg.png', name: 'Claude 3.5 Sonnet', type: 'Advanced Text', basePriceUsd: 3.00, unit: '1M Tokens', category: 'premium' },
+    { provider: 'Anthropic', modelId: 'claude-3-5-haiku', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Anthropic_logo.svg/512px-Anthropic_logo.svg.png', name: 'Claude 3.5 Haiku', type: 'Fast Text', basePriceUsd: 0.80, unit: '1M Tokens', category: 'premium' },
 ];
 
 const LOADING_STEPS = [
@@ -67,6 +66,7 @@ const ApiConsumptionPage: React.FC = () => {
     const { addToast } = useToast();
     
     const [filterProvider, setFilterProvider] = useState<string>('all');
+    const [usdRate, setUsdRate] = useState<number>(25500);
     const [catalogSearch, setCatalogSearch] = useState('');
     const [catalog, setCatalog] = useState<ModelItem[]>(INITIAL_MODEL_CATALOG);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -81,6 +81,8 @@ const ApiConsumptionPage: React.FC = () => {
     const [payAmount, setPayAmount] = useState<string>('');
     const [payDescription, setPayDescription] = useState<string>('');
     const [isPaying, setIsPaying] = useState(false);
+
+    const [activeMainTab, setActiveMainTab] = useState<'model' | 'tools'>('model');
 
     useEffect(() => {
         fetchAdminFinance();
@@ -206,9 +208,9 @@ const ApiConsumptionPage: React.FC = () => {
     }, [catalog, showOnlyIntegrated, integratedModelIds]);
 
     const providers = useMemo(() => {
-        const p = new Set(visibleModelsByUsage.map(m => m.provider));
+        const p = new Set(catalog.map(m => m.provider));
         return ['all', ...Array.from(p)];
-    }, [visibleModelsByUsage]);
+    }, [catalog]);
 
     useEffect(() => {
         if (filterProvider !== 'all' && !providers.includes(filterProvider)) {
@@ -217,9 +219,16 @@ const ApiConsumptionPage: React.FC = () => {
     }, [providers, filterProvider]);
 
     const filteredCatalog = useMemo(() => {
+        // Ensure strictly returning only models from correctly selected provider
         return visibleModelsByUsage
-            .filter(m => filterProvider === 'all' || m.provider === filterProvider)
-            .filter(m => !catalogSearch || m.name.toLowerCase().includes(catalogSearch.toLowerCase()) || m.provider.toLowerCase().includes(catalogSearch.toLowerCase()));
+            .filter(m => {
+                if (filterProvider === 'all') return true;
+                return m.provider.toLowerCase() === filterProvider.toLowerCase();
+            })
+            .filter(m => !catalogSearch || 
+                m.name.toLowerCase().includes(catalogSearch.toLowerCase()) || 
+                m.provider.toLowerCase().includes(catalogSearch.toLowerCase())
+            );
     }, [visibleModelsByUsage, filterProvider, catalogSearch]);
 
     const handleRefreshPricing = async () => {
@@ -227,51 +236,69 @@ const ApiConsumptionPage: React.FC = () => {
         setIsRefreshing(true);
         setSources([]);
         setRefreshStep(0);
-        addToast("AI đang thực hiện tìm kiếm Google để xác thực giá thực tế...", "info");
+        addToast("AI đang thực hiện tìm kiếm Google để xác thực giá và tỷ giá mới nhất...", "info");
 
         try {
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
             const response = await ai.models.generateContent({
                 model: "gemini-3-pro-preview",
-                contents: "Cập nhật bảng giá API mới nhất và CHÍNH XÁC từ các hãng Google Cloud, OpenAI, Anthropic tính đến thời điểm hiện tại. Trả về mảng JSON bao gồm các trường: provider, modelId, name, type, basePriceUsd, unit, category, logo. Chỉ liệt kê các mô hình đã ra mắt chính thức.",
+                contents: `Bạn là một hệ thống tự động cập nhật giá API.
+Danh sách các model hiện tại của hệ thống:
+${JSON.stringify(INITIAL_MODEL_CATALOG, null, 2)}
+
+NHIỆM VỤ CỦA BẠN:
+1. Thông qua tìm kiếm (Google Search), lấy thông tin BẢNG GIÁ MỚI NHẤT của các dịch vụ AI trên (Google Cloud, OpenAI, Anthropic).
+2. Thông qua tìm kiếm, lấy tỷ giá USD/VND hiện tại ở Việt Nam.
+3. Cập nhật lại trường "basePriceUsd" của TẤT CẢ các model trong danh sách trên dựa vào kết quả tìm được.
+4. QUAN TRỌNG: KHÔNG ĐƯỢC THAY ĐỔI thông tin "modelId", "logo", "name", "type", "unit", "category", "provider". Phải giữ CHÍNH XÁC cấu trúc và số lượng model như danh sách gốc.
+5. Trả về đối tượng JSON gồm: models (mảng các mô hình đã cập nhật bảng giá) và usdRate (số nguyên, ví dụ: 26346).`,
                 config: {
                     tools: [{ googleSearch: {} }],
                     responseMimeType: "application/json",
                     responseSchema: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.OBJECT,
-                            properties: {
-                                provider: { type: Type.STRING },
-                                modelId: { type: Type.STRING },
-                                name: { type: Type.STRING },
-                                type: { type: Type.STRING },
-                                basePriceUsd: { type: Type.NUMBER },
-                                unit: { type: Type.STRING },
-                                category: { type: Type.STRING },
-                                logo: { type: Type.STRING }
-                            },
-                            required: ["provider", "modelId", "name", "basePriceUsd", "unit", "category", "logo"]
-                        }
+                        type: Type.OBJECT,
+                        properties: {
+                            usdRate: { type: Type.NUMBER },
+                            models: {
+                                type: Type.ARRAY,
+                                items: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        provider: { type: Type.STRING },
+                                        modelId: { type: Type.STRING },
+                                        name: { type: Type.STRING },
+                                        type: { type: Type.STRING },
+                                        basePriceUsd: { type: Type.NUMBER },
+                                        unit: { type: Type.STRING },
+                                        category: { type: Type.STRING },
+                                        logo: { type: Type.STRING }
+                                    },
+                                    required: ["provider", "modelId", "name", "basePriceUsd", "unit", "category", "logo"]
+                                }
+                            }
+                        },
+                        required: ["usdRate", "models"]
                     }
                 }
             });
 
             const rawText = response.text || "";
             let cleanedJson = rawText.trim();
-            const jsonArrayStart = cleanedJson.indexOf('[');
-            const jsonArrayEnd = cleanedJson.lastIndexOf(']');
+            const jsonStart = cleanedJson.indexOf('{');
+            const jsonEnd = cleanedJson.lastIndexOf('}');
             
-            if (jsonArrayStart === -1 || jsonArrayEnd === -1) {
-                throw new Error("AI không trả về định dạng mảng dữ liệu hợp lệ.");
+            if (jsonStart === -1 || jsonEnd === -1) {
+                throw new Error("AI không trả về định dạng dữ liệu hợp lệ.");
             }
             
-            cleanedJson = cleanedJson.substring(jsonArrayStart, jsonArrayEnd + 1);
+            cleanedJson = cleanedJson.substring(jsonStart, jsonEnd + 1);
 
             try {
-                const newCatalog = JSON.parse(cleanedJson);
-                if (Array.isArray(newCatalog) && newCatalog.length > 0) {
-                    setCatalog(newCatalog);
+                const parsed = JSON.parse(cleanedJson);
+                if (parsed.models && Array.isArray(parsed.models)) {
+                    setCatalog(parsed.models);
+                    if (parsed.usdRate) setUsdRate(parsed.usdRate);
+                    
                     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
                     if (groundingChunks) {
                         const extractedSources = groundingChunks
@@ -279,7 +306,7 @@ const ApiConsumptionPage: React.FC = () => {
                             .map((chunk: any) => ({ title: chunk.web.title, uri: chunk.web.uri }));
                         setSources(extractedSources);
                     }
-                    addToast("Đã cập nhật bảng giá chính xác qua Google Search!", "success");
+                    addToast(`Đã cập nhất bảng giá và tỷ giá USD (${parsed.usdRate.toLocaleString()}đ) mới nhất!`, "success");
                 }
             } catch (parseError) {
                 addToast("Lỗi phân tích dữ liệu AI.", "error");
@@ -326,13 +353,51 @@ const ApiConsumptionPage: React.FC = () => {
         return { totalCostUsd, totalRequests, modelPieData, trendData };
     }, [apiLogs]);
 
+    const toolStats = useMemo(() => {
+        const toolUsage: Record<string, { count: number, costUsd: number, creditEarned: number, uniqueUsers: Set<string> }> = {};
+        
+        loggingState.logs.forEach(log => {
+            if (log.actionType === LoggableAction.TOOL_USAGE && log.apiMetadata && log.apiMetadata.toolId) {
+                const toolId = log.apiMetadata.toolId;
+                if (!toolUsage[toolId]) {
+                    toolUsage[toolId] = { count: 0, costUsd: 0, creditEarned: 0, uniqueUsers: new Set() };
+                }
+                toolUsage[toolId].count += 1;
+                toolUsage[toolId].costUsd += (log.apiMetadata.estimatedCostUsd || 0);
+                toolUsage[toolId].creditEarned += (log.apiMetadata.creditCost || 0);
+                if (log.userId) toolUsage[toolId].uniqueUsers.add(log.userId);
+            }
+        });
+
+        return Object.entries(toolUsage).map(([id, data]) => ({
+            id,
+            name: settingsState.systemSettings.integrationTools?.find(t => t.id === id)?.title || id,
+            count: data.count,
+            costUsd: data.costUsd,
+            creditEarned: data.creditEarned,
+            uniqueUsersCount: data.uniqueUsers.size
+        })).sort((a, b) => b.count - a.count);
+    }, [loggingState.logs, settingsState.systemSettings.integrationTools]);
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-3">
-                    <GlobeAltIcon className="h-7 w-7 text-indigo-500" />
-                    Bảng giá & Thống kê API
-                </h2>
+                <div className="flex space-x-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700">
+                    <button
+                        onClick={() => setActiveMainTab('model')}
+                        className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeMainTab === 'model' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    >
+                        <GlobeAltIcon className="h-5 w-5" />
+                        Thống Kê API (Gốc)
+                    </button>
+                    <button
+                        onClick={() => setActiveMainTab('tools')}
+                        className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeMainTab === 'tools' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    >
+                        <SparklesIcon className="h-5 w-5" />
+                        Báo Cáo Công Cụ AI
+                    </button>
+                </div>
                 <div className="flex flex-wrap items-center gap-4">
                     <button 
                         onClick={() => setIsPayModalOpen(true)}
@@ -341,35 +406,97 @@ const ApiConsumptionPage: React.FC = () => {
                         <CurrencyDollarIcon className="h-5 w-5" />
                         Chi trả hóa đơn API
                     </button>
-                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-                        <button 
-                            onClick={() => setShowOnlyIntegrated(true)}
-                            className={`px-4 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all flex items-center gap-2 ${showOnlyIntegrated ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                            <CheckBadgeIcon className="h-4 w-4" /> Đang dùng
-                        </button>
-                        <button 
-                            onClick={() => setShowOnlyIntegrated(false)}
-                            className={`px-4 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all flex items-center gap-2 ${!showOnlyIntegrated ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                            <GlobeAltIcon className="h-4 w-4" /> Thị trường
-                        </button>
-                    </div>
+                    {activeMainTab === 'model' && (
+                        <>
+                            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <button 
+                                    onClick={() => setShowOnlyIntegrated(true)}
+                                    className={`px-4 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all flex items-center gap-2 ${showOnlyIntegrated ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    <CheckBadgeIcon className="h-4 w-4" /> Đang dùng
+                                </button>
+                                <button 
+                                    onClick={() => setShowOnlyIntegrated(false)}
+                                    className={`px-4 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all flex items-center gap-2 ${!showOnlyIntegrated ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    <GlobeAltIcon className="h-4 w-4" /> Thị trường
+                                </button>
+                            </div>
 
-                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-                        {providers.map(p => (
-                            <button 
-                                key={p} 
-                                onClick={() => setFilterProvider(p)} 
-                                className={`px-4 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all ${filterProvider === p ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                            >
-                                {p === 'all' ? 'Hãng' : p}
-                            </button>
-                        ))}
-                    </div>
+                            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                                {providers.map(p => (
+                                    <button 
+                                        key={p} 
+                                        onClick={() => setFilterProvider(p)} 
+                                        className={`px-4 py-1.5 text-[10px] font-bold uppercase rounded-lg transition-all ${filterProvider === p ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                                    >
+                                        {p === 'all' ? 'Tất cả' : p}
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 
+            {activeMainTab === 'tools' && (
+                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden">
+                     <div className="p-6 border-b border-slate-100 dark:border-slate-700">
+                         <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                             <SparklesIcon className="h-6 w-6 text-indigo-500" />
+                             Hiệu Quả & Chi Phí Theo Từng Công Cụ
+                         </h3>
+                         <p className="text-xs text-slate-500 mt-2">Báo cáo chi tiết số lượt sử dụng, lượng user và tỷ suất lợi nhuận (Credit tiêu thụ vs Chi phí thật) của từng công cụ AI.</p>
+                     </div>
+                     <div className="overflow-x-auto">
+                         <table className="w-full text-sm text-left">
+                             <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 font-bold uppercase text-[10px]">
+                                 <tr>
+                                     <th className="px-6 py-4">Tên Công Cụ</th>
+                                     <th className="px-6 py-4 text-center">Số Lượt Gọi</th>
+                                     <th className="px-6 py-4 text-center">User Sử Dụng</th>
+                                     <th className="px-6 py-4 text-right">Chi phí API (Thật)</th>
+                                     <th className="px-6 py-4 text-right border-l border-slate-200 dark:border-slate-700">Doanh thu Credit (Ảo)</th>
+                                     <th className="px-6 py-4 text-right">Lợi nhuận ước tính</th>
+                                 </tr>
+                             </thead>
+                             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                 {toolStats.length > 0 ? toolStats.map(tool => {
+                                     const estimatedProfitVnd = (tool.creditEarned * 100) - (tool.costUsd * usdRate);
+                                     return (
+                                     <tr key={tool.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                         <td className="px-6 py-4 font-bold text-slate-800 dark:text-white">{tool.name}</td>
+                                         <td className="px-6 py-4 text-center text-indigo-600 font-bold">{tool.count.toLocaleString()}</td>
+                                         <td className="px-6 py-4 text-center font-bold text-slate-600 dark:text-slate-300">{tool.uniqueUsersCount} <UserGroupIcon className="h-3 w-3 inline text-slate-400"/></td>
+                                         <td className="px-6 py-4 text-right text-rose-500 font-bold">
+                                             ~{(tool.costUsd * usdRate).toLocaleString()}đ <br/><span className="text-[10px] text-slate-400 font-normal">(${tool.costUsd.toFixed(4)})</span>
+                                         </td>
+                                         <td className="px-6 py-4 text-right font-bold text-amber-500 border-l border-slate-100 dark:border-slate-700">
+                                             {tool.creditEarned.toLocaleString()} P <br/><span className="text-[10px] text-slate-400 font-normal">({(tool.creditEarned * 100).toLocaleString()}đ)</span>
+                                         </td>
+                                         <td className="px-6 py-4 text-right font-bold">
+                                             <span className={estimatedProfitVnd >= 0 ? "text-emerald-500" : "text-rose-500"}>
+                                                 {estimatedProfitVnd > 0 ? '+' : ''}{estimatedProfitVnd.toLocaleString()}đ
+                                             </span>
+                                         </td>
+                                     </tr>
+                                 )}) : (
+                                     <tr>
+                                         <td colSpan={6} className="px-6 py-12 text-center text-slate-500 text-sm">
+                                             <SparklesIcon className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                                             <p className="font-bold">Chưa có dữ liệu sử dụng công cụ AI rành mạch.</p>
+                                             <p className="text-xs font-normal mt-1">Dữ liệu sẽ xuất hiện khi user bắt đầu sử dụng các công cụ.</p>
+                                         </td>
+                                     </tr>
+                                 )}
+                             </tbody>
+                         </table>
+                     </div>
+                 </div>
+            )}
+
+            {activeMainTab === 'model' && (
+                <>
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden relative flex flex-col">
                 {isRefreshing && (
                     <div className="absolute inset-0 z-50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md flex flex-col items-center justify-center animate-fadeIn">
@@ -469,7 +596,7 @@ const ApiConsumptionPage: React.FC = () => {
                                         ${m.basePriceUsd.toFixed(4)}
                                     </td>
                                     <td className="px-6 py-4 text-right font-bold text-indigo-600 dark:text-indigo-400 text-sm group-hover:scale-105 transition-transform origin-right">
-                                        {Math.round(m.basePriceUsd * USD_RATE).toLocaleString()}đ
+                                        {Math.round(m.basePriceUsd * usdRate).toLocaleString()}đ
                                     </td>
                                     <td className="px-4 py-4 text-center">
                                         {m.provider === 'Google' ? (
@@ -488,6 +615,14 @@ const ApiConsumptionPage: React.FC = () => {
                                     </td>
                                 </tr>
                             )})}
+                            {filteredCatalog.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500 text-sm">
+                                        <InformationCircleIcon className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                                        Không thấy model AI nào
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -497,7 +632,7 @@ const ApiConsumptionPage: React.FC = () => {
                          <div className="flex items-center gap-4 text-[10px] text-slate-500 uppercase font-bold">
                              <span>Tổng số: {filteredCatalog.length} Model</span>
                              <div className="w-px h-3 bg-slate-300 dark:bg-slate-700"></div>
-                             <span className="font-medium italic">Tỷ giá tham chiếu: {USD_RATE.toLocaleString()}đ</span>
+                             <span className="font-medium italic">Tỷ giá tham chiếu: {usdRate.toLocaleString()}đ</span>
                          </div>
                     </div>
                 </div>
@@ -523,7 +658,7 @@ const ApiConsumptionPage: React.FC = () => {
                 </div>
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
                     <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">Chi phí VND (Gốc)</p>
-                    <p className="text-3xl font-bold text-rose-500">{(stats.totalCostUsd * USD_RATE).toLocaleString()}đ</p>
+                    <p className="text-3xl font-bold text-rose-500">{(stats.totalCostUsd * usdRate).toLocaleString()}đ</p>
                 </div>
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
                     <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">Lưu lượng</p>
@@ -701,6 +836,8 @@ const ApiConsumptionPage: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            )}
+            </>
             )}
         </div>
     );

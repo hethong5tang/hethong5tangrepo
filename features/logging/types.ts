@@ -46,6 +46,8 @@ export interface ApiMetadata {
     unitCount: number; // tokens or images count
     estimatedCostUsd: number;
     toolId: string;
+    tokens?: number;
+    creditCost?: number;
 }
 
 export interface LogEntry {

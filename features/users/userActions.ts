@@ -370,10 +370,61 @@ export const createUserActions = (deps: {
         addToast('Đổi Credit thành công!', 'success');
     };
 
-    const handleUseToolCredit = async (userId: string, tool: IntegrationTool) => {
+    const handleUseToolCredit = async (userId: string, tool: IntegrationTool, apiMetadata?: Partial<LogEntry['apiMetadata']>) => {
         const u = findUserInTree(userState.allUsers, userId);
         if (!u || (tool.creditCost > 0 && u.creditBalance < tool.creditCost)) return { success: false };
         userDispatch({ type: 'ADJUST_USER_CREDIT', payload: { userId, amount: -tool.creditCost } });
+        
+        let estimatedCostUsd = apiMetadata?.estimatedCostUsd || 0;
+        let modelUsed = apiMetadata?.model || 'unknown';
+
+        if (estimatedCostUsd === 0 && Math.abs(tool.creditCost) > 0) {
+            const absoluteCreditCost = Math.abs(tool.creditCost);
+            // Approximations if real cost isn't passed directly by the tool yet:
+            if (tool.id.includes('video')) {
+                estimatedCostUsd = (absoluteCreditCost / 2000) * 0.15; // ~$0.15 per video
+                modelUsed = 'veo-3.1-fast-generate-preview';
+            } else if (tool.id.includes('image') || tool.id.includes('design') || tool.id.includes('swap') || tool.id.includes('fashion') || tool.id.includes('portrait')) {
+                estimatedCostUsd = (absoluteCreditCost / 500) * 0.03; // ~$0.03 per image
+                modelUsed = 'gemini-2.5-flash-image';
+            } else {
+                estimatedCostUsd = (absoluteCreditCost / 100) * 0.0005; // text generation
+                modelUsed = 'gemini-3-flash-preview';
+            }
+        }
+
+        if (tool.creditCost > 0) {
+            logAction({
+                userId,
+                userName: u.name,
+                actionType: LoggableAction.TOOL_USAGE,
+                details: `Sử dụng công cụ: ${tool.title || tool.id}. Tiêu thụ: ${tool.creditCost} Credits.`,
+                apiMetadata: {
+                    toolId: tool.id,
+                    model: modelUsed,
+                    tokens: apiMetadata?.tokens,
+                    estimatedCostUsd: estimatedCostUsd,
+                    creditCost: tool.creditCost,
+                    success: true,
+                }
+            });
+        } else if (tool.creditCost < 0) {
+             // Refund
+             logAction({
+                userId,
+                userName: u.name,
+                actionType: LoggableAction.TOOL_USAGE,
+                details: `Hoàn tiền công cụ: ${tool.title || tool.id}. API lỗi. Hoàn lại: ${Math.abs(tool.creditCost)} Credits.`,
+                apiMetadata: {
+                    toolId: tool.id,
+                    model: modelUsed,
+                    tokens: apiMetadata?.tokens,
+                    estimatedCostUsd: estimatedCostUsd < 0 ? estimatedCostUsd : -estimatedCostUsd, // Ensure it's negative
+                    creditCost: tool.creditCost, // already negative
+                    success: false,
+                }
+            });
+        }
         return { success: true };
     };
 
