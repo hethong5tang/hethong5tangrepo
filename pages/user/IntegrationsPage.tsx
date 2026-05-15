@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { SparklesIcon, UserCircleIcon, ChartBarIcon, CurrencyDollarIcon, PuzzlePieceIcon, CpuChipIcon, ArrowRightIcon, CheckBadgeIcon, ComputerDesktopIcon } from '../../components/Icons';
 import { useSettings } from '../../features/settings/useSettings';
 import { IntegrationTool } from '../../features/settings/types';
@@ -13,11 +13,45 @@ const iconMap: Record<string, React.FC<{className?: string}>> = {
     ComputerDesktopIcon,
 };
 
+const toolCategories: Record<string, string> = {
+    tool_menu_designer: 'Ảnh',
+    tool_interior_design: 'Ảnh',
+    tool_fashion_designer: 'Ảnh',
+    tool_image_mixer: 'Ảnh',
+    tool_content_writer: 'Văn bản',
+    tool_image_gen_gemini: 'Ảnh',
+    tool_video_editor: 'Video',
+    tool_vectorizer: 'Ảnh',
+    tool_hairstyle_pro: 'Ảnh',
+    tool_photo_restore: 'Ảnh',
+    tool_bg_remover: 'Ảnh',
+    tool_ai_video_gen: 'Video',
+    tool_face_swap: 'Ảnh',
+    tool_ad_creator: 'Ảnh',
+    tool_fashion_studio: 'Ảnh',
+    tool_portrait_editor: 'Ảnh',
+    tool_ocr_pro: 'Văn bản',
+    tool_mockup_generator: 'Ảnh'
+};
+
+const getToolCategory = (tool: IntegrationTool): string => {
+    if (tool.category) return tool.category;
+    return toolCategories[tool.id] || 'Tiện ích';
+};
+
+const CATEGORIES = ['Tất cả', 'Ảnh', 'Văn bản', 'Video', 'Tiện ích'];
+
 const IntegrationsPage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
     const { settingsState } = useSettings();
     const { integrationTools } = settingsState.systemSettings;
+    const [activeTab, setActiveTab] = useState('Tất cả');
     
     const enabledTools = integrationTools.filter(tool => tool.enabled);
+    
+    const displayedTools = useMemo(() => {
+        if (activeTab === 'Tất cả') return enabledTools;
+        return enabledTools.filter(tool => getToolCategory(tool) === activeTab);
+    }, [enabledTools, activeTab]);
 
     const handleUseTool = (tool: IntegrationTool) => {
         onNavigate(`Kho Tiện Ích/${tool.id}`);
@@ -35,6 +69,9 @@ const IntegrationsPage: React.FC<{ onNavigate: (page: string) => void }> = ({ on
                         {tool.creditCost > 0 ? (<div className="px-2.5 py-1 text-xs font-bold text-yellow-800 dark:text-yellow-200 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center gap-1"><SparklesIcon className="h-3 w-3" /> {tool.creditCost} Credit</div>)
                         : (<div className="px-2.5 py-1 text-xs font-bold text-green-800 dark:text-green-200 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center gap-1.5"><CheckBadgeIcon className="h-4 w-4" /> Miễn phí</div>)}
                     </div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-full">{getToolCategory(tool)}</span>
+                    </div>
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">{tool.title}</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{tool.description}</p>
                 </div>
@@ -44,10 +81,41 @@ const IntegrationsPage: React.FC<{ onNavigate: (page: string) => void }> = ({ on
     };
 
     return (
-        <div className="space-y-12">
-            <div className="text-center"><h2 className="text-3xl font-bold">Kho Tiện Ích & AI</h2><p className="mt-2 max-w-2xl mx-auto text-slate-500">Khám phá các công cụ và tiện ích AI được thiết kế để giúp bạn phát triển.</p></div>
-            {enabledTools.length > 0 ? (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{enabledTools.map((tool) => (<ToolCard key={tool.id} tool={tool} onUse={handleUseTool} />))}</div>)
-            : (<div className="text-center py-20 text-slate-500"><PuzzlePieceIcon className="h-12 w-12 mx-auto text-slate-400 mb-4" /><p className="font-semibold text-lg">Chưa có tiện ích nào</p><p className="mt-1">Vui lòng quay lại sau.</p></div>)}
+        <div className="space-y-8">
+            <div className="text-center">
+                <h2 className="text-3xl font-bold">Kho Tiện Ích & AI</h2>
+                <p className="mt-2 max-w-2xl mx-auto text-slate-500">Khám phá các công cụ và tiện ích AI được thiết kế để giúp bạn phát triển.</p>
+            </div>
+            
+            <div className="flex justify-center mt-6">
+                <div className="bg-white/60 dark:bg-slate-800/60 p-1 rounded-xl backdrop-blur-md shadow-sm border border-slate-200/50 dark:border-slate-700/50 inline-flex flex-wrap gap-1 max-w-full justify-center">
+                    {CATEGORIES.map(category => {
+                        const count = category === 'Tất cả' ? enabledTools.length : enabledTools.filter(t => getToolCategory(t) === category).length;
+                        if (count === 0 && category !== 'Tất cả') return null; // Ẩn tab nếu không có công cụ
+                        return (
+                            <button
+                                key={category}
+                                onClick={() => setActiveTab(category)}
+                                className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === category ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700'}`}
+                            >
+                                {category} <span className={`ml-1 text-xs opacity-70 ${activeTab === category ? 'text-indigo-100' : ''}`}>({count})</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {displayedTools.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {displayedTools.map((tool) => (<ToolCard key={tool.id} tool={tool} onUse={handleUseTool} />))}
+                </div>
+            ) : (
+                <div className="text-center py-20 text-slate-500">
+                    <PuzzlePieceIcon className="h-12 w-12 mx-auto text-slate-400 mb-4" />
+                    <p className="font-semibold text-lg">Không tìm thấy công cụ nào</p>
+                    <p className="mt-1">Vui lòng chọn danh mục khác hoặc quay lại sau.</p>
+                </div>
+            )}
         </div>
     );
 };

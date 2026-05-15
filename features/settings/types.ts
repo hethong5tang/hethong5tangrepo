@@ -30,6 +30,7 @@ export interface IntegrationTool {
     customIconUrl?: string;
     title: string;
     description: string;
+    category?: string;
     enabled: boolean;
     type: IntegrationType;
     creditCost: number;
