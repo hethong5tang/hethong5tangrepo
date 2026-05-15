@@ -209,6 +209,95 @@ async function startServer() {
     }
   });
 
+  // ==========================================
+  // 3. AI PROVIDERS DYNAMIC SYNC
+  // ==========================================
+  app.get("/api/ai/models", async (req, res) => {
+    try {
+      const models: any[] = [];
+      const usdRate = process.env.VITE_USD_RATE ? parseInt(process.env.VITE_USD_RATE) : 25500;
+
+      // 1. OpenAI
+      const openAiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+      if (openAiKey) {
+        try {
+          const oaiRes = await fetch("https://api.openai.com/v1/models", {
+            headers: { "Authorization": `Bearer ${openAiKey}` }
+          });
+          if (oaiRes.ok) {
+            const data = await oaiRes.json();
+            const gptModels = data.data.filter((m: any) => m.id.startsWith("gpt-") || m.id.startsWith("o1") || m.id.startsWith("o3"));
+            gptModels.forEach((m: any) => {
+              models.push({
+                provider: "OpenAI",
+                modelId: m.id,
+                name: m.id.toUpperCase(),
+                type: m.id.includes("gpt-4") ? "Smart Text" : "Fast Text",
+                basePriceUsd: m.id.includes("gpt-4") ? 2.50 : 0.15,
+                unit: "1M Tokens",
+                category: "premium",
+                logo: "https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg",
+                isActiveProvider: true
+              });
+            });
+          }
+        } catch (e) { console.error("OpenAI sync error", e); }
+      }
+
+      // 2. Anthropic (Anthropic has no official v1/models endpoints yet, we mock standard ones if key exists)
+      const anthropicKey = process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY;
+      if (anthropicKey) {
+        const standardAnthropic = ["claude-3-5-sonnet-latest", "claude-3-5-haiku-latest", "claude-3-opus-latest"];
+        standardAnthropic.forEach(id => {
+          models.push({
+            provider: "Anthropic",
+            modelId: id,
+            name: id.toUpperCase().replace(/-/g, ' '),
+            type: id.includes("haiku") ? "Fast Text" : "Advanced Text",
+            basePriceUsd: id.includes("opus") ? 15.0 : (id.includes("sonnet") ? 3.0 : 0.25),
+            unit: "1M Tokens",
+            category: "premium",
+            logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Anthropic_logo.svg/512px-Anthropic_logo.svg.png",
+            isActiveProvider: true
+          });
+        });
+      }
+
+      // 3. Google Gemini (Via generic catalog or fetch if needed, we'll keep it static here but tag as active if key exists)
+      const geminiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+      // Provide baseline Gemini models
+      const baseGemini = [
+        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
+        { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
+        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+        { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
+        { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview' }
+      ];
+      baseGemini.forEach(m => {
+        models.push({
+          provider: "Google",
+          modelId: m.id,
+          name: m.name,
+          type: "Text/Vision",
+          basePriceUsd: m.id.includes("pro") ? 1.25 : 0.075,
+          unit: "1M Tokens",
+          category: m.id.includes("pro") ? "pro" : "flash",
+          logo: "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg",
+          isActiveProvider: !!geminiKey
+        });
+      });
+
+      res.json({ success: true, models, configuredProviders: {
+        openai: !!openAiKey,
+        anthropic: !!anthropicKey,
+        google: !!geminiKey
+      }});
+    } catch (error: any) {
+      console.error("Models Sync Error:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

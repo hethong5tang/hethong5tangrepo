@@ -86,7 +86,23 @@ const ApiConsumptionPage: React.FC = () => {
 
     useEffect(() => {
         fetchAdminFinance();
+        fetchDynamicModels();
     }, []);
+
+    const fetchDynamicModels = async () => {
+        try {
+            const res = await fetch('/api/ai/models');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success && data.models && data.models.length > 0) {
+                    // Merge with existing catalog or replace. Replacing is cleaner because it includes static Gemini + dynamically fetched OpenAI/Anthropic
+                    setCatalog(data.models);
+                }
+            }
+        } catch (err) {
+            console.error("Failed to sync dynamic models", err);
+        }
+    };
 
     const fetchAdminFinance = async () => {
         try {
@@ -168,7 +184,7 @@ const ApiConsumptionPage: React.FC = () => {
         return () => clearInterval(interval);
     }, [isRefreshing]);
 
-    const handleToggleGeminiModel = (modelId: string) => {
+    const handleToggleModel = (modelId: string) => {
         const currentActive = settingsState.systemSettings.activeGeminiModels || [];
         const isActive = currentActive.includes(modelId);
         let newActive: string[];
@@ -390,6 +406,50 @@ NHIỆM VỤ CỦA BẠN:
 
     return (
         <div className="space-y-6">
+            {/* Hướng dẫn Kích hoạt Model AI (Lưu ý quan trọng trên cùng) */}
+            <div className="bg-gradient-to-br from-slate-900 to-indigo-900 rounded-3xl p-6 text-white shadow-2xl border border-white/10 relative overflow-hidden">
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-indigo-500/20 rounded-lg backdrop-blur-xl border border-indigo-400/30">
+                            <InformationCircleIcon className="h-6 w-6 text-indigo-300" />
+                        </div>
+                        <h2 className="text-xl font-bold tracking-tight">Kích hoạt & Tích hợp Model AI mới</h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10 hover:border-indigo-400/50 transition-all group">
+                            <p className="text-indigo-300 font-bold text-xs uppercase tracking-widest mb-2 flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center text-[10px] text-indigo-400">01</span>
+                                Cấu hình API Key
+                            </p>
+                            <p className="text-sm text-slate-300 leading-relaxed">
+                                Dán API Key vào <span className="text-white font-mono bg-white/10 px-1.5 py-0.5 rounded">Environment Variables</span> của Vercel (Key: OPENAI_API_KEY, ANTHROPIC_API_KEY, v.v.)
+                            </p>
+                        </div>
+                        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10 hover:border-emerald-400/50 transition-all group">
+                            <p className="text-emerald-300 font-bold text-xs uppercase tracking-widest mb-2 flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-[10px] text-emerald-400">02</span>
+                                Quét tự động
+                            </p>
+                            <p className="text-sm text-slate-300 leading-relaxed">
+                                Hệ thống sẽ tự động quét các Model khả dụng từ nhà cung cấp. Các model mới sẽ xuất hiện ngay trong bảng danh sách phía dưới.
+                            </p>
+                        </div>
+                        <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10 hover:border-amber-400/50 transition-all group">
+                            <p className="text-amber-300 font-bold text-xs uppercase tracking-widest mb-2 flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center text-[10px] text-amber-400">03</span>
+                                Phân loại & Sử dụng
+                            </p>
+                            <p className="text-sm text-slate-300 leading-relaxed">
+                                Khi bật <span className="text-white font-bold italic">Switch</span>, model sẽ tự động xuất hiện trong các công cụ tương ứng (Văn bản, Ảnh, Video,...) dựa trên tính năng của nó.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {/* Background Decor */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/10 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2"></div>
+            </div>
+
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex space-x-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700">
                     <button
@@ -608,19 +668,12 @@ NHIỆM VỤ CỦA BẠN:
                                         {Math.round(m.basePriceUsd * usdRate).toLocaleString()}đ
                                     </td>
                                     <td className="px-4 py-4 text-center">
-                                        {m.provider === 'Google' ? (
-                                            <button 
-                                                onClick={() => handleToggleGeminiModel(m.modelId)}
-                                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out ${settingsState.systemSettings.activeGeminiModels?.includes(m.modelId) ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
-                                            >
-                                                <span aria-hidden="true" className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${settingsState.systemSettings.activeGeminiModels?.includes(m.modelId) ? 'translate-x-2' : '-translate-x-2'}`} />
-                                            </button>
-                                        ) : isIntegrated ? (
-                                            /* Import CheckCircleIcon in the component top to fix the error */
-                                            <CheckCircleIcon className="h-5 w-5 text-emerald-500 mx-auto" />
-                                        ) : (
-                                            <span className="inline-flex px-1.5 py-0.5 rounded text-[8px] font-bold bg-slate-100 text-slate-400 uppercase">Trống</span>
-                                        )}
+                                        <button 
+                                            onClick={() => handleToggleModel(m.modelId)}
+                                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out ${settingsState.systemSettings.activeGeminiModels?.includes(m.modelId) || isIntegrated ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+                                        >
+                                            <span aria-hidden="true" className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${settingsState.systemSettings.activeGeminiModels?.includes(m.modelId) || isIntegrated ? 'translate-x-2' : '-translate-x-2'}`} />
+                                        </button>
                                     </td>
                                 </tr>
                             )})}
