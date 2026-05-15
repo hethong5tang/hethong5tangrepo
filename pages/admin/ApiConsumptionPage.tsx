@@ -66,9 +66,9 @@ const ApiConsumptionPage: React.FC = () => {
     const { addToast } = useToast();
     
     const [filterProvider, setFilterProvider] = useState<string>('all');
-    const [usdRate, setUsdRate] = useState<number>(25500);
+    const [usdRate, setUsdRate] = useState<number>(settingsState.systemSettings.apiUsdRate || 25500);
     const [catalogSearch, setCatalogSearch] = useState('');
-    const [catalog, setCatalog] = useState<ModelItem[]>(INITIAL_MODEL_CATALOG);
+    const [catalog, setCatalog] = useState<ModelItem[]>(settingsState.systemSettings.apiCatalog || INITIAL_MODEL_CATALOG);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [refreshStep, setRefreshStep] = useState(0);
     const [showOnlyIntegrated, setShowOnlyIntegrated] = useState(true);
@@ -298,6 +298,15 @@ NHIỆM VỤ CỦA BẠN:
                 if (parsed.models && Array.isArray(parsed.models)) {
                     setCatalog(parsed.models);
                     if (parsed.usdRate) setUsdRate(parsed.usdRate);
+
+                    settingsDispatch({
+                        type: 'UPDATE_SYSTEM_SETTINGS',
+                        payload: {
+                            ...settingsState.systemSettings,
+                            apiCatalog: parsed.models,
+                            apiUsdRate: parsed.usdRate || usdRate
+                        }
+                    });
                     
                     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
                     if (groundingChunks) {

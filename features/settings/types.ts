@@ -248,4 +248,8 @@ export interface SystemSettings {
 
     // Active Gemini Models
     activeGeminiModels?: string[];
+
+    // Dynamic API Catalog & Pricing
+    apiCatalog?: any[];
+    apiUsdRate?: number;
 }
