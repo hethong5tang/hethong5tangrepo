@@ -259,55 +259,80 @@ export const MOCK_SYSTEM_SETTINGS: SystemSettings = {
         ]
     },
     legalContent: {
-        tos: `Chào mừng bạn đến với Affiliate SaaS AI!
+        tos: ` ĐIỀU KHOẢN SỬ DỤNG DỊCH VỤ & THỎA THUẬN ĐỐI TÁC
  
- Bằng cách sử dụng nền tảng của chúng tôi, bạn đồng ý tuân thủ các điều khoản sau:
- - Bản chất dịch vụ: Đây là nền tảng cung cấp dịch vụ phần mềm AI (SaaS). Người dùng thanh toán để sử dụng các tài nguyên công nghệ AI chuyên nghiệp theo gói thuê bao.
- - Tiếp thị liên kết: Hệ thống áp dụng mô hình Affiliate 2 tầng minh bạch. Đối tác có thể nhận chiết khấu dịch vụ bằng việc giới thiệu khách hàng thực tế sử dụng nền tảng.
- - Đăng ký: Đối tác phải cung cấp thông tin chính xác và tự chịu trách nhiệm bảo mật tài khoản cá nhân.
- - Hoạt động: Nghiêm cấm các hành vi gian lận, trục lợi chính sách hoặc gây ảnh hưởng đến danh tiếng hệ thống.
- - Nghĩa vụ Thuế: Mọi khoản chiết khấu/lợi nhuận thực nhận sẽ được khấu trừ 10% Thuế Thu nhập Cá nhân (TNCN) để nộp vào ngân sách Nhà nước theo quy định hiện hành.
- - Hoàn phí: Các gói dịch vụ đã kích hoạt tương ứng với tài nguyên công nghệ đã được cấp phát (AI Credits) và không hỗ trợ hoàn phí.`,
-        privacy: `Chúng tôi cam kết bảo vệ thông tin cá nhân của người dùng:
+ 1. ĐIỀU KHOẢN CHUNG
+ Bằng cách đăng ký tài khoản tại Affiliate SaaS AI, Đối tác xác nhận đã đọc, hiểu và đồng ý bị ràng buộc bởi các điều khoản này. Hệ thống có quyền cập nhật quy định để phù hợp với pháp luật hiện hành.
  
- - Thông tin thu thập: Tên, email, số điện thoại và các dữ liệu cần thiết để xác thực giao dịch tài chính.
- - Mục đích sử dụng: Quản lý tài khoản, tính toán chiết khấu kinh doanh, thực hiện báo cáo thuế và hỗ trợ kỹ thuật.
- - Tính bảo mật: Dữ liệu được bảo vệ bằng các công nghệ mã hóa hiện đại, đảm bảo an toàn thông tin tối đa.
- - Cam kết chia sẻ: Chúng tôi tuyệt đối không cung cấp thông tin người dùng cho bên thứ ba vì mục đích thương mại.`,
-        systemPolicy: `<h3>Chính sách vận hành và Gói thuê bao</h3>
- <p>- Gói dịch vụ AI: Cung cấp dưới dạng thuê bao định kỳ. Khi kích hoạt hoặc gia hạn, đối tác sẽ nhận được lượt sử dụng AI (Credits) tương ứng với giá trị gói.</p>
- <p>- Khấu trừ Thuế: Toàn bộ lệnh rút lợi nhuận sẽ được hệ thống tự động khấu trừ 10% Thuế TNCN để thực hiện nghĩa vụ với Nhà nước.</p>
+ 2. MÔ TẢ DỊCH VỤ (SaaS)
+ Chúng tôi cung cấp các công cụ và tài nguyên dựa trên trí tuệ nhân tạo (AI). Người dùng đăng ký gói thuê bao để nhận "AI Credits" - đơn vị định mức sử dụng các tính năng công nghệ trong hệ thống.
  
- <h4>Bảng giá Gói Thuê bao & Tài nguyên AI</h4>
+ 3. CƠ CHẾ CHIẾT KHẤU TIẾP THỊ & QUẢN LÝ
+ - Chiết khấu trực tiếp (F1): Trả cho Đối tác giới thiệu trực tiếp khách hàng sử dụng dịch vụ.
+ - Phí quản lý (F2): Được trích trả cho đối tác cấp trên khi đảm bảo được việc hướng dẫn trực tiếp và hỗ trợ người dùng do mình giới thiệu sử dụng hệ thống AI đúng quy định và hiệu quả.
+ - Lưu ý: Hoa hồng và phí quản lý chỉ phát sinh dựa trên các giao dịch thanh toán thực tế của khách hàng.
+ 
+ 4. NGHĨA VỤ THUẾ TNCN
+ Theo quy định của pháp luật Việt Nam về thu nhập từ hoạt động tiếp thị liên kết, hệ thống sẽ thực hiện khấu trừ 10% Thuế Thu nhập Cá nhân (TNCN) trên mọi lệnh rút tiền để nộp vào Ngân sách Nhà nước. Chứng từ khấu trừ thuế sẽ được cung cấp khi có yêu cầu.
+ 
+ 5. PHÍ VẬN HÀNH & GIAO DỊCH
+ Mỗi lệnh rút tiền sẽ chịu mức phí vận hành cổng thanh toán cố định là 5.000 VNĐ. Số tiền thực nhận = (Số tiền rút - 10% Thuế TNCN) - 5.000đ.
+ 
+ 6. QUYỀN SỞ HỮU VÀ BẢO LẬP Ý TƯỞNG
+ Toàn bộ quy trình vận hành, mô hình kinh doanh và mã nguồn là tài sản trí tuệ độc quyền. Mọi hình thức sao chép, tái cấu trúc hoặc trục lợi ý tưởng sẽ bị xử lý theo quy định pháp luật về công nghệ thông tin.
+ 
+ 7. CHẤM DỨT TÀI KHOẢN
+ Các hành vi gian lận (spam, cheat, tạo tài khoản ảo) sẽ bị khóa vĩnh viễn mà không hoàn lại số dư.`,
+        privacy: ` CHÍNH SÁCH BẢO MẬT VÀ AN TOÀN DỮ LIỆU
+ 
+ 1. THU THẬP THÔNG TIN
+ Chúng tôi thu thập các thông tin: Họ tên, Email, Số điện thoại và Thông tin ngân hàng. Mục đích duy nhất là để định danh đối tác, chi trả lợi nhuận và thực hiện nghĩa vụ báo cáo thuế.
+ 
+ 2. BẢO MẬT ĐA LỚP
+ Dữ liệu của bạn được mã hóa theo tiêu chuẩn quốc tế và lưu trữ trên hệ thống máy chủ Cloud bảo mật cao. Chúng tôi cam kết tuyệt đối không bán hoặc chia sẻ dữ liệu cho bên thứ ba vì mục đích thương mại.
+ 
+ 3. TRÁCH NHIỆM VỚI PHÁP LUẬT
+ Dữ liệu chỉ được cung cấp cho cơ quan Nhà nước có thẩm quyền trong trường hợp có yêu cầu chính thức bằng văn bản phục vụ công tác thanh tra, giám sát.
+ 
+ 4. QUYỀN KIỂM SOÁT CỦA NGƯỜI DÙNG
+ Bạn có quyền yêu cầu trích xuất dữ liệu hoặc xóa tài khoản (sau khi đã hoàn tất các nghĩa vụ tài chính) thông qua bộ phận hỗ trợ kỹ thuật.`,
+        systemPolicy: `<h3>Quy chế vận hành Hệ thống</h3>
+ <p>- Gói dịch vụ AI: Mỗi gói thuê bao tương ứng với một định mức tài nguyên công nghệ (Credits). Credits được dùng để thanh toán cho các tác vụ AI có trong hệ thống.</p>
+ <p>- Chính sách Tiếp thị: Chiết khấu được tính trên tổng giá trị gói dịch vụ (sau khi đã trừ thuế phát sinh). Hệ thống ghi nhận hoa hồng tức thì và Đối tác có thể thực hiện rút tiền khi đạt hạn mức tối thiểu.</p>
+ 
+ <h4>Phân bổ Gói Thuê bao (Minh bạch 100%)</h4>
  <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
    <thead>
      <tr style="background-color: #f1f5f9;">
-       <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: left;">Giải pháp dịch vụ</th>
-       <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">Phí thuê bao</th>
-       <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">Tài nguyên công nghệ (Credits)</th>
+       <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: left;">Thành phần phân bổ</th>
+       <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">Tỷ lệ (%)</th>
+       <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: left;">Ghi chú</th>
      </tr>
    </thead>
    <tbody>
      <tr>
-       <td style="border: 1px solid #e2e8f0; padding: 10px;">Starter (Cơ bản)</td>
-       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">100,000đ</td>
-       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">1,000 P</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px;">Chiết khấu trực tiếp (F1)</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">40.0%</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px;">Chi trả cho người giới thiệu</td>
      </tr>
      <tr style="background-color: #f8fafc;">
-       <td style="border: 1px solid #e2e8f0; padding: 10px;">Pro (Chuyên nghiệp)</td>
-       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">1,000,000đ</td>
-       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">10,000 P</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px;">Phí quản lý (F2)</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">20.0%</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px;">Chi trả cho tuyến trên trực tiếp</td>
      </tr>
      <tr>
-       <td style="border: 1px solid #e2e8f0; padding: 10px;">Master (Cao cấp)</td>
-       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">10,000,000đ</td>
-       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">100,000 P</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px;">Quỹ vận hành & Thuế</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">30.0%</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px;">VAT, TNDN, API, Server</td>
+     </tr>
+     <tr style="background-color: #f8fafc;">
+       <td style="border: 1px solid #e2e8f0; padding: 10px;">Quỹ Leader & Hỗ trợ</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: right;">10.0%</td>
+       <td style="border: 1px solid #e2e8f0; padding: 10px;">Thưởng doanh số & Xử lý sự cố</td>
      </tr>
    </tbody>
  </table>
- 
- <p style="margin-top: 15px;">- Duy trì dịch vụ: Tài khoản cần ở trạng thái Active để đảm bảo các quyền lợi về tài nguyên AI và chiết khấu liên kết.</p>
- <p>- Chính sách bảo lưu: Quyền lợi chiết khấu sẽ được bảo lưu trong thời gian ân hạn (7 ngày) kể từ khi gói dịch vụ hết hạn.</p>`
+ <p style="margin-top: 15px;"><i>Hệ thống đảm bảo tính thượng tôn pháp luật và nghĩa vụ nộp thuế của Đối tác được thực hiện tự động và minh bạch.</i></p>`
     },
     integrationTools: [
          {

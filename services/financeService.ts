@@ -130,7 +130,7 @@ export const calculateFeePaymentChanges = (
                 newTransactions.push({ id: `txn_support_clawback_${Date.now()}_${recipient.id}`, userId: recipient.id, user: { name: recipient.name, avatar: recipient.avatar }, date, type: TransactionType.SupportFund, description: `Khấu trừ ${amountToRecover.toLocaleString('vi-VN')}đ hoàn trả quỹ hỗ trợ`, amount: -amountToRecover, status: TransactionStatus.Completed, sourceEventId });
             }
             userUpdates[recipient.id] = { ...userUpdates[recipient.id], balanceChange: (userUpdates[recipient.id]?.balanceChange || 0) + actualCommission - amountToRecover, earningsChange: (userUpdates[recipient.id]?.earningsChange || 0) + actualCommission };
-            newTransactions.push({ id: `txn_comm_${Date.now()}_${recipient.id}`, userId: recipient.id, user: { name: recipient.name, avatar: recipient.avatar }, date, type: level === 1 ? TransactionType.CommissionParticipation : TransactionType.CommissionMaintenance, description: `Hoa hồng F${level} (${rate}%) từ ${payingUser.name}`, amount: actualCommission, status: TransactionStatus.Completed, sourceEventId, sourceTier: membershipTier });
+            newTransactions.push({ id: `txn_comm_${Date.now()}_${recipient.id}`, userId: recipient.id, user: { name: recipient.name, avatar: recipient.avatar }, date, type: level === 1 ? TransactionType.CommissionParticipation : TransactionType.CommissionMaintenance, description: level === 1 ? `Hoa hồng F1 (${rate}%) từ ${payingUser.name}` : `Phí quản lý F2 (${rate}%) từ ${payingUser.name}`, amount: actualCommission, status: TransactionStatus.Completed, sourceEventId, sourceTier: membershipTier });
         }
     });
 

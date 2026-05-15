@@ -11,9 +11,12 @@ const defaultFinanceState: FinanceState = {
     withdrawalRequests: IS_DEMO_MODE ? MOCK_INITIAL_WITHDRAWALS : [],
     depositRequests: [],
     fundStatus: {
-        [FundType.Admin]: { name: 'Ví Admin', balance: IS_DEMO_MODE ? 10000000 : 0, totalIn: 0, totalOut: 0 },
+        [FundType.Admin]: { name: 'Ví Admin (API/Server/Lợi nhuận)', balance: IS_DEMO_MODE ? 10000000 : 0, totalIn: 0, totalOut: 0 },
         [FundType.LeaderBonus]: { name: 'Quỹ Thưởng Leader', balance: IS_DEMO_MODE ? 10000000 : 0, totalIn: IS_DEMO_MODE ? 10000000 : 0, totalOut: 0 },
         [FundType.Support]: { name: 'Quỹ Hỗ Trợ', balance: 0, totalIn: 0, totalOut: 0 },
+        [FundType.VAT]: { name: 'Thuế VAT (10%)', balance: 0, totalIn: 0, totalOut: 0 },
+        [FundType.CorporateTax]: { name: 'Thuế Doanh nghiệp (3%)', balance: 0, totalIn: 0, totalOut: 0 },
+        [FundType.TNCN_TAX]: { name: 'Thuế TNCN (10%)', balance: 0, totalIn: 0, totalOut: 0 },
     },
     fundTransactions: IS_DEMO_MODE ? MOCK_FUND_TRANSACTIONS : [],
     milestoneBonusRequests: [],

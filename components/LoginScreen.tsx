@@ -17,6 +17,7 @@ interface LoginScreenProps {
   referrerName?: string | null;
   isMaintenanceMode?: boolean;
   maintenanceEndTime?: string | null;
+  onShowLegal?: (type: 'tos' | 'privacy') => void;
 }
 
 interface LoginHintGroup {
@@ -52,7 +53,7 @@ const loginHints: LoginHintGroup[] = [
     }
 ];
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFinalize2faLogin, onRegister, onForgotPassword, referrerId, referrerName, isMaintenanceMode, maintenanceEndTime }) => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFinalize2faLogin, onRegister, onForgotPassword, referrerId, referrerName, isMaintenanceMode, maintenanceEndTime, onShowLegal }) => {
     const { pendingGoogleAuth, clearPendingGoogleAuth } = useAuth();
     const [view, setView] = useState<'login' | 'register' | 'forgot' | 'verify2fa'>('login');
     const [error, setError] = useState('');
@@ -75,6 +76,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
     const [confirmPassword, setConfirmPassword] = useState('');
     const [passwordValidation, setPasswordValidation] = useState<PasswordValidationResult['checks'] | null>(null);
     const [referralCode, setReferralCode] = useState('');
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
 
     const [registerSuccess, setRegisterSuccess] = useState(false);
 
@@ -199,6 +201,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
         
         if (isMaintenanceMode) {
             setError('Chức năng đăng ký tạm thời bị vô hiệu hóa do bảo trì.');
+            return;
+        }
+
+        if (!agreedToTerms) {
+            setError('Bạn phải đồng ý với Điều khoản và Chính sách để tiếp tục.');
             return;
         }
 
@@ -524,6 +531,35 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
 
                         {error && <p className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-100">{error}</p>}
                         
+                        <div className="flex items-start gap-2 py-2">
+                            <input
+                                id="agree-terms"
+                                type="checkbox"
+                                checked={agreedToTerms}
+                                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                                className="mt-1 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                            <label htmlFor="agree-terms" className="text-xs text-slate-500 leading-normal">
+                                Tôi đã đọc và đồng ý với{' '}
+                                <button 
+                                    type="button" 
+                                    onClick={() => onShowLegal?.('tos')}
+                                    className="text-indigo-600 hover:underline font-medium"
+                                >
+                                    Điều khoản dịch vụ
+                                </button>
+                                {' '}và{' '}
+                                <button 
+                                    type="button" 
+                                    onClick={() => onShowLegal?.('privacy')}
+                                    className="text-indigo-600 hover:underline font-medium"
+                                >
+                                    Chính sách bảo mật
+                                </button>
+                                .
+                            </label>
+                        </div>
+
                         <div className="pt-2 text-center">
                             <button 
                                 type="button" 

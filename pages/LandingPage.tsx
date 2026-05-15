@@ -633,6 +633,7 @@ const LandingPage: React.FC = () => {
             referrerName={referrerName} 
             isMaintenanceMode={isEffectivelyInMaintenance}
             maintenanceEndTime={systemSettings.maintenanceEndTime}
+            onShowLegal={(type) => setActiveLegalModal(`#${type}`)}
         />
       </Modal>
 
@@ -647,7 +648,7 @@ const LandingPage: React.FC = () => {
         hideFooter
       >
         <div className="max-h-[70vh] overflow-y-auto pr-2 text-slate-700 dark:text-slate-300">
-            <div className="prose prose-slate dark:prose-invert max-w-none leading-relaxed" 
+            <div className={`prose prose-slate dark:prose-invert max-w-none leading-relaxed ${activeLegalModal !== '#system-policy' ? 'whitespace-pre-line' : ''}`} 
                  dangerouslySetInnerHTML={{ 
                     __html: (activeLegalModal === '#tos' ? systemSettings.legalContent?.tos :
                              activeLegalModal === '#privacy' ? systemSettings.legalContent?.privacy :

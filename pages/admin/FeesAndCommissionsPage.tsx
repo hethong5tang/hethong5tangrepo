@@ -332,7 +332,7 @@ export const FeesAndCommissionsPage: React.FC<FeesAndCommissionsPageProps> = () 
                                                     const amountMaster = Math.floor(feeMaster * (c.percentage/100));
                                                     return (
                                                         <tr key={index} className="group hover:bg-slate-50/50 dark:hover:bg-slate-700/20">
-                                                            <td className="px-6 py-4 font-semibold text-slate-800 dark:text-slate-200">{c.level}</td>
+                                                            <td className="px-6 py-4 font-semibold text-slate-800 dark:text-slate-200">{c.level === 'F1' ? 'Hoa hồng (F1)' : 'Phí quản lý (F2)'}</td>
                                                             <td className="px-6 py-4">
                                                                 <div className="relative max-w-[140px]">
                                                                     <FormattedNumberInput
