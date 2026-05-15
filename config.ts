@@ -269,7 +269,7 @@ export const MOCK_SYSTEM_SETTINGS: SystemSettings = {
  
  3. CƠ CHẾ CHIẾT KHẤU TIẾP THỊ & QUẢN LÝ
  - Chiết khấu trực tiếp (F1): Trả cho Đối tác giới thiệu trực tiếp khách hàng sử dụng dịch vụ.
- - Phí quản lý (F2): Được trích trả cho đối tác cấp trên khi đảm bảo được việc hướng dẫn trực tiếp và hỗ trợ người dùng do mình giới thiệu sử dụng hệ thống AI đúng quy định và hiệu quả.
+ - Phí quản lý (F2): Phí quản lý được trích trả cho đối tác khi đảm bảo được việc hướng dẫn và hỗ trợ người dùng do mình giới thiệu sử dụng hệ thống AI đúng quy định.
  - Lưu ý: Hoa hồng và phí quản lý chỉ phát sinh dựa trên các giao dịch thanh toán thực tế của khách hàng.
  
  4. NGHĨA VỤ THUẾ TNCN

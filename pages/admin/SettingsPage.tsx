@@ -627,19 +627,32 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
             {activeTab === 'legal' && (
                 <div className="space-y-6 max-w-5xl">
                     <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6">
-                        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-                            <ShieldExclamationIcon className="h-5 w-5 text-indigo-500" />Cấu hình nội dung Pháp lý
-                        </h3>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                <ShieldExclamationIcon className="h-5 w-5 text-indigo-500" />Cấu hình nội dung Pháp lý
+                            </h3>
+                            <button 
+                                onClick={() => {
+                                    if(confirm('Bạn có chắc muốn khôi phục nội dung pháp lý về mặc định? Toàn bộ thỉnh sửa hiện tại sẽ bị ghi đè.')) {
+                                        setSettings(prev => ({ ...prev, legalContent: initialSettings.legalContent }));
+                                        addToast('Đã khôi phục nội dung pháp lý mặc định.', 'success');
+                                    }
+                                }}
+                                className="text-xs font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
+                            >
+                                <ArrowPathIcon className="h-4 w-4" /> Khôi phục mặc định
+                            </button>
+                        </div>
                         <p className="text-sm text-slate-500 mb-6 font-medium">Nội dung này sẽ hiển thị trong các cửa sổ khi người dùng nhấn vào các liên kết pháp lý ở cuối trang Landing Page.</p>
                         
                         <div className="space-y-6">
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Điều khoản Dịch vụ (Terms of Service)</label>
                                 <textarea 
-                                    rows={8}
+                                    rows={10}
                                     value={settings.legalContent.tos}
                                     onChange={e => handleLegalChange('tos', e.target.value)}
-                                    className="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all"
+                                    className="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all font-sans text-sm leading-relaxed"
                                     placeholder="Nhập nội dung điều khoản..."
                                 />
                             </div>
@@ -647,22 +660,26 @@ const SettingsPage: React.FC<SettingsPageProps> = () => {
                             <div className="pt-6 border-t border-slate-100 dark:border-slate-700">
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Chính sách Bảo mật (Privacy Policy)</label>
                                 <textarea 
-                                    rows={8}
+                                    rows={10}
                                     value={settings.legalContent.privacy}
                                     onChange={e => handleLegalChange('privacy', e.target.value)}
-                                    className="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all"
+                                    className="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all font-sans text-sm leading-relaxed"
                                     placeholder="Nhập nội dung chính sách bảo mật..."
                                 />
                             </div>
 
                             <div className="pt-6 border-t border-slate-100 dark:border-slate-700">
                                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Chính sách Hệ thống (System Policy)</label>
+                                <div className="mb-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-lg flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
+                                    <InformationCircleIcon className="h-4 w-4" />
+                                    <span>Lưu ý: Chính sách hệ thống sử dụng định dạng HTML để hiển thị bảng biểu và danh sách.</span>
+                                </div>
                                 <textarea 
-                                    rows={8}
+                                    rows={10}
                                     value={settings.legalContent.systemPolicy}
                                     onChange={e => handleLegalChange('systemPolicy', e.target.value)}
-                                    className="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all"
-                                    placeholder="Nhập nội dung chính sách hệ thống..."
+                                    className="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500 transition-all font-mono text-sm leading-relaxed"
+                                    placeholder="Nhập nội dung chính sách hệ thống (HTML)..."
                                 />
                             </div>
                         </div>

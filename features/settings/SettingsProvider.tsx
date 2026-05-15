@@ -18,12 +18,21 @@ const init = (defaultState: SettingsState): SettingsState => {
     const storedLevelSettings = raw.systemSettings?.levelSettings || [];
     const shouldResetLevels = storedLevelSettings.length !== defaultState.systemSettings.levelSettings.length;
 
+    // Fix persistence for legal content: if it's the old default, reset it to new default
+    const currentTos = raw.systemSettings?.legalContent?.tos || '';
+    if (currentTos.includes('Chào mừng bạn đến với Affiliate SaaS AI!') || 
+        currentTos.includes('Cơ chế Tiếp thị Liên kết (Affiliate):') ||
+        (currentTos.includes('PHÍ QUẢN LÝ (F2)') && !currentTos.includes('đúng quy định.'))) {
+        raw.systemSettings.legalContent = defaultState.systemSettings.legalContent;
+    }
+
     return {
         ...defaultState,
         ...raw,
         systemSettings: { 
             ...defaultState.systemSettings, 
             ...raw.systemSettings,
+            legalContent: raw.systemSettings?.legalContent || defaultState.systemSettings.legalContent,
             levelSettings: shouldResetLevels ? defaultState.systemSettings.levelSettings : (raw.systemSettings?.levelSettings || defaultState.systemSettings.levelSettings),
             tierSettings: {
                 starter: {
