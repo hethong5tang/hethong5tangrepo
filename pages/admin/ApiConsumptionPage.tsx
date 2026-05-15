@@ -30,22 +30,22 @@ interface ModelItem {
 }
 
 const INITIAL_MODEL_CATALOG: ModelItem[] = [
-    { provider: 'Google', modelId: 'gemini-1.5-flash', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 1.5 Flash', type: 'Fast Text', basePriceUsd: 0.075, unit: '1M Tokens', category: 'flash' },
-    { provider: 'Google', modelId: 'gemini-1.5-flash-8b', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 1.5 Flash-8B', type: 'Fast Text', basePriceUsd: 0.035, unit: '1M Tokens', category: 'flash' },
-    { provider: 'Google', modelId: 'gemini-1.5-pro', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 1.5 Pro', type: 'Smart Text', basePriceUsd: 1.25, unit: '1M Tokens', category: 'pro' },
-    { provider: 'Google', modelId: 'gemini-2.0-flash', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.0 Flash', type: 'Fast Text', basePriceUsd: 0.10, unit: '1M Tokens', category: 'flash' },
-    { provider: 'Google', modelId: 'gemini-2.0-pro-exp-02-05', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.0 Pro', type: 'Experimental', basePriceUsd: 1.25, unit: '1M Tokens', category: 'pro' },
-    { provider: 'Google', modelId: 'gemini-2.5-flash', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.5 Flash', type: 'Fast Text', basePriceUsd: 0.075, unit: '1M Tokens', category: 'flash' },
-    { provider: 'Google', modelId: 'gemini-2.5-flash-image', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.5 Flash Image', type: 'Image Gen', basePriceUsd: 0.03, unit: 'Mỗi ảnh', category: 'flash' },
-    { provider: 'Google', modelId: 'gemini-2.5-pro', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.5 Pro', type: 'Smart Text', basePriceUsd: 1.25, unit: '1M Tokens', category: 'pro' },
     { provider: 'Google', modelId: 'gemini-3-flash-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3 Flash Preview', type: 'Text/Vision', basePriceUsd: 0.075, unit: '1M Tokens', category: 'flash' },
-    { provider: 'Google', modelId: 'gemini-3-pro-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3 Pro Preview', type: 'Complex Reasoning', basePriceUsd: 1.25, unit: '1M Tokens', category: 'pro' },
+    { provider: 'Google', modelId: 'gemini-3.1-pro-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3.1 Pro Preview', type: 'Advanced Reasoning', basePriceUsd: 1.25, unit: '1M Tokens', category: 'pro' },
+    { provider: 'Google', modelId: 'gemini-3.1-flash-lite', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3.1 Flash Lite', type: 'Lite Text', basePriceUsd: 0.035, unit: '1M Tokens', category: 'flash' },
+    { provider: 'Google', modelId: 'gemini-2.5-flash-image', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 2.5 Flash Image', type: 'Image Gen', basePriceUsd: 0.03, unit: 'Mỗi ảnh', category: 'flash' },
+    { provider: 'Google', modelId: 'gemini-3.1-flash-image-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3.1 Flash Image', type: 'Image Gen', basePriceUsd: 0.04, unit: 'Mỗi ảnh', category: 'flash' },
     { provider: 'Google', modelId: 'gemini-3-pro-image-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3 Pro Image', type: 'Image Gen', basePriceUsd: 0.08, unit: 'Mỗi ảnh', category: 'pro' },
+    { provider: 'Google', modelId: 'veo-3.1-lite-generate-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Google Veo', type: 'Video Gen', basePriceUsd: 0.25, unit: 'Mỗi video', category: 'video' },
+    { provider: 'Google', modelId: 'gemini-3.1-flash-tts-preview', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Cloud_Logo.svg', name: 'Gemini 3.1 Flash TTS', type: 'Speech Gen', basePriceUsd: 0.01, unit: 'Mỗi lượt', category: 'audio' },
     { provider: 'OpenAI', modelId: 'gpt-4o', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg', name: 'GPT-4o', type: 'Multi-modal', basePriceUsd: 2.50, unit: '1M Tokens', category: 'premium' },
     { provider: 'OpenAI', modelId: 'gpt-4o-mini', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg', name: 'GPT-4o Mini', type: 'Fast Text', basePriceUsd: 0.150, unit: '1M Tokens', category: 'premium' },
     { provider: 'OpenAI', modelId: 'o1', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg', name: 'OpenAI o1', type: 'Reasoning', basePriceUsd: 15.00, unit: '1M Tokens', category: 'premium' },
-    { provider: 'Anthropic', modelId: 'claude-3-5-sonnet', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Anthropic_logo.svg/512px-Anthropic_logo.svg.png', name: 'Claude 3.5 Sonnet', type: 'Advanced Text', basePriceUsd: 3.00, unit: '1M Tokens', category: 'premium' },
-    { provider: 'Anthropic', modelId: 'claude-3-5-haiku', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Anthropic_logo.svg/512px-Anthropic_logo.svg.png', name: 'Claude 3.5 Haiku', type: 'Fast Text', basePriceUsd: 0.80, unit: '1M Tokens', category: 'premium' },
+    { provider: 'OpenAI', modelId: 'o3-mini', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg', name: 'OpenAI o3-mini', type: 'Fast Reasoning', basePriceUsd: 1.10, unit: '1M Tokens', category: 'premium' },
+    { provider: 'OpenAI', modelId: 'dall-e-3', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg', name: 'DALL-E 3', type: 'Image Gen', basePriceUsd: 0.04, unit: 'Mỗi ảnh', category: 'premium' },
+    { provider: 'Anthropic', modelId: 'claude-3-5-sonnet-latest', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Anthropic_logo.svg/512px-Anthropic_logo.svg.png', name: 'Claude 3.5 Sonnet', type: 'Advanced Text', basePriceUsd: 3.00, unit: '1M Tokens', category: 'premium' },
+    { provider: 'Anthropic', modelId: 'claude-3-5-haiku-latest', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Anthropic_logo.svg/512px-Anthropic_logo.svg.png', name: 'Claude 3.5 Haiku', type: 'Fast Text', basePriceUsd: 0.80, unit: '1M Tokens', category: 'premium' },
+    { provider: 'Anthropic', modelId: 'claude-3-opus-latest', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Anthropic_logo.svg/512px-Anthropic_logo.svg.png', name: 'Claude 3 Opus', type: 'Expert Text', basePriceUsd: 15.00, unit: '1M Tokens', category: 'premium' },
 ];
 
 const LOADING_STEPS = [
@@ -327,12 +327,19 @@ NHIỆM VỤ CỦA BẠN:
                         type: 'UPDATE_SYSTEM_SETTINGS',
                         payload: updatedSystemSettings
                     });
+
+                    // FORCE IMMEDIATE SAVE to storage to prevent data loss on quick logout/refresh
+                    // This bypasses the useEffect delay in SettingsProvider
+                    storageService.set(STORAGE_KEYS.SETTINGS, {
+                        ...settingsState,
+                        systemSettings: updatedSystemSettings
+                    });
                     
                     // Update local state to reflect UI immediately
                     setCatalog(parsed.models);
                     if (parsed.usdRate) setUsdRate(parsed.usdRate);
                     
-                    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+                    addToast('Đã quét và lưu bảng giá mới thành công!', 'success');
                     if (groundingChunks) {
                         const extractedSources = groundingChunks
                             .filter((chunk: any) => chunk.web)

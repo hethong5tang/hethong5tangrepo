@@ -26,32 +26,36 @@ const init = (defaultState: SettingsState): SettingsState => {
         raw.systemSettings.legalContent = defaultState.systemSettings.legalContent;
     }
 
+    const mergedSystemSettings = {
+        ...defaultState.systemSettings,
+        ...raw.systemSettings,
+        legalContent: raw.systemSettings?.legalContent || defaultState.systemSettings.legalContent,
+        levelSettings: shouldResetLevels ? defaultState.systemSettings.levelSettings : (raw.systemSettings?.levelSettings || defaultState.systemSettings.levelSettings),
+        // Ensure apiCatalog is taken from raw if it exists, otherwise from default
+        apiCatalog: raw.systemSettings?.apiCatalog || defaultState.systemSettings.apiCatalog,
+        tierSettings: {
+            starter: {
+                ...defaultState.systemSettings.tierSettings.starter,
+                ...(raw.systemSettings?.tierSettings?.starter || {}),
+                benefits: defaultState.systemSettings.tierSettings.starter.benefits
+            },
+            pro: {
+                ...defaultState.systemSettings.tierSettings.pro,
+                ...(raw.systemSettings?.tierSettings?.pro || {}),
+                benefits: defaultState.systemSettings.tierSettings.pro.benefits
+            },
+            master: {
+                ...defaultState.systemSettings.tierSettings.master,
+                ...(raw.systemSettings?.tierSettings?.master || {}),
+                benefits: defaultState.systemSettings.tierSettings.master.benefits
+            }
+        }
+    };
+
     return {
         ...defaultState,
         ...raw,
-        systemSettings: { 
-            ...defaultState.systemSettings, 
-            ...raw.systemSettings,
-            legalContent: raw.systemSettings?.legalContent || defaultState.systemSettings.legalContent,
-            levelSettings: shouldResetLevels ? defaultState.systemSettings.levelSettings : (raw.systemSettings?.levelSettings || defaultState.systemSettings.levelSettings),
-            tierSettings: {
-                starter: {
-                    ...defaultState.systemSettings.tierSettings.starter,
-                    ...(raw.systemSettings?.tierSettings?.starter || {}),
-                    benefits: defaultState.systemSettings.tierSettings.starter.benefits
-                },
-                pro: {
-                    ...defaultState.systemSettings.tierSettings.pro,
-                    ...(raw.systemSettings?.tierSettings?.pro || {}),
-                    benefits: defaultState.systemSettings.tierSettings.pro.benefits
-                },
-                master: {
-                    ...defaultState.systemSettings.tierSettings.master,
-                    ...(raw.systemSettings?.tierSettings?.master || {}),
-                    benefits: defaultState.systemSettings.tierSettings.master.benefits
-                }
-            }
-        },
+        systemSettings: mergedSystemSettings,
         fundSettings: { ...defaultState.fundSettings, ...raw.fundSettings },
         userSettings: { ...defaultState.userSettings, ...raw.userSettings }
     };

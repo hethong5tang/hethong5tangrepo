@@ -88,7 +88,11 @@ const EditModal: React.FC<{
         const toolCat = formData.category || filterCat;
         AI_MODEL_OPTIONS.forEach(model => {
             if (model.category === toolCat || toolCat === 'all') {
-                const catalogItem = apiCatalog.find((c: any) => c.id === model.id);
+                const catalogItem = apiCatalog.find((c: any) => {
+                    const cId = (c.modelId || c.id || '').toLowerCase();
+                    const mId = (model.id || '').toLowerCase();
+                    return cId === mId || cId.includes(mId) || mId.includes(cId);
+                });
                 const baseCostVnd = (catalogItem?.basePriceUsd || 0) * apiUsdRate;
                 if (baseCostVnd > 0) {
                     const targetRevenue = baseCostVnd * (1 + markupPercent / 100);
@@ -252,7 +256,11 @@ const EditModal: React.FC<{
                             const hasPrice = formData.modelPricing?.hasOwnProperty(model.id);
                             const userPrice = hasPrice ? formData.modelPricing![model.id] : 0;
                             
-                            const catalogItem = apiCatalog.find((c: any) => c.id === model.id);
+                            const catalogItem = apiCatalog.find((c: any) => {
+                                const cId = (c.modelId || c.id || '').toLowerCase();
+                                const mId = (model.id || '').toLowerCase();
+                                return cId === mId || cId.includes(mId) || mId.includes(cId);
+                            });
                             const baseCostVnd = (catalogItem?.basePriceUsd || 0) * apiUsdRate;
                             const profitVnd = (userPrice * CREDIT_VAL) - baseCostVnd;
 

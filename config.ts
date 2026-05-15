@@ -230,6 +230,9 @@ export const MOCK_SYSTEM_SETTINGS: SystemSettings = {
             { id: 'mock5', name: 'Hoàng Văn E', avatar: 'https://picsum.photos/id/1015/100', score: 70000000 },
         ]
     },
+    // API Catalog & External pricing
+    apiCatalog: [],
+    apiUsdRate: 25000,
     // DEFAULT PAYMENT CONFIG
     adminPayment: {
         bank: {

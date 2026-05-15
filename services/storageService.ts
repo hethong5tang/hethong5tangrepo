@@ -74,23 +74,24 @@ export const storageService = {
 
   // === SYNC API (Bây giờ đã hỗ trợ cả Supabase thông qua In-Memory Cache) ===
   get: <T>(key: string, defaultValue: T): T => {
-    // Ưu tiên đọc từ cache nếu đã init hoặc cache có dữ liệu
+    // 1. Ưu tiên đọc từ cache nếu đã có dữ liệu (kể cả Supabase đã load xong)
     if (inMemoryCache[key] !== undefined) {
       return inMemoryCache[key] as T;
     }
     
-    // Fallback cho LocalStorage nếu chưa init
-    if (dataSource === 'local') {
-      if (typeof window === 'undefined') return defaultValue;
+    // 2. Nếu chưa có trong cache, cố gắng đọc từ LocalStorage bất kể dataSource là gì
+    // Vì ngay cả khi dùng Supabase, ta vẫn thường lưu một bản copy ở LocalStorage để load nhanh
+    if (typeof window !== 'undefined') {
       try {
         const item = localStorage.getItem(key);
         if (item) {
           const parsed = JSON.parse(item);
+          // Cập nhật lại cache để lần sau không phải parse tiếp
           inMemoryCache[key] = parsed;
           return parsed;
         }
       } catch (error) {
-        console.error(`Error reading key ${key} from storage`, error);
+        console.error(`[Storage] Error reading key ${key} from LocalStorage fallback`, error);
       }
     }
     
