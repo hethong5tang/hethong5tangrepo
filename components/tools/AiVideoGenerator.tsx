@@ -79,18 +79,21 @@ const AiVideoGenerator: React.FC<AiVideoGeneratorProps> = ({ tool, onNavigate })
 
     // UseMemo for active models
     const activeModels = useMemo(() => {
-        // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
+        const toolCat = tool.category || 'video';
+        
+        // Priority: Admin defined pricing for this specific tool
         const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
         if (toolSpecificModels.length > 0) {
-            const toolFiltered = ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && m.category === 'video');
+            const toolFiltered = ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && m.category === toolCat);
             if (toolFiltered.length > 0) return toolFiltered;
         }
 
-        const activeIds = settingsState.systemSettings.activeGeminiModels || [];
-        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id) && m.category === 'video');
-        const fallback = ALL_GEMINI_MODELS.filter(m => m.category === 'video');
+        const globalActiveIds = settingsState.systemSettings.activeGeminiModels || [];
+        const filtered = ALL_GEMINI_MODELS.filter(m => globalActiveIds.includes(m.id) && m.category === toolCat);
+        const fallback = ALL_GEMINI_MODELS.filter(m => m.category === toolCat);
+        
         return filtered.length > 0 ? filtered : (fallback.length > 0 ? [fallback[0]] : [ALL_GEMINI_MODELS[0]]);
-    }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
+    }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing, tool.category]);
 
     // Use correct key from environment
     const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
@@ -137,6 +140,10 @@ const AiVideoGenerator: React.FC<AiVideoGeneratorProps> = ({ tool, onNavigate })
     const freshUser = useMemo(() => loggedInUser ? findUserInTree(userState.allUsers, loggedInUser.id) : null, [userState.allUsers, loggedInUser]);
     const currentCredits = freshUser ? freshUser.creditBalance : 0;
     
+    const currentCost = useMemo(() => {
+        return tool.modelPricing?.[selectedModel] ?? tool.creditCost;
+    }, [tool.modelPricing, tool.creditCost, selectedModel]);
+
     // Dynamic Storage Key based on User ID
     const storageKey = useMemo(() => `tool_ai_video_gen_session_${loggedInUser?.id}`, [loggedInUser]);
 
@@ -293,7 +300,7 @@ const AiVideoGenerator: React.FC<AiVideoGeneratorProps> = ({ tool, onNavigate })
              if (mode === 'image' && !inputImage) { addToast('Vui lòng tải lên ảnh đầu vào.', 'error'); return; }
         }
 
-        const cost = tool.creditCost;
+        const cost = currentCost;
         if (currentCredits < cost) {
             addToast(`Không đủ Credit. Cần ${cost} Credit.`, 'error');
             return;
@@ -507,9 +514,14 @@ const AiVideoGenerator: React.FC<AiVideoGeneratorProps> = ({ tool, onNavigate })
                                 onChange={(e) => setSelectedModel(e.target.value)}
                                 className="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
                             >
-                                {activeModels.map(m => (
-                                    <option key={m.id} value={m.id}>{m.name}</option>
-                                ))}
+                                {activeModels.map(m => {
+                                    const modelPrice = tool.modelPricing?.[m.id] ?? tool.creditCost;
+                                    return (
+                                        <option key={m.id} value={m.id}>
+                                            {m.name} ({modelPrice} Credit)
+                                        </option>
+                                    );
+                                })}
                             </select>
                         </div>
                         
@@ -667,7 +679,7 @@ const AiVideoGenerator: React.FC<AiVideoGeneratorProps> = ({ tool, onNavigate })
                             <span className="text-slate-400">Chi phí ước tính:</span>
                             <span className="font-bold text-white flex items-center gap-1">
                                 <SparklesIcon className="h-4 w-4 text-yellow-400" />
-                                {tool.creditCost} Credit
+                                {currentCost} Credit
                             </span>
                         </div>
                         <button 

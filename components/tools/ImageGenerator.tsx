@@ -416,6 +416,13 @@ const ImageGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
     const freshUser = useMemo(() => loggedInUser ? findUserInTree(userState.allUsers, loggedInUser.id) : null, [userState.allUsers, loggedInUser]);
     const currentCredits = freshUser ? freshUser.creditBalance : 0;
 
+    const currentCost = useMemo(() => {
+        if (tool.modelPricing && tool.modelPricing[selectedModel] !== undefined) {
+            return tool.modelPricing[selectedModel];
+        }
+        return tool.creditCost || 10;
+    }, [tool.modelPricing, tool.creditCost, selectedModel]);
+    
     // Filtering & View States
     const [searchTerm, setSearchTerm] = useState('');
     const [gridCols, setGridCols] = useState<2 | 4 | 6>(4);
@@ -870,8 +877,13 @@ const ImageGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
             return;
         }
 
+        const modelToUse = params.selectedModel || 'gemini-2.5-flash-image';
+        const modelPrice = (tool.modelPricing && tool.modelPricing[modelToUse] !== undefined) 
+            ? tool.modelPricing[modelToUse] 
+            : (tool.creditCost || 10);
+
         // 1. Calculate Cost FIRST
-        const cost = params.selectedImage ? tool.creditCost : tool.creditCost * params.imageQuantity;
+        const cost = params.selectedImage ? modelPrice : modelPrice * params.imageQuantity;
 
         // 2. Get Fresh User
         const freshUser = findUserInTree(userState.allUsers, loggedInUser.id);
@@ -1267,7 +1279,7 @@ const ImageGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
         );
     };
 
-    const creditCost = selectedImage ? tool.creditCost : tool.creditCost * imageQuantity;
+    const creditCost = selectedImage ? currentCost : currentCost * imageQuantity;
 
     const allAspectRatios = useMemo(() => {
         const ratios = new Set(history.map(h => {

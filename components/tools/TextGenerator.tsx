@@ -385,6 +385,15 @@ const TextGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: string
 
     const activeToolkit = useMemo(() => MARKETING_TOOLKITS.find(t => t.id === activeToolkitId) || MARKETING_TOOLKITS[0], [activeToolkitId]);
     const activeFeature = useMemo(() => activeToolkit.features.find(f => f.id === activeFeatureId) || activeToolkit.features[0], [activeToolkit, activeFeatureId]);
+    
+    // Dynamic cost calculation based on selected model
+    const currentCost = useMemo(() => {
+        if (tool.modelPricing && tool.modelPricing[selectedModel] !== undefined) {
+            return tool.modelPricing[selectedModel];
+        }
+        return tool.creditCost || 10;
+    }, [tool.modelPricing, tool.creditCost, selectedModel]);
+
     const isTTS = activeFeature.id === 'text_to_speech';
     const showVoiceSettings = activeToolkit.id === 'audio';
 
@@ -507,14 +516,14 @@ const TextGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: string
         if (!loggedInUser) return;
         if (!isTTS && activeFeature.requiresProduct && !productName.trim()) { addToast('Nhập tên sản phẩm/thương hiệu.', 'error'); return; }
         if (!topic.trim()) { addToast('Nhập nội dung chi tiết.', 'error'); return; }
-        if (currentCredits < tool.creditCost) { addToast('Không đủ Credit.', 'error'); return; }
+        if (currentCredits < currentCost) { addToast('Không đủ Credit.', 'error'); return; }
 
         setIsGenerating(true);
         setResult('');
         setShowHistoryModal(false);
 
         try {
-            const creditResult = await handleUseToolCredit(loggedInUser.id, tool);
+            const creditResult = await handleUseToolCredit(loggedInUser.id, { ...tool, creditCost: currentCost });
             if (!creditResult.success) { setIsGenerating(false); return; }
 
             if (isTTS) {
@@ -1066,7 +1075,7 @@ const TextGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: string
                             className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all transform active:scale-95"
                         >
                             {isGenerating ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : (isTTS ? <SpeakerWaveIcon className="h-5 w-5" /> : <SparklesIcon className="h-5 w-5" />)}
-                            {isGenerating ? 'Đang xử lý...' : (isTTS ? `Chuyển giọng nói (${tool.creditCost} Credit)` : `Tạo nội dung (${tool.creditCost} Credit)`)}
+                            {isGenerating ? 'Đang xử lý...' : (isTTS ? `Chuyển giọng nói (${currentCost} Credit)` : `Tạo nội dung (${currentCost} Credit)`)}
                         </button>
                     </div>
                 </aside>

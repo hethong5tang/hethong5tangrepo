@@ -174,7 +174,14 @@ const AdCreatorTool: React.FC<AdCreatorToolProps> = ({ tool, onNavigate }) => {
             .sort((a, b) => new Date(b.creationTime).getTime() - new Date(a.creationTime).getTime());
     }, [loggedInUser]);
 
-    const totalCost = tool.creditCost * imageQuantity;
+    const currentCost = useMemo(() => {
+        if (tool.modelPricing && tool.modelPricing[selectedModel] !== undefined) {
+            return tool.modelPricing[selectedModel];
+        }
+        return tool.creditCost || 20; // Default for AdCreator if not set
+    }, [tool.modelPricing, tool.creditCost, selectedModel]);
+
+    const totalCost = currentCost * imageQuantity;
 
     const extractPromptFromImage = async (base64Image: string) => {
         setIsExtractingRef(true);

@@ -315,14 +315,22 @@ NHIỆM VỤ CỦA BẠN:
                     setCatalog(parsed.models);
                     if (parsed.usdRate) setUsdRate(parsed.usdRate);
 
+                    // Prepare updated settings
+                    const updatedSystemSettings = {
+                        ...settingsState.systemSettings,
+                        apiCatalog: parsed.models,
+                        apiUsdRate: parsed.usdRate || usdRate
+                    };
+
+                    // Update global settings
                     settingsDispatch({
                         type: 'UPDATE_SYSTEM_SETTINGS',
-                        payload: {
-                            ...settingsState.systemSettings,
-                            apiCatalog: parsed.models,
-                            apiUsdRate: parsed.usdRate || usdRate
-                        }
+                        payload: updatedSystemSettings
                     });
+                    
+                    // Update local state to reflect UI immediately
+                    setCatalog(parsed.models);
+                    if (parsed.usdRate) setUsdRate(parsed.usdRate);
                     
                     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
                     if (groundingChunks) {

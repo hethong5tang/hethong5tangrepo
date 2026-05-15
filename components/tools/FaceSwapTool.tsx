@@ -126,6 +126,10 @@ const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
     const freshUser = useMemo(() => loggedInUser ? findUserInTree(userState.allUsers, loggedInUser.id) : null, [userState.allUsers, loggedInUser]);
     const currentCredits = freshUser ? freshUser.creditBalance : 0;
 
+    const currentCost = useMemo(() => {
+        return tool.modelPricing?.[selectedModel] ?? tool.creditCost;
+    }, [tool.modelPricing, tool.creditCost, selectedModel]);
+
     // History
     const historyItems = useMemo(() => {
         if (!loggedInUser?.generationHistory) return [];
@@ -642,7 +646,7 @@ const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
              return;
         }
 
-        const cost = tool.creditCost;
+        const cost = currentCost;
         if (currentCredits < cost) {
             addToast('Không đủ Credit.', 'error');
             return;
@@ -938,9 +942,14 @@ const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
                                 onChange={(e) => setSelectedModel(e.target.value)}
                                 className="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
                             >
-                                {activeModels.map(m => (
-                                    <option key={m.id} value={m.id}>{m.name}</option>
-                                ))}
+                                {activeModels.map(m => {
+                                    const modelPrice = tool.modelPricing?.[m.id] ?? tool.creditCost;
+                                    return (
+                                        <option key={m.id} value={m.id}>
+                                            {m.name} ({modelPrice} Credit)
+                                        </option>
+                                    );
+                                })}
                             </select>
                         </div>
 
@@ -1062,7 +1071,7 @@ const FaceSwapTool: React.FC<FaceSwapToolProps> = ({ tool, onNavigate }) => {
                             <div className="flex justify-between items-center text-sm mb-3">
                                 <span className="text-slate-400">Chi phí:</span>
                                 <span className="font-bold text-white flex items-center gap-1">
-                                    <SparklesIcon className="h-4 w-4 text-yellow-400" /> {tool.creditCost} Credit
+                                    <SparklesIcon className="h-4 w-4 text-yellow-400" /> {currentCost} Credit
                                 </span>
                             </div>
                             <button 

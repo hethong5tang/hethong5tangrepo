@@ -64,10 +64,23 @@ export const SettingsContext = createContext<{
 
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [settingsState, settingsDispatch] = useReducer(settingsReducer, initialState, init);
+  const [isInitialized, setIsInitialized] = React.useState(false);
+  const isFirstRun = React.useRef(true);
   
   useEffect(() => {
-      storageService.set(STORAGE_KEYS.SETTINGS, settingsState);
-  }, [settingsState]);
+      // Mark as initialized once the component has mounted and init function has run
+      if (isFirstRun.current) {
+          isFirstRun.current = false;
+          // Small delay to ensure storageService.initializeStorage is fully settled in all contexts
+          setTimeout(() => setIsInitialized(true), 100);
+          return;
+      }
+      
+      // ONLY save if we are initialized to prevent overwriting with mock data during boot
+      if (isInitialized) {
+        storageService.set(STORAGE_KEYS.SETTINGS, settingsState);
+      }
+  }, [settingsState, isInitialized]);
   
   const value = {
     settingsState,

@@ -10,7 +10,8 @@ import {
     ArrowUpTrayIcon, CodeBracketIcon, ComputerDesktopIcon, PhotoIcon, VideoIcon, 
     FaceSmileIcon, BanknotesIcon, DocumentArrowDownIcon, ClockIcon, ArrowsUpDownIcon,
     Bars3Icon, ChevronUpIcon, ChevronDownIcon, BoltIcon, DocumentTextIcon,
-    ExclamationTriangleIcon, MagnifyingGlassIcon, AdjustmentsHorizontalIcon, CheckCircleIcon
+    ExclamationTriangleIcon, MagnifyingGlassIcon, AdjustmentsHorizontalIcon, CheckCircleIcon,
+    SpeakerWaveIcon
 } from '../../components/Icons';
 import { useToast } from '../../components/ToastProvider';
 import FormattedNumberInput from '../../components/FormattedNumberInput';
@@ -18,22 +19,8 @@ import { ensureSupportedImageFormat } from '../../utils/imageProcessing';
 
 import { ALL_GEMINI_MODELS } from '../../constants';
 
-const USD_RATE = 25500;
+// Constants removed as they are now dynamic from systemSettings
 const CREDIT_VAL = 1000;
-
-// Mapping prices for model calculation markup
-const API_BASE_PRICES: Record<string, number> = {
-    'gemini-1.5-flash': 0.0001,
-    'gemini-1.5-pro': 0.0035,
-    'gemini-2.0-flash-exp': 0,
-    'gemini-2.1-flash': 0.0001,
-    'gemini-2.5-flash': 0.0001,
-    'gemini-3-flash-preview': 0.0001,
-    'gemini-2.5-flash-image': 0.03,
-    'gemini-3-pro-image-preview': 0.07,
-    'veo-3.1-fast-generate-preview': 0.50,
-    'gemini-2.5-flash-preview-tts': 0.01,
-};
 
 const AI_MODEL_OPTIONS = ALL_GEMINI_MODELS.map(m => ({
     ...m,
@@ -43,7 +30,7 @@ const AI_MODEL_OPTIONS = ALL_GEMINI_MODELS.map(m => ({
 const iconMap: Record<string, React.FC<{className?: string}>> = {
     SparklesIcon, UserCircleIcon, ChartBarIcon, CurrencyDollarIcon, PuzzlePieceIcon, 
     CpuChipIcon, ComputerDesktopIcon, PhotoIcon, VideoIcon, FaceSmileIcon, 
-    PencilSquareIcon, DocumentTextIcon
+    PencilSquareIcon, DocumentTextIcon, SpeakerWaveIcon
 };
 
 const iconNames = Object.keys(iconMap);
@@ -53,16 +40,31 @@ const EditModal: React.FC<{
     onClose: () => void;
     onSave: (item: IntegrationTool) => void;
     item: Partial<IntegrationTool> | null;
-}> = ({ isOpen, onClose, onSave, item }) => {
+    systemSettings: SystemSettings;
+}> = ({ isOpen, onClose, onSave, item, systemSettings }) => {
     const [formData, setFormData] = useState<Partial<IntegrationTool>>({});
     const [searchModel, setSearchModel] = useState('');
     const [filterCat, setFilterCat] = useState('all');
     const [markupPercent, setMarkupPercent] = useState<number>(0);
     const iconInputRef = useRef<HTMLInputElement>(null);
 
-    React.useEffect(() => {
+    const { apiCatalog = [], apiUsdRate = 25500 } = systemSettings;
+
+    useEffect(() => {
         if (isOpen) {
-            setFormData(item || { icon: 'PuzzlePieceIcon', title: '', description: '', creditCost: 10, modelPricing: {} });
+            setFormData(item || { icon: 'PuzzlePieceIcon', title: '', description: '', modelPricing: {}, category: 'image' });
+            
+            if (item?.category) {
+                setFilterCat(item.category);
+            } else {
+                // Auto-filter based on tool type if category is missing
+                const id = (item?.id || '').toLowerCase();
+                const title = (item?.title || '').toLowerCase();
+                if (id.includes('video') || title.includes('video')) setFilterCat('video');
+                else if (id.includes('text') || id.includes('writer') || id.includes('ocr') || title.includes('văn bản') || title.includes('viết') || title.includes('nội dung')) setFilterCat('text');
+                else if (id.includes('image') || title.includes('ảnh') || title.includes('hình')) setFilterCat('image');
+                else setFilterCat('all');
+            }
         }
     }, [isOpen, item]);
 
@@ -83,22 +85,29 @@ const EditModal: React.FC<{
     const handleApplyMarkup = () => {
         if (markupPercent === 0) return;
         const newPricing = { ...(formData.modelPricing || {}) };
+        const toolCat = formData.category || filterCat;
         AI_MODEL_OPTIONS.forEach(model => {
-            const baseCostVnd = (API_BASE_PRICES[model.id] || 0) * USD_RATE;
-            const targetRevenue = baseCostVnd * (1 + markupPercent / 100);
-            newPricing[model.id] = Math.ceil(targetRevenue / CREDIT_VAL);
+            if (model.category === toolCat || toolCat === 'all') {
+                const catalogItem = apiCatalog.find((c: any) => c.id === model.id);
+                const baseCostVnd = (catalogItem?.basePriceUsd || 0) * apiUsdRate;
+                if (baseCostVnd > 0) {
+                    const targetRevenue = baseCostVnd * (1 + markupPercent / 100);
+                    newPricing[model.id] = Math.ceil(targetRevenue / CREDIT_VAL);
+                }
+            }
         });
         setFormData(p => ({ ...p, modelPricing: newPricing }));
         setMarkupPercent(0);
     };
 
     const filteredModels = useMemo(() => {
+        const toolCat = formData.category || filterCat;
         return AI_MODEL_OPTIONS.filter(m => {
             const matchSearch = m.name.toLowerCase().includes(searchModel.toLowerCase());
-            const matchCat = filterCat === 'all' || m.category === filterCat;
+            const matchCat = toolCat === 'all' || m.category === toolCat;
             return matchSearch && matchCat;
         });
-    }, [searchModel, filterCat]);
+    }, [searchModel, filterCat, formData.category]);
 
     const inputClasses = "w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm transition-all";
 
@@ -136,8 +145,18 @@ const EditModal: React.FC<{
                         <textarea placeholder="Mô tả công cụ..." value={formData.description || ''} onChange={e => setFormData(p => ({ ...p, description: e.target.value }))} rows={4} className={inputClasses} />
                         <div className="flex gap-4">
                             <div className="flex-1">
-                                <span className="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Giá mặc định (Credit)</span>
-                                <FormattedNumberInput value={formData.creditCost || 0} onChange={v => setFormData(p => ({ ...p, creditCost: v }))} className={inputClasses} />
+                                <span className="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Loại Công Cụ</span>
+                                <select value={formData.category || 'image'} onChange={e => {
+                                    const newCat = e.target.value;
+                                    setFormData(p => ({ ...p, category: newCat }));
+                                    setFilterCat(newCat);
+                                }} className={`${inputClasses} appearance-none font-bold`}>
+                                    <option value="image">Hình ảnh</option>
+                                    <option value="text">Văn bản</option>
+                                    <option value="video">Video</option>
+                                    <option value="audio">Âm thanh</option>
+                                    <option value="all">Khác (Tất cả model)</option>
+                                </select>
                             </div>
                             <div className="flex-1">
                                 <span className="text-[10px] font-bold text-slate-500 block mb-1 uppercase">Icon Mặc định</span>
@@ -180,7 +199,7 @@ const EditModal: React.FC<{
                                                 setFormData(p => ({...p, subTools: newSubTools}));
                                             }} className={`${inputClasses} flex-1 !py-2 !text-xs`} />
                                             <div className="w-24">
-                                                <FormattedNumberInput value={st.creditCost} onChange={v => {
+                                                <FormattedNumberInput value={st.creditCost || 0} onChange={v => {
                                                     const newSubTools = [...formData.subTools!];
                                                     newSubTools[index].creditCost = v;
                                                     setFormData(p => ({...p, subTools: newSubTools}));
@@ -198,15 +217,15 @@ const EditModal: React.FC<{
                 <div className="lg:col-span-8 flex flex-col bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
                     <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-4">
                         <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase flex items-center gap-2 tracking-wider">
-                                <BoltIcon className="h-4 w-4" /> 2. Model Pricing Marketplace (Chỉ tích hợp)
+                            <h4 className="text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase flex items-center gap-2 tracking-wider text-balance">
+                                <BoltIcon className="h-4 w-4" /> 2. Model Pricing (Bắt buộc thiết lập)
                             </h4>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 shrink-0">
                                 <div className="relative">
                                     <input type="number" placeholder="Lãi %" value={markupPercent || ''} onChange={e => setMarkupPercent(Number(e.target.value))} className="w-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-indigo-500" />
                                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">%</span>
                                 </div>
-                                <button onClick={handleApplyMarkup} className="text-[10px] font-bold bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">Tự tính giá bán</button>
+                                <button onClick={handleApplyMarkup} className="text-[10px] font-bold bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm whitespace-nowrap">Tự tính giá bán</button>
                             </div>
                         </div>
 
@@ -228,47 +247,59 @@ const EditModal: React.FC<{
 
                     {/* Danh sách Model */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin">
+                        <p className="text-[10px] text-slate-400 italic px-2 mb-2">Nhấn dấu tích xanh để mở model và đặt giá. Model nào không tích sẽ không xuất hiện trong công cụ của User.</p>
                         {filteredModels.length > 0 ? filteredModels.map(model => {
                             const hasPrice = formData.modelPricing?.hasOwnProperty(model.id);
-                            const userPrice = hasPrice ? formData.modelPricing![model.id] : (formData.creditCost || 0);
-                            const baseCostVnd = (API_BASE_PRICES[model.id] || 0) * USD_RATE;
+                            const userPrice = hasPrice ? formData.modelPricing![model.id] : 0;
+                            
+                            const catalogItem = apiCatalog.find((c: any) => c.id === model.id);
+                            const baseCostVnd = (catalogItem?.basePriceUsd || 0) * apiUsdRate;
                             const profitVnd = (userPrice * CREDIT_VAL) - baseCostVnd;
 
                             return (
-                                <div key={model.id} className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-between gap-4 transition-all hover:border-indigo-200 dark:hover:border-indigo-500/30">
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">{model.name}</span>
-                                            <span className="text-[8px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded uppercase font-black">{model.provider}</span>
-                                        </div>
-                                        <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">Gốc: ~{Math.round(baseCostVnd).toLocaleString()}đ</p>
-                                    </div>
-                                    
-                                    <div className="flex items-center gap-4">
-                                        <div className="text-right">
+                                <div key={model.id} className={`p-4 rounded-xl border transition-all ${hasPrice ? 'bg-white dark:bg-slate-800 border-indigo-200 dark:border-indigo-500/50 shadow-md' : 'bg-slate-50/50 dark:bg-slate-900/10 border-slate-100 dark:border-slate-800 opacity-60'}`}>
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase">Giá bán:</span>
-                                                <FormattedNumberInput 
-                                                    value={userPrice} 
-                                                    onChange={v => setFormData(p => ({ ...p, modelPricing: { ...p.modelPricing, [model.id]: v } }))} 
-                                                    className="w-16 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-indigo-600 dark:text-indigo-400 font-black text-right outline-none focus:ring-1 focus:ring-indigo-500" 
-                                                />
+                                                <span className={`font-bold text-xs truncate ${hasPrice ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400'}`}>{model.name}</span>
+                                                <span className="text-[8px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded uppercase font-black">{model.provider}</span>
                                             </div>
-                                            <div className={`text-[10px] font-bold mt-1 ${profitVnd < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                                                {profitVnd < 0 ? `LỖ: ${Math.round(Math.abs(profitVnd)).toLocaleString()}đ` : `LÃI: +${Math.round(profitVnd).toLocaleString()}đ`}
-                                            </div>
+                                            <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">Giá gốc: ~{Math.round(baseCostVnd).toLocaleString()}đ ({catalogItem?.unit || 'lần'})</p>
                                         </div>
-                                        <button 
-                                            onClick={() => {
-                                                const newPricing = { ...formData.modelPricing };
-                                                if (hasPrice) delete newPricing[model.id];
-                                                else newPricing[model.id] = formData.creditCost || 0;
-                                                setFormData(p => ({ ...p, modelPricing: newPricing }));
-                                            }}
-                                            className={`p-2 rounded-full transition-colors ${hasPrice ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-300 dark:text-slate-600 hover:text-indigo-400'}`}
-                                        >
-                                            <CheckCircleIcon className="h-5 w-5" />
-                                        </button>
+                                        
+                                        <div className="flex items-center gap-4">
+                                            {hasPrice && (
+                                                <div className="text-right">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase">Giá bán:</span>
+                                                        <FormattedNumberInput 
+                                                            value={userPrice} 
+                                                            onChange={v => setFormData(p => ({ ...p, modelPricing: { ...p.modelPricing, [model.id]: v } }))} 
+                                                            className="w-16 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-indigo-600 dark:text-indigo-400 font-black text-right outline-none focus:ring-1 focus:ring-indigo-500" 
+                                                        />
+                                                    </div>
+                                                    <div className={`text-[10px] font-bold mt-1 ${profitVnd < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                                        {profitVnd < 0 ? `LỖ: ${Math.round(Math.abs(profitVnd)).toLocaleString()}đ` : `LÃI: +${Math.round(profitVnd).toLocaleString()}đ`}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <button 
+                                                type="button"
+                                                onClick={() => {
+                                                    const newPricing = { ...formData.modelPricing };
+                                                    if (hasPrice) delete newPricing[model.id];
+                                                    else {
+                                                        // Default to markup recommended price if possible
+                                                        const recPrice = Math.ceil((baseCostVnd * 1.5) / CREDIT_VAL) || 10;
+                                                        newPricing[model.id] = recPrice;
+                                                    }
+                                                    setFormData(p => ({ ...p, modelPricing: newPricing }));
+                                                }}
+                                                className={`p-2 rounded-full transition-colors ${hasPrice ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-700 text-slate-300 dark:text-slate-600 hover:text-indigo-400'}`}
+                                            >
+                                                <CheckCircleIcon className="h-5 w-5" />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -297,12 +328,23 @@ const IntegrationsManagementPage: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<Partial<IntegrationTool> | null>(null);
 
-    const [activeTab, setActiveTab] = useState<'image' | 'text' | 'video'>('image');
+    const [activeTab, setActiveTab] = useState<'image' | 'text' | 'video' | 'audio'>('image');
 
     const handleSave = (itemToSave: IntegrationTool) => {
         let newTools: IntegrationTool[];
-        if (itemToSave.id) newTools = integrationTools.map(t => t.id === itemToSave.id ? itemToSave : t);
-        else newTools = [...integrationTools, { ...itemToSave, id: `tool_${Date.now()}` }];
+        // Ensure category is set
+        const finalTool = { ...itemToSave };
+        if (!finalTool.category) {
+            const id = (finalTool.id || '').toLowerCase();
+            const title = (finalTool.title || '').toLowerCase();
+            if (id.includes('video') || title.includes('video')) finalTool.category = 'video';
+            else if (id.includes('text') || id.includes('writer') || id.includes('ocr') || title.includes('văn bản') || title.includes('viết')) finalTool.category = 'text';
+            else if (id.includes('audio') || title.includes('âm thanh')) finalTool.category = 'audio';
+            else finalTool.category = 'image';
+        }
+
+        if (itemToSave.id) newTools = integrationTools.map(t => t.id === itemToSave.id ? finalTool : t);
+        else newTools = [...integrationTools, { ...finalTool, id: `tool_${Date.now()}` }];
         handleUpdateSystemSettings({ ...settingsState.systemSettings, integrationTools: newTools });
         setIsModalOpen(false);
     };
@@ -311,27 +353,24 @@ const IntegrationsManagementPage: React.FC = () => {
         const textTools: IntegrationTool[] = [];
         const videoTools: IntegrationTool[] = [];
         const imageTools: IntegrationTool[] = [];
+        const audioTools: IntegrationTool[] = [];
         
         integrationTools.forEach(t => {
-            const id = t.id.toLowerCase();
-            const title = t.title.toLowerCase();
-            
-            if (id.includes('video') || title.includes('video')) {
-                videoTools.push(t);
-            } else if (id.includes('text') || id.includes('writer') || id.includes('ocr') || title.includes('văn bản') || title.includes('viết') || title.includes('nội dung')) {
-                textTools.push(t);
-            } else {
-                imageTools.push(t);
-            }
+            const cat = t.category || 'image';
+            if (cat === 'video') videoTools.push(t);
+            else if (cat === 'text') textTools.push(t);
+            else if (cat === 'audio') audioTools.push(t);
+            else imageTools.push(t);
         });
         
-        return { text: textTools, video: videoTools, image: imageTools };
+        return { text: textTools, video: videoTools, image: imageTools, audio: audioTools };
     }, [integrationTools]);
 
     const tabs = [
         { id: 'image', label: 'Hình ảnh', icon: PhotoIcon, color: 'from-pink-500 to-rose-500', count: groupedTools.image.length },
         { id: 'text', label: 'Văn bản', icon: DocumentTextIcon, color: 'from-blue-500 to-indigo-500', count: groupedTools.text.length },
         { id: 'video', label: 'Video', icon: VideoIcon, color: 'from-purple-500 to-violet-500', count: groupedTools.video.length },
+        { id: 'audio', label: 'Âm thanh', icon: SpeakerWaveIcon, color: 'from-amber-500 to-yellow-500', count: groupedTools.audio.length },
     ] as const;
 
     const renderToolCard = (tool: IntegrationTool) => {
@@ -357,7 +396,6 @@ const IntegrationsManagementPage: React.FC = () => {
                 <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-700/50 flex-shrink-0">
                     <div className="flex justify-between items-center mb-3">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bảng giá Model ({Object.keys(tool.modelPricing || {}).length})</p>
-                        <span className="text-[9px] bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 px-1.5 py-0.5 rounded font-bold">{tool.creditCost} P mặc định</span>
                     </div>
                     <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
                         {Object.entries(tool.modelPricing || {}).slice(0, 3).map(([mId, price]) => (
@@ -400,7 +438,7 @@ const IntegrationsManagementPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {isModalOpen && <EditModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSave} item={editingItem} />}
+            {isModalOpen && <EditModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSave} item={editingItem} systemSettings={settingsState.systemSettings} />}
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
                 <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-full md:w-auto">

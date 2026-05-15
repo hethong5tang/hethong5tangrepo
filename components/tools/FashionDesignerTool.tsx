@@ -196,18 +196,21 @@ const FashionDesignerTool: React.FC<FashionToolProps> = ({ tool, onNavigate }) =
 
     // Custom useMemo for models
     const activeModels = useMemo(() => {
-        // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
+        const toolCat = tool.category || 'image';
+        
+        // Priority: Admin defined pricing for this specific tool
         const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
         if (toolSpecificModels.length > 0) {
-            const toolFiltered = ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && m.category === 'image');
+            const toolFiltered = ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && m.category === toolCat);
             if (toolFiltered.length > 0) return toolFiltered;
         }
 
-        const activeIds = settingsState.systemSettings.activeGeminiModels || [];
-        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id) && m.category === 'image');
-        const fallback = ALL_GEMINI_MODELS.filter(m => m.category === 'image');
+        const globalActiveIds = settingsState.systemSettings.activeGeminiModels || [];
+        const filtered = ALL_GEMINI_MODELS.filter(m => globalActiveIds.includes(m.id) && m.category === toolCat);
+        const fallback = ALL_GEMINI_MODELS.filter(m => m.category === toolCat);
+        
         return filtered.length > 0 ? filtered : (fallback.length > 0 ? [fallback[0]] : [ALL_GEMINI_MODELS[0]]);
-    }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
+    }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing, tool.category]);
 
     // Use correct key from environment
     const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
@@ -235,6 +238,12 @@ const FashionDesignerTool: React.FC<FashionToolProps> = ({ tool, onNavigate }) =
 
     const [selectedModel, setSelectedModel] = useState<string>(activeModels[0].id);
 
+    const freshUser = useMemo(() => loggedInUser ? findUserInTree(userState.allUsers, loggedInUser.id) : null, [userState.allUsers, loggedInUser]);
+    const currentCredits = freshUser ? freshUser.creditBalance : 0;
+    const currentCost = useMemo(() => {
+        return tool.modelPricing?.[selectedModel] ?? tool.creditCost;
+    }, [tool.modelPricing, tool.creditCost, selectedModel]);
+
     useEffect(() => {
         if (!activeModels.some(m => m.id === selectedModel)) {
             setSelectedModel(activeModels[0].id);
@@ -252,8 +261,6 @@ const FashionDesignerTool: React.FC<FashionToolProps> = ({ tool, onNavigate }) =
     const [showHistoryModal, setShowHistoryModal] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const freshUser = useMemo(() => loggedInUser ? findUserInTree(userState.allUsers, loggedInUser.id) : null, [userState.allUsers, loggedInUser]);
-    const currentCredits = freshUser ? freshUser.creditBalance : 0;
 
     const historyItems = useMemo(() => {
         if (!loggedInUser?.generationHistory) return [];
@@ -390,7 +397,7 @@ const FashionDesignerTool: React.FC<FashionToolProps> = ({ tool, onNavigate }) =
     const handleGenerate = async () => {
         if (isProcessing || !loggedInUser) return;
         
-        const cost = tool.creditCost;
+        const cost = currentCost;
         if (currentCredits < cost) {
             addToast('Không đủ Credit.', 'error');
             return;
@@ -635,9 +642,14 @@ const FashionDesignerTool: React.FC<FashionToolProps> = ({ tool, onNavigate }) =
                                 onChange={(e) => setSelectedModel(e.target.value)}
                                 className="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
                             >
-                                {activeModels.map(m => (
-                                    <option key={m.id} value={m.id}>{m.name}</option>
-                                ))}
+                                {activeModels.map(m => {
+                                    const modelPrice = tool.modelPricing?.[m.id] ?? tool.creditCost;
+                                    return (
+                                        <option key={m.id} value={m.id}>
+                                            {m.name} ({modelPrice} Credit)
+                                        </option>
+                                    );
+                                })}
                             </select>
                         </div>
 
@@ -794,7 +806,7 @@ const FashionDesignerTool: React.FC<FashionToolProps> = ({ tool, onNavigate }) =
                         <div className="pt-4 border-t border-slate-800 mt-auto">
                              <div className="flex justify-between items-center mb-3 text-xs">
                                 <span className="text-slate-400">Chi phí:</span>
-                                <span className="font-bold text-white flex items-center gap-1"><SparklesIcon className="h-3 w-3 text-yellow-400"/> {tool.creditCost} Credit</span>
+                                <span className="font-bold text-white flex items-center gap-1"><SparklesIcon className="h-3 w-3 text-yellow-400"/> {currentCost} Credit</span>
                             </div>
                             <button 
                                 onClick={handleGenerate}

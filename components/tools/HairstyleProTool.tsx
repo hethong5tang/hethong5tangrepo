@@ -146,18 +146,25 @@ const HairstyleProTool: React.FC<HairstyleProToolProps> = ({ tool, onNavigate })
 
     // Custom useMemo for models
     const activeModels = useMemo(() => {
-        // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
+        // Lấy category của tool (mặc định là image cho công cụ này)
+        const toolCat = tool.category || 'image';
+        
+        // Priority: Admin defined pricing for this specific tool
         const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
         if (toolSpecificModels.length > 0) {
-            const toolFiltered = ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && m.category === 'image');
+            // Filter ALL_GEMINI_MODELS by the specific IDs allowed for this tool
+            const toolFiltered = ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && m.category === toolCat);
             if (toolFiltered.length > 0) return toolFiltered;
         }
 
-        const activeIds = settingsState.systemSettings.activeGeminiModels || [];
-        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id) && m.category === 'image');
-        const fallback = ALL_GEMINI_MODELS.filter(m => m.category === 'image');
+        // Fallback: If no modelPricing is defined, we show all active models of correct category
+        // But the user policy says "remove default pricing", so we should encourage setting modelPricing
+        const globalActiveIds = settingsState.systemSettings.activeGeminiModels || [];
+        const filtered = ALL_GEMINI_MODELS.filter(m => globalActiveIds.includes(m.id) && m.category === toolCat);
+        const fallback = ALL_GEMINI_MODELS.filter(m => m.category === toolCat);
+        
         return filtered.length > 0 ? filtered : (fallback.length > 0 ? [fallback[0]] : [ALL_GEMINI_MODELS[0]]);
-    }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
+    }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing, tool.category]);
 
     // State
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -201,9 +208,16 @@ const HairstyleProTool: React.FC<HairstyleProToolProps> = ({ tool, onNavigate })
     const availableStyles = gender === 'male' ? MALE_HAIRSTYLES : FEMALE_HAIRSTYLES;
     
     // Cost calculation
+    const currentCost = useMemo(() => {
+        if (tool.modelPricing && tool.modelPricing[selectedModel] !== undefined) {
+            return tool.modelPricing[selectedModel];
+        }
+        return tool.creditCost || 10;
+    }, [tool.modelPricing, tool.creditCost, selectedModel]);
+
     const totalCost = mode === 'presets' 
-        ? selectedStyles.length * tool.creditCost 
-        : tool.creditCost * 2;
+        ? selectedStyles.length * currentCost 
+        : currentCost * 2;
 
     // --- LOAD HISTORY ---
     useEffect(() => {
@@ -584,7 +598,7 @@ const HairstyleProTool: React.FC<HairstyleProToolProps> = ({ tool, onNavigate })
         let actualCost = totalCost;
 
         if (failedCount > 0) {
-            const costPerImage = tool.creditCost;
+            const costPerImage = currentCost;
             const refundAmount = failedCount * costPerImage;
             actualCost -= refundAmount;
             

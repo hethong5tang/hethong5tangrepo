@@ -147,7 +147,12 @@ const InteriorDesignTool: React.FC<InteriorDesignToolProps> = ({ tool, onNavigat
 
     const freshUser = useMemo(() => loggedInUser ? findUserInTree(userState.allUsers, loggedInUser.id) : null, [userState.allUsers, loggedInUser]);
     const currentCredits = freshUser ? freshUser.creditBalance : 0;
-    const totalCost = tool.creditCost * imageQuantity;
+    
+    const currentCost = useMemo(() => {
+        return tool.modelPricing?.[selectedModel] ?? tool.creditCost;
+    }, [tool.modelPricing, tool.creditCost, selectedModel]);
+
+    const totalCost = currentCost * imageQuantity;
 
     // History
     const historyItems = useMemo(() => {
@@ -506,9 +511,14 @@ const InteriorDesignTool: React.FC<InteriorDesignToolProps> = ({ tool, onNavigat
                                 onChange={(e) => setSelectedModel(e.target.value)}
                                 className="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
                             >
-                                {activeModels.map(m => (
-                                    <option key={m.id} value={m.id}>{m.name}</option>
-                                ))}
+                                {activeModels.map(m => {
+                                    const modelPrice = tool.modelPricing?.[m.id] ?? tool.creditCost;
+                                    return (
+                                        <option key={m.id} value={m.id}>
+                                            {m.name} ({modelPrice} Credit)
+                                        </option>
+                                    );
+                                })}
                             </select>
                         </div>
 

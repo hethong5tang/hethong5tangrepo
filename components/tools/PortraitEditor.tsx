@@ -438,7 +438,14 @@ const PortraitEditor: React.FC<{ tool: IntegrationTool, onNavigate: (page: strin
     const freshUser = useMemo(() => loggedInUser ? findUserInTree(userState.allUsers, loggedInUser.id) : null, [userState.allUsers, loggedInUser]);
     const currentCredits = freshUser ? freshUser.creditBalance : 0;
     
-    const totalCost = tool.creditCost * imageQuantity;
+    const currentCost = useMemo(() => {
+        if (tool.modelPricing && tool.modelPricing[selectedModel] !== undefined) {
+            return tool.modelPricing[selectedModel];
+        }
+        return tool.creditCost || 10;
+    }, [tool.modelPricing, tool.creditCost, selectedModel]);
+
+    const totalCost = currentCost * imageQuantity;
 
     // History
     const historyItems = useMemo(() => {
