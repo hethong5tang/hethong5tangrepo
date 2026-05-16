@@ -14,16 +14,37 @@ export const STORAGE_KEYS = {
 };
 
 // Khởi tạo Adapter dựa trên môi trường
-const isSupabaseConfigured = !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+const isSupabaseConfigured = !!(
+    (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_URL.length > 10) && 
+    (import.meta.env.VITE_SUPABASE_ANON_KEY && import.meta.env.VITE_SUPABASE_ANON_KEY.length > 20)
+);
+
+const isDevelopment = import.meta.env.DEV;
 const isLocalhost = typeof window !== 'undefined' && 
                    (window.location.hostname === 'localhost' || 
                     window.location.hostname === '127.0.0.1' ||
-                    window.location.hostname.includes('ais-dev')); // AI Studio Dev env
+                    window.location.hostname.includes('ais-dev') ||
+                    window.location.hostname.includes('stackblitz'));
 
-// Ưu tiên Supabase nếu đã cấu hình và không phải môi trường local (trừ khi ép buộc qua VITE_DATA_SOURCE)
-const dataSource = (isSupabaseConfigured && !isLocalhost) 
-    ? 'supabase' 
-    : (import.meta.env.VITE_DATA_SOURCE || 'local');
+// CHẾ ĐỘ HOẠT ĐỘNG
+let dataSource: 'supabase' | 'local' = 'local';
+
+if (isSupabaseConfigured) {
+    // Nếu là Prod hoặc Shared App (không phải localhost/dev) -> Ưu tiên Supabase
+    if (!isDevelopment && !isLocalhost) {
+        dataSource = 'supabase';
+    } else {
+        // Ở môi trường Dev, chỉ dùng Supabase nếu được yêu cầu cụ thể
+        dataSource = import.meta.env.VITE_DATA_SOURCE === 'supabase' ? 'supabase' : 'local';
+    }
+}
+
+// Global debug flag
+if (typeof window !== 'undefined') {
+    (window as any).__DATA_SOURCE__ = dataSource;
+    console.log(`%c[Database System] Active Mode: ${dataSource.toUpperCase()}`, 
+        `color: white; background: ${dataSource === 'supabase' ? '#3ecf8e' : '#3498db'}; padding: 4px 8px; border-radius: 4px; font-weight: bold;`);
+}
 
 export const dataAdapter: IDataAdapter = 
   dataSource === 'supabase' 
