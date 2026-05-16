@@ -16,34 +16,36 @@ export const STORAGE_KEYS = {
 // Khởi tạo Adapter dựa trên môi trường
 const isSupabaseConfigured = !!(
     (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_URL.length > 10) && 
-    (import.meta.env.VITE_SUPABASE_ANON_KEY && import.meta.env.VITE_SUPABASE_ANON_KEY.length > 20)
+    (import.meta.env.VITE_SUPABASE_ANON_KEY && import.meta.env.VITE_SUPABASE_ANON_KEY.length > 10)
 );
 
-const isDevelopment = import.meta.env.DEV;
 const isLocalhost = typeof window !== 'undefined' && 
                    (window.location.hostname === 'localhost' || 
-                    window.location.hostname === '127.0.0.1' ||
-                    window.location.hostname.includes('ais-dev') ||
-                    window.location.hostname.includes('stackblitz'));
+                    window.location.hostname === '127.0.0.1');
 
-// CHẾ ĐỘ HOẠT ĐỘNG
+// CHẾ ĐỘ HOẠT ĐỘNG:
+// 1. Luôn ưu tiên dùng Supabase nếu có Config và KHÔNG phải ở máy cá nhân (localhost)
+// 2. Chấp nhận sử dụng Supabase trên cả domain .vercel.app và .asia-southeast1.run.app (Shared App)
 let dataSource: 'supabase' | 'local' = 'local';
 
 if (isSupabaseConfigured) {
-    // Nếu là Prod hoặc Shared App (không phải localhost/dev) -> Ưu tiên Supabase
-    if (!isDevelopment && !isLocalhost) {
+    if (!isLocalhost) {
         dataSource = 'supabase';
     } else {
-        // Ở môi trường Dev, chỉ dùng Supabase nếu được yêu cầu cụ thể
+        // Ở máy local, chỉ dùng Supabase nếu được yêu cầu qua Env
         dataSource = import.meta.env.VITE_DATA_SOURCE === 'supabase' ? 'supabase' : 'local';
     }
 }
 
-// Global debug flag
+// Global debug flag để kiểm tra trạng thái trong Console (F12)
 if (typeof window !== 'undefined') {
     (window as any).__DATA_SOURCE__ = dataSource;
     console.log(`%c[Database System] Active Mode: ${dataSource.toUpperCase()}`, 
         `color: white; background: ${dataSource === 'supabase' ? '#3ecf8e' : '#3498db'}; padding: 4px 8px; border-radius: 4px; font-weight: bold;`);
+    
+    if (dataSource === 'supabase') {
+        console.log(`[Database] Connecting to: ${import.meta.env.VITE_SUPABASE_URL}`);
+    }
 }
 
 export const dataAdapter: IDataAdapter = 
@@ -133,15 +135,16 @@ export const storageService = {
     
     // Ghi bất đồng bộ xuống data adapter (fire and forget)
     dataAdapter.set(key, value).catch(err => {
-       console.error(`[Storage] Async write failed for key ${key}`, err);
+       console.error(`[Storage Error] Không thể lưu key "${key}" vào ${dataSource}:`, err);
+       alert(`Lỗi đồng bộ Database: Dữ liệu của bạn có thể chỉ đang được lưu tạm trên máy này. Hãy kiểm tra kết nối Supabase.`);
     });
     
-    // Double save to LocalStorage cho LocalAdapter nếu an toàn
-    if (dataSource === 'local' && typeof window !== 'undefined') {
+    // Luôn lưu bản backup vào LocalStorage để đảm bảo trải nghiệm không bị gián đoạn
+    if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(key, JSON.stringify(value));
       } catch (error) {
-        console.error(`Error saving key ${key} to storage`, error);
+        console.error(`Error saving key ${key} to local backup`, error);
       }
     }
   },

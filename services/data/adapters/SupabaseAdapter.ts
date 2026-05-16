@@ -28,6 +28,11 @@ export class SupabaseAdapter implements IDataAdapter {
           this.cache.set(key, { value: defaultValue, timestamp: Date.now() });
           return defaultValue;
         }
+        
+        if (error.message?.includes('JWT') || error.message?.includes('permission')) {
+          console.error(`%c[Supabase Security] LỰU Ý: Bạn chưa cấp quyền (RLS) để truy cập bảng cho người dùng ẩn danh (anon). Hãy kiểm tra SQL Editor.`, 'color: yellow; background: red; font-size: 14px;');
+        }
+        
         console.warn(`[Supabase Adapter] Lỗi khi lấy ${key}:`, error);
         return defaultValue;
       }
