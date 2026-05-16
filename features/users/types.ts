@@ -109,6 +109,7 @@ export interface GenerationResult {
     cost: number;
     balanceAfter: number;
     creationTime: string;
+    expiresAt?: string;
 }
 
 

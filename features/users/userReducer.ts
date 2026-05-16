@@ -57,13 +57,46 @@ export const userReducer = (state: UserState, action: UserAction): UserState => 
         return { ...state, allUsers: updateUserInTree(state.allUsers, { id: userId, creditBalance: Math.max(0, user.creditBalance + amount) }) };
     }
 
+    case 'CLEANUP_EXPIRED_GENERATIONS': {
+        const now = new Date().getTime();
+        const cleanupUser = (u: AdminManagedUser): AdminManagedUser => {
+            let userUpdated = false;
+            let newHistory = u.generationHistory || [];
+            if (newHistory.length > 0) {
+                const filtered = newHistory.filter(h => !h.expiresAt || new Date(h.expiresAt).getTime() > now);
+                if (filtered.length !== newHistory.length) {
+                    newHistory = filtered;
+                    userUpdated = true;
+                }
+            }
+            
+            const newChildren = u.children ? u.children.map(cleanupUser) : undefined;
+            const childrenUpdated = u.children !== newChildren;
+
+            if (userUpdated || childrenUpdated) {
+                return { ...u, generationHistory: newHistory, children: newChildren };
+            }
+            return u;
+        };
+
+        const updatedTree = state.allUsers.map(cleanupUser);
+        return { ...state, allUsers: updatedTree };
+    }
+
     case 'ADD_GENERATION_RESULT': {
         const { userId, result } = action.payload;
         const user = findUserInTree(state.allUsers, userId);
         if (!user) return state;
         
         const currentHistory = user.generationHistory || [];
-        const newHistory = [result, ...currentHistory];
+        // Filter out expired results (older than 24h)
+        const now = new Date().getTime();
+        const filteredHistory = currentHistory.filter(h => {
+            if (!h.expiresAt) return true; 
+            return new Date(h.expiresAt).getTime() > now;
+        });
+
+        const newHistory = [result, ...filteredHistory];
         
         return { 
             ...state, 

@@ -21,7 +21,8 @@ const isSupabaseConfigured = !!(
 
 const isLocalhost = typeof window !== 'undefined' && 
                    (window.location.hostname === 'localhost' || 
-                    window.location.hostname === '127.0.0.1');
+                    window.location.hostname === '127.0.0.1' ||
+                    window.location.hostname.includes('ais-dev'));
 
 // CHẾ ĐỘ HOẠT ĐỘNG:
 // 1. Luôn ưu tiên dùng Supabase nếu có Config và KHÔNG phải ở máy cá nhân (localhost)

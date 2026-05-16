@@ -456,6 +456,13 @@ const LandingPage: React.FC = () => {
   const [referrerId, setReferrerId] = useState<string | null>(null);
   const [referrerName, setReferrerName] = useState<string | null>(null);
   const [headerScrolled, setHeaderScrolled] = useState(false);
+  const { loggedInUser } = useAuth();
+
+  useEffect(() => {
+    if (loggedInUser && isLoginModalOpen) {
+      setLoginModalOpen(false);
+    }
+  }, [loggedInUser, isLoginModalOpen]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

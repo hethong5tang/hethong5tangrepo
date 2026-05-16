@@ -26,6 +26,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     storageService.set(STORAGE_KEYS.USERS, userState);
   }, [userState]);
 
+  useEffect(() => {
+    // Periodic cleanup of expired AI images
+    userDispatch({ type: 'CLEANUP_EXPIRED_GENERATIONS' });
+    const interval = setInterval(() => {
+      userDispatch({ type: 'CLEANUP_EXPIRED_GENERATIONS' });
+    }, 15 * 60 * 1000); // Every 15 minutes
+    return () => clearInterval(interval);
+  }, []);
+
   const value = { userState, userDispatch };
 
   return (

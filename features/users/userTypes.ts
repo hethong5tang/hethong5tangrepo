@@ -17,4 +17,5 @@ export type UserAction =
   | { type: 'ADD_GENERATION_RESULT'; payload: { userId: string; result: GenerationResult } }
   | { type: 'DELETE_GENERATION_RESULT'; payload: { userId: string; taskId: string } }
   | { type: 'DELETE_SINGLE_IMAGE_FROM_RESULT'; payload: { userId: string; taskId: string; imageIndex: number } }
-  | { type: 'ADJUST_USER_CREDIT'; payload: { userId: string; amount: number } };
+  | { type: 'ADJUST_USER_CREDIT'; payload: { userId: string; amount: number } }
+  | { type: 'CLEANUP_EXPIRED_GENERATIONS' };

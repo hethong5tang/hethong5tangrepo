@@ -429,7 +429,10 @@ export const createUserActions = (deps: {
     };
 
     const handleSetGenerationHistory = (userId: string, result: GenerationResult) => {
-        userDispatch({ type: 'ADD_GENERATION_RESULT', payload: { userId, result } });
+        // Automatically set expiration metadata (24 hours from now)
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        const resultWithExpiration = { ...result, expiresAt };
+        userDispatch({ type: 'ADD_GENERATION_RESULT', payload: { userId, result: resultWithExpiration } });
     };
 
     const handleDeleteGenerationResult = (userId: string, taskId: string) => {
