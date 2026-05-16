@@ -10,7 +10,7 @@ import { isEqual } from 'lodash-es';
 import { useFinance } from '../../features/finance/useFinance';
 import { useUser } from '../../features/users/useUser';
 import { AdminManagedUser, UserStatus } from '../../features/users/types';
-import { FundType, TransactionType } from '../../features/finance/types';
+import { FundType, TransactionType, FundTransaction } from '../../features/finance/types';
 import { useToast } from '../../components/ToastProvider';
 import Pagination from '../../components/Pagination';
 

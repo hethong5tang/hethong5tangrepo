@@ -14,15 +14,17 @@ export const STORAGE_KEYS = {
 };
 
 // Khởi tạo Adapter dựa trên môi trường
+// @ts-ignore
+const env = import.meta.env;
 const isSupabaseConfigured = !!(
-    (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_URL.length > 10) && 
-    (import.meta.env.VITE_SUPABASE_ANON_KEY && import.meta.env.VITE_SUPABASE_ANON_KEY.length > 10)
+    (env.VITE_SUPABASE_URL && env.VITE_SUPABASE_URL.length > 10) && 
+    (env.VITE_SUPABASE_ANON_KEY && env.VITE_SUPABASE_ANON_KEY.length > 10)
 );
 
 const isLocalhost = typeof window !== 'undefined' && 
                    (window.location.hostname === 'localhost' || 
                     window.location.hostname === '127.0.0.1' ||
-                    window.location.hostname.includes('ais-dev'));
+                    window.location.hostname.includes('-dev-'));
 
 // CHẾ ĐỘ HOẠT ĐỘNG:
 // 1. Luôn ưu tiên dùng Supabase nếu có Config và KHÔNG phải ở máy cá nhân (localhost)
@@ -34,7 +36,7 @@ if (isSupabaseConfigured) {
         dataSource = 'supabase';
     } else {
         // Ở máy local, chỉ dùng Supabase nếu được yêu cầu qua Env
-        dataSource = import.meta.env.VITE_DATA_SOURCE === 'supabase' ? 'supabase' : 'local';
+        dataSource = env.VITE_DATA_SOURCE === 'supabase' ? 'supabase' : 'local';
     }
 }
 
@@ -52,7 +54,7 @@ if (typeof window !== 'undefined') {
         `color: white; background: ${dataSource === 'supabase' ? '#3ecf8e' : '#3498db'}; padding: 4px 8px; border-radius: 4px; font-weight: bold;`);
     
     if (dataSource === 'supabase') {
-        console.log(`[Database] Connecting to: ${import.meta.env.VITE_SUPABASE_URL}`);
+        console.log(`[Database] Connecting to: ${env.VITE_SUPABASE_URL}`);
     }
 }
 

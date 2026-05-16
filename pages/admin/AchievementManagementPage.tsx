@@ -479,7 +479,7 @@ const WinnerManagementModal: React.FC<{
             title={`Duyệt thưởng: ${achievement.name}`}
             confirmText={`Chi trả ${totalAmount.toLocaleString()}đ`}
             onConfirm={() => onPay(usersToPay)}
-            confirmDisabled={selectedUsers.length === 0 || isInsufficient}
+            isConfirmDisabled={selectedUsers.length === 0 || isInsufficient}
             size="2xl"
         >
             <div className="space-y-6">

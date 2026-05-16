@@ -1,14 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 
+// @ts-ignore
+const env = import.meta.env;
+
 let supabaseUrl = (
-  import.meta.env.VITE_SUPABASE_URL || 
-  import.meta.env.SUPABASE_URL || 
+  env.VITE_SUPABASE_URL || 
+  env.SUPABASE_URL || 
   ''
 ).trim();
 
 const supabaseAnonKey = (
-  import.meta.env.VITE_SUPABASE_ANON_KEY || 
-  import.meta.env.SUPABASE_ANON_KEY || 
+  env.VITE_SUPABASE_ANON_KEY || 
+  env.SUPABASE_ANON_KEY || 
   ''
 ).trim();
 

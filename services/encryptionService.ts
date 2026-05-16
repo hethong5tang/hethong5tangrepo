@@ -3,8 +3,10 @@ import CryptoJS from 'crypto-js';
 const LEGACY_SALT = 'AI_STUDIO_ATOMIC_SYNC_2026';
 // Use VITE_ENCRYPTION_KEY if provided, fallback to anon key, then legacy salt
 const getSecretKey = () => {
-  return import.meta.env.VITE_ENCRYPTION_KEY || 
-         import.meta.env.VITE_SUPABASE_ANON_KEY || 
+  // @ts-ignore
+  const env = import.meta.env;
+  return env.VITE_ENCRYPTION_KEY || 
+         env.VITE_SUPABASE_ANON_KEY || 
          LEGACY_SALT;
 };
 

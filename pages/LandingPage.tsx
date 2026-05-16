@@ -462,6 +462,10 @@ const LandingPage: React.FC = () => {
     if (loggedInUser && isLoginModalOpen) {
       setLoginModalOpen(false);
     }
+    
+    const handleLoginSuccess = () => setLoginModalOpen(false);
+    window.addEventListener('auth:login_success', handleLoginSuccess);
+    return () => window.removeEventListener('auth:login_success', handleLoginSuccess);
   }, [loggedInUser, isLoginModalOpen]);
 
   useEffect(() => {

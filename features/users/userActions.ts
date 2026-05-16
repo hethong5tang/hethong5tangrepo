@@ -402,10 +402,11 @@ export const createUserActions = (deps: {
                 apiMetadata: {
                     toolId: tool.id,
                     model: modelUsed,
+                    type: tool.id.includes('video') ? 'video' : (tool.id.includes('image') ? 'image' : 'text'),
+                    unitCount: tool.id.includes('video') || tool.id.includes('image') ? 1 : (apiMetadata?.tokens || 1000),
                     tokens: apiMetadata?.tokens,
                     estimatedCostUsd: estimatedCostUsd,
                     creditCost: tool.creditCost,
-                    success: true,
                 }
             });
         } else if (tool.creditCost < 0) {
@@ -418,10 +419,11 @@ export const createUserActions = (deps: {
                 apiMetadata: {
                     toolId: tool.id,
                     model: modelUsed,
+                    type: tool.id.includes('video') ? 'video' : (tool.id.includes('image') ? 'image' : 'text'),
+                    unitCount: tool.id.includes('video') || tool.id.includes('image') ? 1 : (apiMetadata?.tokens || 1000),
                     tokens: apiMetadata?.tokens,
                     estimatedCostUsd: estimatedCostUsd < 0 ? estimatedCostUsd : -estimatedCostUsd, // Ensure it's negative
                     creditCost: tool.creditCost, // already negative
-                    success: false,
                 }
             });
         }

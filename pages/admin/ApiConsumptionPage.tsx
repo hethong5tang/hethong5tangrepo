@@ -17,6 +17,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { useToast } from '../../components/ToastProvider';
 import { useSettings } from '../../features/settings/useSettings';
 import { supabase } from '../../services/supabaseClient';
+import { storageService, STORAGE_KEYS } from '../../services/storageService';
 
 interface ModelItem {
     provider: string;
@@ -340,13 +341,7 @@ NHIỆM VỤ CỦA BẠN:
                     if (parsed.usdRate) setUsdRate(parsed.usdRate);
                     
                     addToast('Đã quét và lưu bảng giá mới thành công!', 'success');
-                    if (groundingChunks) {
-                        const extractedSources = groundingChunks
-                            .filter((chunk: any) => chunk.web)
-                            .map((chunk: any) => ({ title: chunk.web.title, uri: chunk.web.uri }));
-                        setSources(extractedSources);
-                    }
-                    addToast(`Đã cập nhất bảng giá và tỷ giá USD (${parsed.usdRate.toLocaleString()}đ) mới nhất!`, "success");
+                    addToast(`Đã cập nhất bảng giá và tỷ giá USD (${parsed.usdRate.toLocaleString()}đ) dựa trên dữ liệu Google Cloud Pricing!`, "success");
                 }
             } catch (parseError) {
                 addToast("Lỗi phân tích dữ liệu AI.", "error");

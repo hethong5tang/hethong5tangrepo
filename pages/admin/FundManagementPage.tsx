@@ -1135,7 +1135,7 @@ const FundManagementPage: React.FC = () => {
                 <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-50 dark:bg-slate-900/20 p-4 rounded-xl gap-4">
                     <div className="flex items-center gap-4">
                         <RowsPerPageSelector 
-                            rowsPerPage={historyRowsPerPage} 
+                            currentRowsPerPage={historyRowsPerPage} 
                             onChange={setHistoryRowsPerPage} 
                         />
                         <span className="text-xs text-slate-500">

@@ -11,7 +11,12 @@ const initialState: UserState = {
 };
 
 const init = (defaultState: UserState): UserState => {
-  return storageService.get(STORAGE_KEYS.USERS, defaultState);
+  const stored = storageService.get(STORAGE_KEYS.USERS, defaultState);
+  // Seed demo data if storage is empty and we are in demo mode
+  if (IS_DEMO_MODE && (!stored.allUsers || stored.allUsers.length === 0)) {
+    return { ...stored, allUsers: MOCK_INITIAL_USERS };
+  }
+  return stored;
 };
 
 export const UserContext = createContext<{

@@ -175,6 +175,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onGoogleLogin, onFin
             if (result.requires2fa && result.userId) {
                 setUserIdFor2fa(result.userId);
                 setView('verify2fa');
+            } else {
+                // Emit success event for any parent components listening
+                window.dispatchEvent(new CustomEvent('auth:login_success'));
             }
         } else {
             setError(result.message);

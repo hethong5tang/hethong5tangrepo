@@ -360,10 +360,10 @@ const FinancePage: React.FC<FinancePageProps> = () => {
                  <FinanceStatCard title="Ví Admin" value={stats.adminWallet} icon={<CurrencyDollarIcon className="h-6 w-6"/>} color="green" />
                  <FinanceStatCard title="Lợi nhuận ròng" value={stats.profit} change={stats.profitChange} icon={<ArrowTrendingUpIcon className="h-6 w-6"/>} color="blue" />
                  <FinanceStatCard title="Chi trả" value={stats.payout} change={stats.payoutChange} icon={<ArrowTrendingDownIcon className="h-6 w-6"/>} color="orange" />
-                 <FinanceStatCard title="Quỹ Thuế VAT" value={stats.vat} icon={<BanknotesIcon className="h-6 w-6"/>} color="indigo" />
-                 <FinanceStatCard title="Quỹ Thuế TNDN" value={stats.corporateTax} icon={<BanknotesIcon className="h-6 w-6"/>} color="indigo" />
+                 <FinanceStatCard title="Quỹ Thuế VAT" value={stats.vat} icon={<BanknotesIcon className="h-6 w-6"/>} color="blue" />
+                 <FinanceStatCard title="Quỹ Thuế TNDN" value={stats.corporateTax} icon={<BanknotesIcon className="h-6 w-6"/>} color="blue" />
                  <FinanceStatCard title="Quỹ Thưởng Leader" value={stats.leaderBonus} icon={<ArrowTrendingUpIcon className="h-6 w-6"/>} color="purple" />
-                 <FinanceStatCard title="Quỹ Hỗ Trợ" value={stats.supportFund} icon={<BanknotesIcon className="h-6 w-6"/>} color="teal" />
+                 <FinanceStatCard title="Quỹ Hỗ Trợ" value={stats.supportFund} icon={<BanknotesIcon className="h-6 w-6"/>} color="blue" />
             </div>
 
             {/* TAB NAVIGATION */}
