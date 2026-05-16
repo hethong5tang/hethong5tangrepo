@@ -40,6 +40,13 @@ if (isSupabaseConfigured) {
 // Global debug flag để kiểm tra trạng thái trong Console (F12)
 if (typeof window !== 'undefined') {
     (window as any).__DATA_SOURCE__ = dataSource;
+    
+    // Cảnh báo nếu đang ở Prod mà chưa có Supabase
+    if (!isLocalhost && !isSupabaseConfigured) {
+        console.error("%c[Hệ thống] CẢNH BÁO: Đang chạy trên môi trường thực nhưng chưa nhận được VITE_SUPABASE_URL từ Vercel. Hệ thống đang tạm dùng LocalStorage.", 
+            "color: white; background: red; font-size: 16px; padding: 10px; font-weight: bold;");
+    }
+
     console.log(`%c[Database System] Active Mode: ${dataSource.toUpperCase()}`, 
         `color: white; background: ${dataSource === 'supabase' ? '#3ecf8e' : '#3498db'}; padding: 4px 8px; border-radius: 4px; font-weight: bold;`);
     

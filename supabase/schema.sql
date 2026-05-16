@@ -5,12 +5,23 @@
 -- 1. BẢNG CẬP NHẬT CẤU HÌNH (SETTINGS)
 -- ==========================================
 -- Lưu trữ các công thức linh hoạt để Admin có thể thay đổi sau này mà không cần code lại.
+-- BẢNG NÀY ĐƯỢC DÙNG NHƯ MỘT KEY-VALUE STORE CHO TOÀN BỘ APP TRÊN PRODUCTION.
 CREATE TABLE IF NOT EXISTS public.system_settings (
-    key VARCHAR(50) PRIMARY KEY,
+    key VARCHAR(255) PRIMARY KEY,
     value JSONB NOT NULL,
     description TEXT,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- BẬT RLS (ROW LEVEL SECURITY)
+ALTER TABLE public.system_settings ENABLE ROW LEVEL SECURITY;
+
+-- CẤP QUYỀN CHO ANON VÀ AUTHENTICATED (Để app có thể hoạt động ngay lập tức thay thế localStorage)
+DROP POLICY IF EXISTS "Cho phép truy cập công khai bảng settings" ON public.system_settings;
+CREATE POLICY "Cho phép truy cập công khai bảng settings" 
+ON public.system_settings FOR ALL 
+USING (true) 
+WITH CHECK (true);
 
 -- Khởi tạo tỉ lệ 40/60 (Phân bổ chuẩn 2 tầng)
 INSERT INTO public.system_settings (key, value, description)
@@ -301,14 +312,7 @@ ALTER TABLE public.funds ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.fund_transactions ENABLE ROW LEVEL SECURITY;
 
--- 7.1 SYSTEM_SETTINGS
-DROP POLICY IF EXISTS "Bất kỳ ai cũng có thể xem cài đặt hệ thống" ON public.system_settings;
-CREATE POLICY "Bất kỳ ai cũng có thể xem cài đặt hệ thống" 
-ON public.system_settings FOR SELECT USING (auth.role() = 'authenticated');
-
-DROP POLICY IF EXISTS "Admin có toàn quyền quản lý bảng settings" ON public.system_settings;
-CREATE POLICY "Admin có toàn quyền quản lý bảng settings" 
-ON public.system_settings FOR ALL USING (public.is_admin());
+-- 7.1 SYSTEM_SETTINGS (Đã được định nghĩa ở trên đầu file)
 
 
 -- 7.2 USERS
