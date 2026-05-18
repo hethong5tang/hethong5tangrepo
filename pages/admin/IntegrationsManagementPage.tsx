@@ -411,19 +411,24 @@ const IntegrationsManagementPage: React.FC = () => {
                 
                 <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-700/50 flex-shrink-0">
                     <div className="flex justify-between items-center mb-3">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bảng giá Model ({Object.keys(tool.modelPricing || {}).length})</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            Bảng giá Model ({Object.keys(tool.modelPricing || {}).filter(mId => (settingsState?.systemSettings?.activeGeminiModels || []).includes(mId)).length})
+                        </p>
                     </div>
                     <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
-                        {Object.entries(tool.modelPricing || {}).slice(0, 3).map(([mId, price]) => (
+                        {Object.entries(tool.modelPricing || {})
+                            .filter(([mId]) => (settingsState?.systemSettings?.activeGeminiModels || []).includes(mId))
+                            .slice(0, 3)
+                            .map(([mId, price]) => (
                             <div key={mId} className="flex justify-between items-center text-[10px] bg-slate-50 dark:bg-slate-900/30 p-2 rounded-lg">
                                 <span className="text-slate-600 dark:text-slate-400 font-bold uppercase tracking-tighter truncate w-32">{mId.replace('gemini-', '').replace('preview', 'pro')}</span>
                                 <span className="font-black text-indigo-600 dark:text-indigo-400">{price} P</span>
                             </div>
                         ))}
-                        {Object.keys(tool.modelPricing || {}).length > 3 && (
-                            <p className="text-center text-[9px] text-slate-400 italic">và {Object.keys(tool.modelPricing || {}).length - 3} model khác...</p>
+                        {Object.keys(tool.modelPricing || {}).filter(mId => (settingsState?.systemSettings?.activeGeminiModels || []).includes(mId)).length > 3 && (
+                            <p className="text-center text-[9px] text-slate-400 italic">và {Object.keys(tool.modelPricing || {}).filter(mId => (settingsState?.systemSettings?.activeGeminiModels || []).includes(mId)).length - 3} model khác...</p>
                         )}
-                        {(!tool.modelPricing || Object.keys(tool.modelPricing).length === 0) && (
+                        {(!tool.modelPricing || Object.keys(tool.modelPricing).filter(mId => (settingsState?.systemSettings?.activeGeminiModels || []).includes(mId)).length === 0) && (
                             <div className="flex justify-between items-center text-[10px] bg-slate-50 dark:bg-slate-900/30 p-2 rounded-lg">
                                 <span className="text-slate-600 dark:text-slate-400 font-bold italic">Chưa đặt giá riêng cho model</span>
                                 <span className="font-black text-slate-400">---</span>
