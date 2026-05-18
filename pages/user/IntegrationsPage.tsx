@@ -35,11 +35,15 @@ const toolCategories: Record<string, string> = {
 };
 
 const getToolCategory = (tool: IntegrationTool): string => {
-    if (tool.category) return tool.category;
-    return toolCategories[tool.id] || 'Tiện ích';
+    const rawCat = tool.category || toolCategories[tool.id] || 'Tiện ích';
+    if (rawCat === 'image' || rawCat === 'Ảnh') return 'Ảnh';
+    if (rawCat === 'text' || rawCat === 'Văn bản') return 'Văn bản';
+    if (rawCat === 'video' || rawCat === 'Video') return 'Video';
+    if (rawCat === 'audio' || rawCat === 'Âm thanh') return 'Âm thanh';
+    return rawCat;
 };
 
-const CATEGORIES = ['Tất cả', 'Ảnh', 'Văn bản', 'Video', 'Tiện ích'];
+const CATEGORIES = ['Tất cả', 'Ảnh', 'Văn bản', 'Video', 'Âm thanh', 'Tiện ích'];
 
 const IntegrationsPage: React.FC<{ onNavigate: (page: string) => void }> = ({ onNavigate }) => {
     const { settingsState } = useSettings();
