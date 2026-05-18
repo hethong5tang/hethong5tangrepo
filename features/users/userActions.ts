@@ -399,6 +399,7 @@ export const createUserActions = (deps: {
                 userName: u.name,
                 actionType: LoggableAction.TOOL_USAGE,
                 details: `Sử dụng công cụ: ${tool.title || tool.id}. Tiêu thụ: ${tool.creditCost} Credits.`,
+                status: 'success',
                 apiMetadata: {
                     toolId: tool.id,
                     model: modelUsed,
@@ -416,6 +417,7 @@ export const createUserActions = (deps: {
                 userName: u.name,
                 actionType: LoggableAction.TOOL_USAGE,
                 details: `Hoàn tiền công cụ: ${tool.title || tool.id}. API lỗi. Hoàn lại: ${Math.abs(tool.creditCost)} Credits.`,
+                status: 'failure',
                 apiMetadata: {
                     toolId: tool.id,
                     model: modelUsed,

@@ -24,7 +24,7 @@ const FinanceStatCard: React.FC<{
     <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-sm ring-1 ring-black/5 p-4 flex items-center justify-between transition-all hover:shadow-md">
       <div className="flex items-center gap-4">
         <div className={`p-2.5 rounded-xl ${currentColors.bg} ${currentColors.text}`}>
-          {React.cloneElement(icon as React.ReactElement, { className: "h-5 w-5" })}
+          {React.cloneElement(icon as React.ReactElement<any>, { className: "h-5 w-5" })}
         </div>
         <div className="min-w-0">
           <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">{title}</p>

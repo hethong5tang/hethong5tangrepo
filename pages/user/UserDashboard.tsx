@@ -167,7 +167,7 @@ const UserDashboard: React.FC = () => {
     }
 
     return (
-        <div className="page-enter-active" key={`${configKey}-${subPage || 'root'}`}>
+        <div className="page-enter-active" key={`${String(configKey)}-${subPage || 'root'}`}>
             <Suspense fallback={<PageLoader />}>
                 <PageComponent {...customProps} />
             </Suspense>

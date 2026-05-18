@@ -18,7 +18,7 @@ import CreditBalanceDisplay from './CreditBalanceDisplay';
 import Modal from '../../components/Modal';
 import { aiService } from '../../services/aiService'; // Import Service
 import { useSettings } from '../../features/settings/useSettings';
-import { ALL_GEMINI_MODELS } from '../../constants';
+import { ALL_GEMINI_MODELS, isModelInCategory } from '../../constants';
 
 // ... (KEEP CONSTANTS: MARKETING_TOOLKITS, TONES, LANGUAGES, VOICES, parseScriptContent) ...
 // Để ngắn gọn, tôi giữ nguyên các hằng số và interface này vì chúng không đổi.
@@ -332,16 +332,16 @@ const TextGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: string
     
     // Custom useMemo for models
     const activeModels = useMemo(() => {
-        // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
+        const activeIds = settingsState.systemSettings.activeGeminiModels || [];
+        const fallback = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id) && isModelInCategory(m, 'image'));
+        
         const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
         if (toolSpecificModels.length > 0) {
-            const globalActiveForTool = settingsState.systemSettings.activeGeminiModels || [];
-            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && globalActiveForTool.includes(m.id));
+            const toolFiltered = ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && activeIds.includes(m.id) && isModelInCategory(m, 'image'));
+            if (toolFiltered.length > 0) return toolFiltered;
         }
 
-        const activeIds = settingsState.systemSettings.activeGeminiModels || [];
-        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id));
-        return filtered.length > 0 ? filtered : [ALL_GEMINI_MODELS[0]];
+        return fallback.length > 0 ? fallback : [ALL_GEMINI_MODELS[0]];
     }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
 
     // Main State

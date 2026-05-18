@@ -146,24 +146,16 @@ const HairstyleProTool: React.FC<HairstyleProToolProps> = ({ tool, onNavigate })
 
     // Custom useMemo for models
     const activeModels = useMemo(() => {
-        // Lấy category của tool (mặc định là image cho công cụ này)
-        const toolCat = tool.category || 'image';
+        const activeIds = settingsState.systemSettings.activeGeminiModels || [];
+        const fallback = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id) && isModelInCategory(m, tool.category || 'image'));
         
-        // Priority: Admin defined pricing for this specific tool
         const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
         if (toolSpecificModels.length > 0) {
-            // Filter ALL_GEMINI_MODELS by the specific IDs allowed for this tool
-            const toolFiltered = ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && isModelInCategory(m, toolCat));
+            const toolFiltered = ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && activeIds.includes(m.id) && isModelInCategory(m, tool.category || 'image'));
             if (toolFiltered.length > 0) return toolFiltered;
         }
 
-        // Fallback: If no modelPricing is defined, we show all active models of correct category
-        // But the user policy says "remove default pricing", so we should encourage setting modelPricing
-        const globalActiveIds = settingsState.systemSettings.activeGeminiModels || [];
-        const filtered = ALL_GEMINI_MODELS.filter(m => globalActiveIds.includes(m.id) && isModelInCategory(m, toolCat));
-        const fallback = ALL_GEMINI_MODELS.filter(m => isModelInCategory(m, toolCat));
-        
-        return filtered.length > 0 ? filtered : (fallback.length > 0 ? [fallback[0]] : [ALL_GEMINI_MODELS[0]]);
+        return fallback.length > 0 ? fallback : [ALL_GEMINI_MODELS[0]];
     }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing, tool.category]);
 
     // State
