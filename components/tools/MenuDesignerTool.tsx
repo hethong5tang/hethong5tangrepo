@@ -29,7 +29,7 @@ import {
 import { IntegrationTool, IntegrationType } from '../../features/settings/types';
 import { useToast } from '../../components/ToastProvider';
 import { useSettings } from '../../features/settings/useSettings';
-import { ALL_GEMINI_MODELS } from '../../constants';
+import { ALL_GEMINI_MODELS, isModelInCategory } from '../../constants';
 import { findUserInTree } from '../../services/userService';
 import Modal from '../../components/Modal';
 import { ensureSupportedImageFormat } from '../../utils/imageProcessing';
@@ -79,13 +79,13 @@ const MenuDesignerTool: React.FC<MenuDesignerToolProps> = ({ tool, onNavigate })
         // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
         const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
         if (toolSpecificModels.length > 0) {
-            const toolFiltered = ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && m.category === 'image');
+            const toolFiltered = ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && isModelInCategory(m, 'image'));
             if (toolFiltered.length > 0) return toolFiltered;
         }
 
         const activeIds = settingsState.systemSettings.activeGeminiModels || [];
-        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id) && m.category === 'image');
-        const fallback = ALL_GEMINI_MODELS.filter(m => m.category === 'image');
+        const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id) && isModelInCategory(m, 'image'));
+        const fallback = ALL_GEMINI_MODELS.filter(m => isModelInCategory(m, 'image'));
         return filtered.length > 0 ? filtered : (fallback.length > 0 ? [fallback[0]] : [ALL_GEMINI_MODELS[0]]);
     }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
 

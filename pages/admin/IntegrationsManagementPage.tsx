@@ -17,7 +17,7 @@ import { useToast } from '../../components/ToastProvider';
 import FormattedNumberInput from '../../components/FormattedNumberInput';
 import { ensureSupportedImageFormat } from '../../utils/imageProcessing';
 
-import { ALL_GEMINI_MODELS } from '../../constants';
+import { ALL_GEMINI_MODELS, isModelInCategory } from '../../constants';
 
 // Constants removed as they are now dynamic from systemSettings
 const CREDIT_VAL = 1000;
@@ -85,9 +85,8 @@ const EditModal: React.FC<{
     const handleApplyMarkup = () => {
         if (markupPercent === 0) return;
         const newPricing = { ...(formData.modelPricing || {}) };
-        const toolCat = formData.category || filterCat;
         AI_MODEL_OPTIONS.forEach(model => {
-            if (model.category === toolCat || toolCat === 'all') {
+            if (model.category === filterCat || filterCat === 'all') {
                 const catalogItem = apiCatalog.find((c: any) => {
                     const cId = (c.modelId || c.id || '').toLowerCase();
                     const mId = (model.id || '').toLowerCase();
@@ -105,13 +104,12 @@ const EditModal: React.FC<{
     };
 
     const filteredModels = useMemo(() => {
-        const toolCat = formData.category || filterCat;
         return AI_MODEL_OPTIONS.filter(m => {
             const matchSearch = m.name.toLowerCase().includes(searchModel.toLowerCase());
-            const matchCat = toolCat === 'all' || m.category === toolCat;
+            const matchCat = filterCat === 'all' || isModelInCategory(m, filterCat);
             return matchSearch && matchCat;
         });
-    }, [searchModel, filterCat, formData.category]);
+    }, [searchModel, filterCat]);
 
     const inputClasses = "w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm transition-all";
 
