@@ -86,7 +86,7 @@ const EditModal: React.FC<{
         if (markupPercent === 0) return;
         const newPricing = { ...(formData.modelPricing || {}) };
         AI_MODEL_OPTIONS.forEach(model => {
-            if (model.category === filterCat || filterCat === 'all') {
+            if (isModelInCategory(model, filterCat) || filterCat === 'all') {
                 const catalogItem = apiCatalog.find((c: any) => {
                     const cId = (c.modelId || c.id || '').toLowerCase();
                     const mId = (model.id || '').toLowerCase();

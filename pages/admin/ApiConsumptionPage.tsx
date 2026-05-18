@@ -18,6 +18,7 @@ import { useToast } from '../../components/ToastProvider';
 import { useSettings } from '../../features/settings/useSettings';
 import { supabase } from '../../services/supabaseClient';
 import { storageService, STORAGE_KEYS } from '../../services/storageService';
+import { isModelInCategory } from '../../constants';
 
 interface ModelItem {
     provider: string;
@@ -26,7 +27,7 @@ interface ModelItem {
     type: string;
     basePriceUsd: number;
     unit: string;
-    category: string;
+    category: string | string[];
     modelId: string;
 }
 
@@ -667,7 +668,9 @@ NHIỆM VỤ CỦA BẠN:
                                     <td className="px-6 py-4">
                                         <div className="flex flex-col">
                                             <span className="font-bold text-slate-700 dark:text-slate-100">{m.name}</span>
-                                            <span className={`text-[8px] uppercase font-bold w-fit px-1.5 rounded mt-1 ${m.category === 'premium' ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>{m.category}</span>
+                                            <span className={`text-[8px] uppercase font-bold w-fit px-1.5 rounded mt-1 ${isModelInCategory(m, 'premium') ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
+                                                {Array.isArray(m.category) ? m.category.join(', ') : m.category}
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-slate-400 text-[11px]">{m.type} / {m.unit}</td>
