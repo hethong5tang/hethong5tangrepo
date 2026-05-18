@@ -2,7 +2,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { AdminManagedUser, MembershipTier, UserStatus } from '../../features/users/types';
-import { Transaction, TransactionType, TRANSACTION_TYPE_LABELS, TransactionStatus, WithdrawalRequest } from '../../features/finance/types';
+import { Transaction, TransactionType, TRANSACTION_TYPE_LABELS, TransactionStatus, WithdrawalRequest, WithdrawalStatus } from '../../features/finance/types';
 import { useActions } from '../../features/actions/useActions';
 import Pagination from '../../components/Pagination';
 import { TierBadge, TransactionStatusBadge } from '../../components/Badges';
@@ -16,6 +16,9 @@ import RowsPerPageSelector from '../../components/RowsPerPageSelector';
 import FormattedNumberInput from '../../components/FormattedNumberInput';
 import { useAuth } from '../../features/auth/useAuth';
 import { useFinance } from '../../features/finance/useFinance';
+import { useLogging } from '../../features/logging/useLogging';
+import { LoggableAction } from '../../features/logging/types';
+import { ChartBarIcon, DocumentTextIcon, BanknotesIcon, CpuChipIcon } from '../../components/Icons';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -88,7 +91,49 @@ const RequestStatusBadge: React.FC<{ status: string }> = ({ status }) => {
 const WalletPage: React.FC<{ onNavigate: (page: string) => void; }> = ({ onNavigate }) => {
     const { loggedInUser: user } = useAuth();
     const { financeState: { allTransactions, depositRequests, withdrawalRequests } } = useFinance();
+    const { loggingState } = useLogging();
     const { handleConvertVndToCredits } = useActions();
+
+    // Main Tabs State
+    const [mainHistoryTab, setMainHistoryTab] = useState<'transactions' | 'requests' | 'ai-usage'>('transactions');
+
+    // AI Usage Data
+    const [aiUsageSearchTerm, setAiUsageSearchTerm] = useState('');
+    const [aiUsageTypeFilter, setAiUsageTypeFilter] = useState('all');
+    
+    const myAiLogs = useMemo(() => {
+        if (!user) return [];
+        return loggingState.logs.filter(log => log.userId === user.id && (log.actionType === LoggableAction.TOOL_USAGE || log.actionType === LoggableAction.API_CONSUMPTION)).sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    }, [loggingState.logs, user]);
+
+    const [aiUsagePage, setAiUsagePage] = useState(1);
+    const [aiUsageItemsPerPage, setAiUsageItemsPerPage] = useState(10);
+    
+    const filteredAiLogs = useMemo(() => {
+        let list = myAiLogs;
+        if (aiUsageTypeFilter !== 'all') {
+            list = list.filter(l => l.apiMetadata?.type === aiUsageTypeFilter);
+        }
+        if (aiUsageSearchTerm) {
+            const term = aiUsageSearchTerm.toLowerCase();
+            list = list.filter(l => 
+                l.details?.toLowerCase().includes(term) ||
+                l.apiMetadata?.model?.toLowerCase().includes(term) ||
+                l.apiMetadata?.toolId?.toLowerCase().includes(term)
+            );
+        }
+        return list;
+    }, [myAiLogs, aiUsageTypeFilter, aiUsageSearchTerm]);
+
+    const totalAiUsagePages = Math.ceil(filteredAiLogs.length / aiUsageItemsPerPage) || 1;
+    const paginatedAiLogs = useMemo(() => {
+        return filteredAiLogs.slice((aiUsagePage - 1) * aiUsageItemsPerPage, aiUsagePage * aiUsageItemsPerPage);
+    }, [filteredAiLogs, aiUsagePage, aiUsageItemsPerPage]);
+
+    useEffect(() => {
+        setAiUsagePage(1);
+    }, [aiUsageTypeFilter, aiUsageSearchTerm, aiUsageItemsPerPage]);
+
 
     // Transactions Data (Biến động số dư)
     const transactions = useMemo(() => {
@@ -103,8 +148,9 @@ const WalletPage: React.FC<{ onNavigate: (page: string) => void; }> = ({ onNavig
     // States for "Yêu cầu thanh toán" (Requests)
     const [requestTab, setRequestTab] = useState<'deposit' | 'withdrawal'>('deposit');
     const [requestCurrentPage, setRequestCurrentPage] = useState(1);
-    // Updated default to 10 items
     const [requestItemsPerPage, setRequestItemsPerPage] = useState(10);
+    const [requestStatusFilter, setRequestStatusFilter] = useState('all');
+    const [requestSearchTerm, setRequestSearchTerm] = useState('');
 
     // States for "Biến động số dư" (Transactions)
     const [convertAmount, setConvertAmount] = useState(0);
@@ -140,7 +186,7 @@ const WalletPage: React.FC<{ onNavigate: (page: string) => void; }> = ({ onNavig
     // Reset pagination when request tab changes
     useEffect(() => {
         setRequestCurrentPage(1);
-    }, [requestTab]);
+    }, [requestTab, requestStatusFilter, requestSearchTerm, requestItemsPerPage]);
 
     // Reset pagination when transaction filters change
     useEffect(() => {
@@ -148,9 +194,40 @@ const WalletPage: React.FC<{ onNavigate: (page: string) => void; }> = ({ onNavig
     }, [searchTerm, typeFilter, flowFilter, statusFilter, startDate, endDate, itemsPerPage]);
 
     // --- CALCULATION FOR REQUESTS PAGINATION ---
-    const currentRequestList = requestTab === 'deposit' ? myDepositRequests : myWithdrawalRequests;
-    const totalRequestPages = Math.ceil(currentRequestList.length / requestItemsPerPage);
-    const paginatedRequests = currentRequestList.slice(
+    const currentRequestList = useMemo(() => {
+        if (requestTab === 'deposit') {
+            let list = myDepositRequests;
+            if (requestStatusFilter !== 'all') {
+                list = list.filter(r => r.status === requestStatusFilter);
+            }
+            if (requestSearchTerm) {
+                const term = requestSearchTerm.toLowerCase();
+                list = list.filter(r => 
+                    r.id.toLowerCase().includes(term) ||
+                    (r.transferCode && r.transferCode.toLowerCase().includes(term))
+                );
+            }
+            return list;
+        } else {
+            let list = myWithdrawalRequests;
+            if (requestStatusFilter !== 'all') {
+                // Map TransactionStatus to WithdrawalStatus if possible
+                const mappedStatus = requestStatusFilter === TransactionStatus.Completed ? WithdrawalStatus.Approved : 
+                                   requestStatusFilter === TransactionStatus.Failed ? WithdrawalStatus.Rejected : 
+                                   WithdrawalStatus.Pending;
+                list = list.filter(r => r.status === mappedStatus);
+            }
+            if (requestSearchTerm) {
+                const term = requestSearchTerm.toLowerCase();
+                list = list.filter(r => r.id.toLowerCase().includes(term));
+            }
+            return list;
+        }
+    }, [requestTab, myDepositRequests, myWithdrawalRequests, requestStatusFilter, requestSearchTerm]);
+
+    // We cast to any for pagination slice to avoid Union type array issues with slice/length
+    const totalRequestPages = Math.ceil((currentRequestList as any[]).length / requestItemsPerPage) || 1;
+    const paginatedRequests = (currentRequestList as any[]).slice(
         (requestCurrentPage - 1) * requestItemsPerPage,
         requestCurrentPage * requestItemsPerPage
     );
@@ -408,13 +485,53 @@ const WalletPage: React.FC<{ onNavigate: (page: string) => void; }> = ({ onNavig
                 </div>
             </div>
             
-            {/* NEW SECTION: REQUEST HISTORY - REDESIGNED AS TABS */}
+            {/* NEW SECTION: WALLET HISTORY - REDESIGNED AS MAIN TABS */}
             <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6">
-                <div className="mb-6">
-                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4">Lịch sử Yêu cầu Thanh toán</h3>
-                     
-                     <div className="border-b border-slate-200 dark:border-slate-700">
-                        <nav className="-mb-px flex space-x-6">
+                <div className="mb-6 border-b border-slate-200 dark:border-slate-700">
+                    <nav className="-mb-px flex space-x-6 overflow-x-auto scrollbar-hide">
+                        <button
+                            onClick={() => setMainHistoryTab('transactions')}
+                            className={`
+                                whitespace-nowrap pb-3 px-1 border-b-2 font-bold text-sm flex items-center gap-2 transition-all outline-none focus:outline-none
+                                ${mainHistoryTab === 'transactions'
+                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:hover:text-slate-300'}
+                            `}
+                        >
+                            <ChartBarIcon className={`h-5 w-5 ${mainHistoryTab === 'transactions' ? 'text-indigo-500' : 'text-slate-400'}`} />
+                            Biến động Số dư (Chi tiết)
+                        </button>
+                        <button
+                            onClick={() => setMainHistoryTab('requests')}
+                            className={`
+                                whitespace-nowrap pb-3 px-1 border-b-2 font-bold text-sm flex items-center gap-2 transition-all outline-none focus:outline-none
+                                ${mainHistoryTab === 'requests'
+                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:hover:text-slate-300'}
+                            `}
+                        >
+                            <DocumentTextIcon className={`h-5 w-5 ${mainHistoryTab === 'requests' ? 'text-indigo-500' : 'text-slate-400'}`} />
+                            Lịch sử Yêu cầu Thanh toán
+                        </button>
+                        <button
+                            onClick={() => setMainHistoryTab('ai-usage')}
+                            className={`
+                                whitespace-nowrap pb-3 px-1 border-b-2 font-bold text-sm flex items-center gap-2 transition-all outline-none focus:outline-none
+                                ${mainHistoryTab === 'ai-usage'
+                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:hover:text-slate-300'}
+                            `}
+                        >
+                            <CpuChipIcon className={`h-5 w-5 ${mainHistoryTab === 'ai-usage' ? 'text-indigo-500' : 'text-slate-400'}`} />
+                            Nhật ký sử dụng Credit
+                        </button>
+                    </nav>
+                </div>
+
+                {mainHistoryTab === 'requests' && (
+                    <div className="space-y-4">
+                        <div className="border-b border-slate-100 dark:border-slate-700/50 pb-2">
+                            <nav className="-mb-px flex space-x-4">
                             <button
                                 onClick={() => setRequestTab('deposit')}
                                 className={`
@@ -442,7 +559,32 @@ const WalletPage: React.FC<{ onNavigate: (page: string) => void; }> = ({ onNavig
                             </button>
                         </nav>
                     </div>
-                </div>
+
+                    {/* Filter Bar cho Yêu cầu thanh toán */}
+                    <div className="flex flex-wrap items-center gap-3 mb-4 mt-4 bg-slate-50/50 dark:bg-slate-900/20 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                        <div className="relative flex-grow min-w-[200px] md:max-w-xs">
+                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <input 
+                                type="text" 
+                                placeholder="Tìm theo mã phiếu, nội dung CK..." 
+                                value={requestSearchTerm}
+                                onChange={e => setRequestSearchTerm(e.target.value)}
+                                className="w-full pl-9 pr-8 py-2 text-xs border border-gray-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 focus:ring-1 focus:ring-indigo-500 outline-none"
+                            />
+                            {requestSearchTerm && <button onClick={() => setRequestSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"><XCircleIcon className="h-3.5 w-3.5"/></button>}
+                        </div>
+
+                        <select
+                            value={requestStatusFilter}
+                            onChange={(e) => setRequestStatusFilter(e.target.value)}
+                            className="px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-xs focus:ring-1 focus:ring-indigo-500 outline-none"
+                        >
+                            <option value="all">Tất cả Trạng thái</option>
+                            <option value={TransactionStatus.Completed}>Đã duyệt</option>
+                            <option value={TransactionStatus.Pending}>Đang chờ xử lý</option>
+                            <option value={TransactionStatus.Failed}>Từ chối</option>
+                        </select>
+                    </div>
                 
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left text-slate-500 dark:text-slate-400">
@@ -515,11 +657,13 @@ const WalletPage: React.FC<{ onNavigate: (page: string) => void; }> = ({ onNavig
                         {totalRequestPages > 1 && <Pagination currentPage={requestCurrentPage} totalPages={totalRequestPages} onPageChange={setRequestCurrentPage} />}
                     </div>
                 )}
-            </div>
+                </div>
+                )}
 
-            {/* TRANSACTION HISTORY SECTION */}
-            <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 p-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                {/* TRANSACTION HISTORY SECTION */}
+                {mainHistoryTab === 'transactions' && (
+                <div className="space-y-4 pt-2">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Biến động Số dư (Chi tiết)</h3>
                     {isFilterActive && <button onClick={handleResetFilters} className="text-xs font-bold text-red-500 hover:text-red-600 uppercase tracking-wider border-b border-red-500">Xóa tất cả bộ lọc</button>}
                 </div>
@@ -680,6 +824,100 @@ const WalletPage: React.FC<{ onNavigate: (page: string) => void; }> = ({ onNavig
                         </div>
                         {totalPages > 1 && <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />}
                     </div>
+                )}
+                </div>
+                )}
+
+                {/* AI USAGE LOGS SECTION */}
+                {mainHistoryTab === 'ai-usage' && (
+                <div className="space-y-4 pt-2">
+                    {/* Filter Bar cho AI Logs */}
+                    <div className="flex flex-wrap items-center gap-3 mb-4 bg-slate-50/50 dark:bg-slate-900/20 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                        <div className="relative flex-grow min-w-[200px] md:max-w-xs">
+                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <input 
+                                type="text" 
+                                placeholder="Tìm theo action, model, tool..." 
+                                value={aiUsageSearchTerm}
+                                onChange={e => setAiUsageSearchTerm(e.target.value)}
+                                className="w-full pl-9 pr-8 py-2 text-xs border border-gray-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 focus:ring-1 focus:ring-indigo-500 outline-none"
+                            />
+                            {aiUsageSearchTerm && <button onClick={() => setAiUsageSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"><XCircleIcon className="h-3.5 w-3.5"/></button>}
+                        </div>
+
+                        <select
+                            value={aiUsageTypeFilter}
+                            onChange={(e) => setAiUsageTypeFilter(e.target.value)}
+                            className="px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-xs focus:ring-1 focus:ring-indigo-500 outline-none"
+                        >
+                            <option value="all">Tất cả Loại AI</option>
+                            <option value="text">Text (Văn bản)</option>
+                            <option value="image">Image (Hình ảnh)</option>
+                            <option value="video">Video</option>
+                            <option value="audio">Audio</option>
+                        </select>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+                             <thead className="text-xs text-slate-700 uppercase bg-slate-50/50 dark:bg-slate-700/50 dark:text-slate-400 font-bold">
+                                <tr>
+                                    <th scope="col" className="px-6 py-4">Thời gian</th>
+                                    <th scope="col" className="px-6 py-4">Mô tả</th>
+                                    <th scope="col" className="px-6 py-4">Model</th>
+                                    <th scope="col" className="px-6 py-4">Tokens / Count</th>
+                                    <th scope="col" className="px-6 py-4">Loại</th>
+                                    <th scope="col" className="px-6 py-4 text-right">Chi phí</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                {paginatedAiLogs.map(log => (
+                                    <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                        <td className="px-6 py-4 text-xs whitespace-nowrap">{new Date(log.timestamp).toLocaleString('vi-VN')}</td>
+                                        <td className="px-6 py-4 font-semibold text-slate-800 dark:text-slate-200">
+                                            {log.details}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-xs font-mono text-slate-500">
+                                            {log.apiMetadata?.model || '--'}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-xs">
+                                            {log.apiMetadata?.tokens ? `${log.apiMetadata.tokens.toLocaleString('vi-VN')} tokens` : 
+                                            (log.apiMetadata?.unitCount ? `${log.apiMetadata.unitCount.toLocaleString('vi-VN')} units` : '--')}
+                                        </td>
+                                        <td className="px-6 py-4 text-xs uppercase font-bold text-slate-500">
+                                            {log.apiMetadata?.type || '--'}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            {log.apiMetadata?.creditCost !== undefined && (
+                                                <span className="flex justify-end gap-1 font-black text-xs text-amber-600">
+                                                    <SparklesIcon className="h-3 w-3" />
+                                                    -{log.apiMetadata.creditCost.toLocaleString('vi-VN')} P
+                                                </span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    {filteredAiLogs.length === 0 && 
+                        <div className="text-center py-16 text-slate-500">
+                            <CpuChipIcon className="h-12 w-12 mx-auto text-slate-400 mb-2" />
+                            <p className="font-semibold">Chưa có hoạt động sử dụng AI nào.</p>
+                        </div>
+                    }
+                    {filteredAiLogs.length > 0 && (
+                        <div className="flex flex-col sm:flex-row justify-between items-center mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 gap-4">
+                            <div className="flex items-center gap-4">
+                                <RowsPerPageSelector value={aiUsageItemsPerPage} onChange={setAiUsageItemsPerPage} options={[10, 20, 50]} />
+                                <div className="text-xs font-bold text-slate-400 uppercase">
+                                    Hiển thị {paginatedAiLogs.length > 0 ? (aiUsagePage - 1) * aiUsageItemsPerPage + 1 : 0} đến {Math.min(aiUsagePage * aiUsageItemsPerPage, filteredAiLogs.length)} / {filteredAiLogs.length} mục
+                                </div>
+                            </div>
+                            {totalAiUsagePages > 1 && <Pagination currentPage={aiUsagePage} totalPages={totalAiUsagePages} onPageChange={setAiUsagePage} />}
+                        </div>
+                    )}
+                </div>
                 )}
             </div>
         </div>

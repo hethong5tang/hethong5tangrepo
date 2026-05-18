@@ -8,6 +8,8 @@ import { Message, Action, ActionType } from '../types';
 import { SparklesIcon, PaperAirplaneIcon, ArrowPathIcon, XMarkIcon } from './Icons';
 import { findUserInTree } from '../services/userService';
 import { aiService } from '../services/aiService'; // Import service mới
+import { useLogging } from '../features/logging/useLogging';
+import { LoggableAction } from '../features/logging/types';
 
 interface GeminiAiAssistantProps {
     isOpen: boolean;
@@ -22,6 +24,7 @@ interface GeminiAiAssistantProps {
 
 const GeminiAiAssistant: React.FC<GeminiAiAssistantProps> = (props) => {
     const { isOpen, onClose, onAction, users, transactions, fundStatus, withdrawalRequests, systemSettings } = props;
+    const { loggingDispatch } = useLogging();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -136,6 +139,30 @@ const GeminiAiAssistant: React.FC<GeminiAiAssistantProps> = (props) => {
             
             const aiText = response.text || "Tôi đã xử lý yêu cầu nhưng không có phản hồi văn bản.";
             setMessages(prev => [...prev, { sender: 'ai', text: aiText }]);
+            
+            // Try to log the AI usage
+            try {
+                const totalTokens = response.usageMetadata?.totalTokenCount || 250;
+                loggingDispatch({
+                    type: 'ADD_LOG',
+                    payload: {
+                        userId: 'admin',
+                        userName: 'Admin Của Hệ Thống',
+                        actionType: LoggableAction.API_CONSUMPTION,
+                        details: 'AI Command Center',
+                        status: 'success',
+                        apiMetadata: {
+                            model: "gemini-3-flash-preview",
+                            type: 'text',
+                            unitCount: totalTokens,
+                            tokens: totalTokens,
+                            estimatedCostUsd: 0.0001,
+                            toolId: 'admin_command_center',
+                            creditCost: 0
+                        }
+                    }
+                });
+            } catch (ignoreUrlErr) {}
         } catch (error: any) {
             console.error("AI Assistant Error:", error);
             const errorMsg = error.message?.includes('429') 

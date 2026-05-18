@@ -299,7 +299,7 @@ const MenuDesignerTool: React.FC<MenuDesignerToolProps> = ({ tool, onNavigate })
             {/* MODEL SELECTOR */}
             <div className={`p-5 rounded-2xl border-2 transition-all ${isProModel ? 'bg-amber-900/10 border-amber-500/30' : 'bg-indigo-900/10 border-indigo-500/30'}`}>
                 <label className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-2 mb-3 ${isProModel ? 'text-amber-400' : 'text-indigo-400'}`}>
-                    <BoltIcon className="h-3 w-3" /> AI ENGINE CORE
+                    <BoltIcon className="h-3 w-3" /> AI Model Engine
                 </label>
                 <div className="relative">
                     <select value={selectedModel} onChange={e => setSelectedModel(e.target.value)} className={selectClasses}>

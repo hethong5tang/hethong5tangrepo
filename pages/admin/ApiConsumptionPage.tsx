@@ -63,7 +63,7 @@ const LOADING_STEPS = [
 const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
 
 const ApiConsumptionPage: React.FC = () => {
-    const { loggingState } = useLogging();
+    const { loggingState, loggingDispatch } = useLogging();
     const { settingsState, settingsDispatch } = useSettings();
     const { addToast } = useToast();
     
@@ -288,6 +288,27 @@ NHIỆM VỤ CỦA BẠN:
                             }
                         },
                         required: ["usdRate", "models"]
+                    }
+                }
+            });
+
+            // Log AI API Consumption for the Admin action
+            loggingDispatch({
+                type: 'ADD_LOG',
+                payload: {
+                    userId: 'admin',
+                    userName: 'Admin Của Hệ Thống',
+                    actionType: LoggableAction.API_CONSUMPTION,
+                    details: 'AI quét giá & tỷ giá (Thủ công)',
+                    status: 'success',
+                    apiMetadata: {
+                        model: "gemini-3-pro-preview",
+                        type: 'text',
+                        unitCount: response.usageMetadata?.totalTokenCount || 450,
+                        tokens: response.usageMetadata?.totalTokenCount || 450,
+                        estimatedCostUsd: 0.001,
+                        toolId: 'admin_pricing_scan',
+                        creditCost: 0
                     }
                 }
             });
