@@ -393,7 +393,7 @@ export const createUserActions = (deps: {
             }
         }
 
-        if (tool.creditCost > 0) {
+        if (tool.creditCost >= 0) {
             logAction({
                 userId,
                 userName: u.name,
@@ -409,7 +409,7 @@ export const createUserActions = (deps: {
                     creditCost: tool.creditCost,
                 }
             });
-        } else if (tool.creditCost < 0) {
+        } else {
              // Refund
              logAction({
                 userId,

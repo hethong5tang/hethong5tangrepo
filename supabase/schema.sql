@@ -94,7 +94,30 @@ CREATE TABLE IF NOT EXISTS public.transactions (
 
 
 -- ==========================================
--- 5. BẢNG GIAO DỊCH QUỸ (FUND TRANSACTIONS)
+-- 8. BẢNG LỊCH SỬ TẠO ẢNH (AI GENERATION HISTORY)
+-- ==========================================
+-- Lưu lịch sử theo yêu cầu chỉ giữ 24h. Cần cài đặt cron job trên Supabase hoặc xóa tự động từ client.
+CREATE TABLE IF NOT EXISTS public.ai_generation_history (
+    task_id VARCHAR(255) PRIMARY KEY,
+    user_id UUID REFERENCES public.users(id),
+    tool_id VARCHAR(100),
+    prompt TEXT,
+    images JSONB NOT NULL, -- Array of base64 strings or URLs
+    settings JSONB,
+    cost NUMERIC(15, 2) DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    expires_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() + INTERVAL '24 hours'
+);
+
+-- Cho phép người dùng xem lịch sử của mình và thêm lịch sử
+ALTER TABLE public.ai_generation_history ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Cho phép user tự xem/sửa lịch sử của mình" ON public.ai_generation_history;
+CREATE POLICY "Cho phép user tự xem/sửa lịch sử của mình"
+ON public.ai_generation_history FOR ALL
+USING (auth.uid() = user_id OR user_id IS NULL)
+WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+
+
 -- ==========================================
 -- Lịch sử dòng tiền vào, ra của 3 Quỹ hệ thống
 CREATE TABLE IF NOT EXISTS public.fund_transactions (
