@@ -115,7 +115,8 @@ const ImageToTextTool: React.FC<ImageToTextToolProps> = ({ tool, onNavigate }) =
         // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
         const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
         if (toolSpecificModels.length > 0) {
-            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id));
+            const globalActiveForTool = settingsState.systemSettings.activeGeminiModels || [];
+            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && globalActiveForTool.includes(m.id));
         }
 
         const activeIds = settingsState.systemSettings.activeGeminiModels || [];

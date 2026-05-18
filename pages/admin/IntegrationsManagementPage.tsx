@@ -104,12 +104,14 @@ const EditModal: React.FC<{
     };
 
     const filteredModels = useMemo(() => {
+        const activeModels = systemSettings.activeGeminiModels || [];
         return AI_MODEL_OPTIONS.filter(m => {
             const matchSearch = m.name.toLowerCase().includes(searchModel.toLowerCase());
             const matchCat = filterCat === 'all' || isModelInCategory(m, filterCat);
-            return matchSearch && matchCat;
+            const isActive = activeModels.includes(m.id);
+            return matchSearch && matchCat && isActive;
         });
-    }, [searchModel, filterCat]);
+    }, [searchModel, filterCat, systemSettings.activeGeminiModels]);
 
     const inputClasses = "w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm transition-all";
 

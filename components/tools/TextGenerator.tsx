@@ -335,12 +335,13 @@ const TextGenerator: React.FC<{ tool: IntegrationTool, onNavigate: (page: string
         // Ưu tiên các model được bật riêng cho công cụ này trong Admin (modelPricing)
         const toolSpecificModels = tool.modelPricing ? Object.keys(tool.modelPricing) : [];
         if (toolSpecificModels.length > 0) {
-            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id));
+            const globalActiveForTool = settingsState.systemSettings.activeGeminiModels || [];
+            return ALL_GEMINI_MODELS.filter(m => toolSpecificModels.includes(m.id) && globalActiveForTool.includes(m.id));
         }
 
         const activeIds = settingsState.systemSettings.activeGeminiModels || [];
         const filtered = ALL_GEMINI_MODELS.filter(m => activeIds.includes(m.id));
-        return filtered.length > 0 ? filtered : [ALL_GEMINI_MODELS[3], ALL_GEMINI_MODELS[4]];
+        return filtered.length > 0 ? filtered : [ALL_GEMINI_MODELS[0]];
     }, [settingsState.systemSettings.activeGeminiModels, tool.modelPricing]);
 
     // Main State
