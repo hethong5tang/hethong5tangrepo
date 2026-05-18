@@ -207,19 +207,11 @@ const ApiConsumptionPage: React.FC = () => {
 
     const integratedModelIds = useMemo(() => {
         const ids = new Set<string>();
-        settingsState.systemSettings.integrationTools?.forEach(tool => {
-            if (tool.modelPricing) {
-                Object.keys(tool.modelPricing).forEach(mId => ids.add(mId));
-            }
-            if (tool.id.includes('video')) ids.add('veo-3.1-fast-generate-preview');
-            if (tool.id.includes('image')) ids.add('gemini-2.5-flash-image');
-            if (tool.id.includes('content')) ids.add('gemini-3-flash-preview');
-        });
         if (settingsState.systemSettings.activeGeminiModels) {
             settingsState.systemSettings.activeGeminiModels.forEach(mId => ids.add(mId));
         }
         return ids;
-    }, [settingsState.systemSettings.integrationTools, settingsState.systemSettings.activeGeminiModels]);
+    }, [settingsState.systemSettings.activeGeminiModels]);
 
     const visibleModelsByUsage = useMemo(() => {
         return catalog.filter(m => !showOnlyIntegrated || integratedModelIds.has(m.modelId));
