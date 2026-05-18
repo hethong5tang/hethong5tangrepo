@@ -364,7 +364,15 @@ const IntegrationsManagementPage: React.FC = () => {
         const audioTools: IntegrationTool[] = [];
         
         integrationTools.forEach(t => {
-            const cat = t.category || 'image';
+            let cat = t.category;
+            if (!cat) {
+                const id = (t.id || '').toLowerCase();
+                const title = (t.title || '').toLowerCase();
+                if (id.includes('video') || title.includes('video')) cat = 'video';
+                else if (id.includes('text') || id.includes('writer') || id.includes('ocr') || title.includes('văn bản') || title.includes('viết') || title.includes('nội dung')) cat = 'text';
+                else if (id.includes('audio') || title.includes('âm thanh')) cat = 'audio';
+                else cat = 'image';
+            }
             if (cat === 'video') videoTools.push(t);
             else if (cat === 'text') textTools.push(t);
             else if (cat === 'audio') audioTools.push(t);
